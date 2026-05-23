@@ -18,6 +18,7 @@ void CORE::VulkanManager::init(const char* appName, GLFWwindow* window) {
 }
 
 void CORE::VulkanManager::destroy() {
+    m_device.destroy();
 #ifndef NDEBUG
     DestroyDebugUtilsMessengerEXT(m_instance.getInstance(), m_debugMessanger, nullptr);
 #endif

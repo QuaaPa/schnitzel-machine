@@ -26,7 +26,7 @@ void CORE::Window::pollEvents() {
 void CORE::Window::destroy() {
     vulkanManager.destroy();
   
-  glfwDestroyWindow(m_pwindow);
+    glfwDestroyWindow(m_pwindow);
   
-  glfwTerminate();
+    glfwTerminate();
 }

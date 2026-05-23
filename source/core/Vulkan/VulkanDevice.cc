@@ -30,13 +30,15 @@ void CORE::Device::init(VulkanInstance &instance) {
 
     createInfo.enabledExtensionCount = 0;
 
-#ifndef NDEBUG    
-    createInfo.enabledLayerCount = static_cast<uint32_t>(m_validationLayers.size());
-    createInfo.ppEnabledLayerNames = m_validationLayers.data();
-#else
-    createInfo.enabledLayerCount = 0;
-#endif
+// #ifndef NDEBUG    
+//     createInfo.enabledLayerCount = static_cast<uint32_t>(m_validationLayers.size());
+//     createInfo.ppEnabledLayerNames = m_validationLayers.data();
+// #else
+//     createInfo.enabledLayerCount = 0;
+// #endif
 
+    createInfo.enabledLayerCount = 0;    
+    
     if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &m_device)  != VK_SUCCESS) {
         throw std::runtime_error("failed to create logical device!");
     }
@@ -45,6 +47,6 @@ void CORE::Device::init(VulkanInstance &instance) {
 }
 
 void CORE::Device::destroy() {
-    vkDestroyDevice(m_device, nullptr);
     delete m_physicalDevice;
+    vkDestroyDevice(m_device, nullptr);
 }
