@@ -3,6 +3,7 @@
 
 #include "VulkanInstance.hh"
 #include "VulkanWindowSurface.hh"
+#include "VulkanDevice.hh"
 #include <GLFW/glfw3.h>
 
 namespace CORE {
@@ -10,10 +11,9 @@ namespace CORE {
     private:
         VulkanInstance m_instance;
         WindowSurface m_surface;
-  
-    public:  
+        Device m_device;
+    public:
         VulkanManager();
-
         void init(const char* appName, GLFWwindow* window);
         void destroy();
     

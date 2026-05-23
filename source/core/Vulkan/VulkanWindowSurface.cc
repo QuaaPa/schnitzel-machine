@@ -9,7 +9,7 @@ CORE::WindowSurface::WindowSurface() {
 
 void CORE::WindowSurface::init(VulkanInstance &instance, GLFWwindow *window) {
     m_pinstance = &instance;
-    if(glfwCreateWindowSurface(instance.getInstance(), window, nullptr, &m_surface) != VK_SUCCESS) {
+    if(glfwCreateWindowSurface(instance.getInstance(), window, nullptr, &m_surface) != VK_SUCCESS)    {
         throw std::runtime_error("failed to create surface!");
     }
 }

@@ -1,5 +1,6 @@
 #include "VulkanManager.hh"
 #include "../../utils/DebugUtils.hh"
+#include "VulkanInstance.hh"
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>
 
@@ -13,6 +14,7 @@ void CORE::VulkanManager::init(const char* appName, GLFWwindow* window) {
     setupDebugMessanger();    
 #endif
     m_surface.init(m_instance, window);
+    m_device.init(m_instance);        
 }
 
 void CORE::VulkanManager::destroy() {
@@ -24,7 +26,6 @@ void CORE::VulkanManager::destroy() {
 }
 
 #ifndef NDEBUG
-
 
 VkResult CORE::VulkanManager::CreateDebugUtilsMessengerEXT(VkInstance instance, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
 

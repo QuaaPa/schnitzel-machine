@@ -12,7 +12,7 @@ namespace dbg {
         VkDebugUtilsMessageSeverityFlagsEXT messageType,
         const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
         void* pUserData) {
-                                                        
+
         std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
         // TODO: create diffrent response for each severity of the message
         // 
