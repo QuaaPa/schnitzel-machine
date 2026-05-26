@@ -1,8 +1,25 @@
-Vulkan-based real-time rendering engine.
-
 ## Build
 
+### Release
+
 ```bash
-mkdir build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-cmake --build .
+cmake -B build . -DCMAKE_BUILD_TYPE=Release
+```
+
+generator Ninja:
+
+```bash
+cmake -G Ninja -B build . -DCMAKE_BUILD_TYPE=Release
+```
+
+### Debug
+
+```bash
+cmake -B build . -DCMAKE_BUILD_TYPE=Debug
+```
+
+generator Ninja:
+
+```bash
+cmake -G Ninja -B build . -DCMAKE_BUILD_TYPE=Debug
+```
