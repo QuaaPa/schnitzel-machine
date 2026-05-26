@@ -1,24 +1,13 @@
 ## Build
-
-### Release
-
-```bash
-cmake -B build . -DCMAKE_BUILD_TYPE=Release
-```
-
-generator Ninja:
-
-```bash
-cmake -G Ninja -B build . -DCMAKE_BUILD_TYPE=Release
-```
-
 ### Debug
+
+Makefiles generator:
 
 ```bash
 cmake -B build . -DCMAKE_BUILD_TYPE=Debug
 ```
 
-generator Ninja:
+Ninja generator:
 
 ```bash
 cmake -G Ninja -B build . -DCMAKE_BUILD_TYPE=Debug
