@@ -5,7 +5,6 @@
 #include <stdexcept>
 #include <vector>
 #include <vulkan/vulkan_core.h>
-#include "../../utils/VulkanUtils.hh"
 
 VkPhysicalDevice CORE::PhysicalDevice::pickPhysicalDevice(VulkanInstance &instance) {
     uint32_t deviceCount = 0;
@@ -17,7 +16,7 @@ VkPhysicalDevice CORE::PhysicalDevice::pickPhysicalDevice(VulkanInstance &instan
 
     std::vector<VkPhysicalDevice> devices(deviceCount);
     vkEnumeratePhysicalDevices(instance.getInstance(), &deviceCount, devices.data());
-
+    
     for(const auto& device : devices) {
         if (isDeviceSuitable(device)) {
             m_physicalDevice = device;
@@ -40,9 +39,14 @@ VkPhysicalDevice CORE::PhysicalDevice::pickPhysicalDevice(VulkanInstance &instan
 }
 
 bool CORE::PhysicalDevice::isDeviceSuitable(VkPhysicalDevice device) {
-    std::optional<uint32_t> graphicsQueue =  CORE::UTILS::findQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT, device);
-    if(!graphicsQueue.has_value()) {
-        throw std::runtime_error("physical device does not support VK_QUEUE_GRAPHICS_BIT");
-    }
     return true;
 }
+
+// bool CORE::PhysicalDevice::isDeviceSuitable(VkPhysicalDevice device) {
+//     std::optional<uint32_t> graphicsQueue =  CORE::UTILS::findQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT, device);
+//     if(!graphicsQueue.has_value()) {
+//         throw std::runtime_error("physical device does not support VK_QUEUE_GRAPHICS_BIT");
+//     }
+    
+//     return true;
+// }

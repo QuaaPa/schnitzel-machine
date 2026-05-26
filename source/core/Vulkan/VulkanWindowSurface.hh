@@ -12,14 +12,11 @@ namespace CORE {
 
     class WindowSurface {
     private:
-        VulkanInstance* m_pinstance = nullptr;
         VkSurfaceKHR m_surface = VK_NULL_HANDLE;
     public:
-        WindowSurface();
-
         void init(VulkanInstance &instance, GLFWwindow *window);
         VkSurfaceKHR getSurface() const;
-        void destroy();    
+        void destroy(VulkanInstance &instance);    
     
     };
 }
