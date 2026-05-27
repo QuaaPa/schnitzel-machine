@@ -33,7 +33,8 @@ namespace CORE {
     private:
       void findQueueFamilies(VkPhysicalDevice physicalDevice,
                              VkSurfaceKHR surface,
-                             QueueFamilyIndices *pqueueFamilyIndices);      
+                             QueueFamilyIndices *pqueueFamilyIndices);
+        
     };
 }
 

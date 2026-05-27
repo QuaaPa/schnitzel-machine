@@ -1,10 +1,11 @@
 #include "VulkanPhysicalDevice.hh"
 #include "VulkanInstance.hh"
 #include <cstdint>
-#include <optional>
+#include <string>
 #include <stdexcept>
 #include <vector>
 #include <vulkan/vulkan_core.h>
+#include <set>
 
 VkPhysicalDevice CORE::PhysicalDevice::pickPhysicalDevice(VulkanInstance &instance) {
     uint32_t deviceCount = 0;
@@ -14,17 +15,17 @@ VkPhysicalDevice CORE::PhysicalDevice::pickPhysicalDevice(VulkanInstance &instan
         throw std::runtime_error("failed to find GPUs with Vulkan support!");
     }
 
-    std::vector<VkPhysicalDevice> devices(deviceCount);
-    vkEnumeratePhysicalDevices(instance.getInstance(), &deviceCount, devices.data());
+    std::vector<VkPhysicalDevice> physicalDevices(deviceCount);
+    vkEnumeratePhysicalDevices(instance.getInstance(), &deviceCount, physicalDevices.data());
     
-    for(const auto& device : devices) {
-        if (isDeviceSuitable(device)) {
-            m_physicalDevice = device;
+    for(const auto& physicalDevice : physicalDevices) {
+        if (isDeviceSuitable(physicalDevice)) {
+            m_physicalDevice = physicalDevice;
 #ifndef NDEBUG
             VkPhysicalDeviceProperties deviceProperties;
-            vkGetPhysicalDeviceProperties(device, &deviceProperties);
+            vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
             VkPhysicalDeviceFeatures deviceFeatures;
-            vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+            vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
             std::cout << "deviceProperties.deviceName: " << deviceProperties.deviceName << std::endl;
 #endif // NDEBUG
             break;
@@ -38,15 +39,25 @@ VkPhysicalDevice CORE::PhysicalDevice::pickPhysicalDevice(VulkanInstance &instan
     return m_physicalDevice;
 }
 
-bool CORE::PhysicalDevice::isDeviceSuitable(VkPhysicalDevice device) {
+bool CORE::PhysicalDevice::isDeviceSuitable(VkPhysicalDevice physicalDevice) {
+    // TODO: check queue family support
+
+    bool extensionsSupported = checkDeviceExtensionSupport(physicalDevice);
+    
     return true;
 }
 
-// bool CORE::PhysicalDevice::isDeviceSuitable(VkPhysicalDevice device) {
-//     std::optional<uint32_t> graphicsQueue =  CORE::UTILS::findQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT, device);
-//     if(!graphicsQueue.has_value()) {
-//         throw std::runtime_error("physical device does not support VK_QUEUE_GRAPHICS_BIT");
-//     }
-    
-//     return true;
-// }
+bool CORE::PhysicalDevice::checkDeviceExtensionSupport(VkPhysicalDevice physicalDevice) {
+    uint32_t extensionCount;
+    vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr);
+    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+    vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, availableExtensions.data());
+
+    std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+
+    for (const auto& extension : availableExtensions) {
+        requiredExtensions.erase(extension.extensionName);
+    }
+
+    return requiredExtensions.empty();
+}
