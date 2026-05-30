@@ -1,5 +1,5 @@
-#include "core.hh"
-#include "window.hh"
+#include "core/core.hh"
+#include "core/window.hh"
 #include <memory>
 #include <vulkan/vulkan_core.h>
 

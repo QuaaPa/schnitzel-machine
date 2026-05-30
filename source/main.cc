@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <exception>
 #include <iostream>
-#include "core/core.hh"
+#include "../include/core/core.hh"
 
 
 int main(int argc, char *argv[]) {

@@ -1,5 +1,5 @@
-#include "VulkanPhysicalDevice.hh"
-#include "VulkanInstance.hh"
+#include "core/Vulkan/VulkanPhysicalDevice.hh"
+#include "core/Vulkan/VulkanInstance.hh"
 #include <cstdint>
 #include <string>
 #include <stdexcept>

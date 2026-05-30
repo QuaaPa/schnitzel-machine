@@ -1,6 +1,6 @@
-#include "VulkanWindowSurface.hh"
-#include "VulkanInstance.hh"
-#include "VulkanManager.hh"
+#include "core/Vulkan/VulkanWindowSurface.hh"
+#include "core/Vulkan/VulkanInstance.hh"
+#include "core/Vulkan/VulkanManager.hh"
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan_core.h>
 

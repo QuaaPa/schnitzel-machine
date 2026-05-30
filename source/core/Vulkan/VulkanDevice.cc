@@ -1,7 +1,7 @@
-#include "VulkanDevice.hh"
-#include "VulkanInstance.hh"
-#include "VulkanPhysicalDevice.hh"
-#include "VulkanWindowSurface.hh"
+#include "core/Vulkan/VulkanDevice.hh"
+#include "core/Vulkan/VulkanInstance.hh"
+#include "core/Vulkan/VulkanPhysicalDevice.hh"
+#include "core/Vulkan/VulkanWindowSurface.hh"
 #include <cstdint>
 #include <vulkan/vulkan_core.h>
 

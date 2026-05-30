@@ -1,6 +1,6 @@
-#include "VulkanManager.hh"
-#include "../../utils/DebugUtils.hh"
-#include "VulkanInstance.hh"
+#include "core/Vulkan/VulkanManager.hh"
+#include "utils/DebugUtils.hh"
+#include "core/Vulkan/VulkanInstance.hh"
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>
 

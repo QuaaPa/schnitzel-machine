@@ -1,5 +1,5 @@
 #include <GLFW/glfw3.h>
-#include "window.hh"
+#include "core/window.hh"
 
 
 CORE::Window::Window(int width, int height, const char *title)

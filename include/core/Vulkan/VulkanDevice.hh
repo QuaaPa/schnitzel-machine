@@ -6,6 +6,7 @@
 #include <set>
 
 #include <vulkan/vulkan_core.h>
+
 #include "VulkanInstance.hh"
 #include "VulkanWindowSurface.hh"
 #include "VulkanPhysicalDevice.hh"
