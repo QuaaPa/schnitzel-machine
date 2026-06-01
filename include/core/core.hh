@@ -1,7 +1,6 @@
 #ifndef CORE_HH
 #define CORE_HH
 
-#include <iostream>
 #include <vulkan/vulkan.h>
 #include "window.hh"
 

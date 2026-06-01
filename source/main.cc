@@ -6,7 +6,7 @@
 
 
 int main(int argc, char *argv[]) {
-  
+
 #ifndef NDEBUG
     std::cout << "---- TOGGLE DEBUG MODE ----" << std::endl;
 #endif
