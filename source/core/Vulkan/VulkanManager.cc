@@ -5,7 +5,8 @@
 void CORE::VulkanManager::init(const char* appName, GLFWwindow* window) {
     m_vulkanContext.createInstance();
     m_vulkanContext.setupDebugMessenger();
-    m_vulkanContext.pickPhysicalDevice();    
+    m_vulkanContext.pickPhysicalDevice();
+    m_vulkanContext.createLogicalDevice();
 }
 
 void CORE::VulkanManager::destroy() {

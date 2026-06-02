@@ -22,6 +22,8 @@ private:
     VkInstance m_instance = VK_NULL_HANDLE;
     VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE;
     VkPhysicalDevice m_physcialDevice = VK_NULL_HANDLE;
+    VkDevice m_device = VK_NULL_HANDLE;
+    VkQueue m_graphicsQueue = VK_NULL_HANDLE;
     
     const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
     struct QueueFamilyIndices {
@@ -35,6 +37,7 @@ public:
     void createInstance();
     void setupDebugMessenger();
     void pickPhysicalDevice();
+    void createLogicalDevice();
     
     void destroy();
     
