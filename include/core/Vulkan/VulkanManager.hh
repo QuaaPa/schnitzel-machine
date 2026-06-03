@@ -11,7 +11,7 @@ namespace CORE {
         VulkanContext m_vulkanContext;
     public:
         VulkanManager() = default;
-        void init(const char* appName, GLFWwindow* window);
+        void init(const char* appName, GLFWwindow* pwindow);
         void destroy();
     
         VulkanManager(const VulkanManager &other) = delete;

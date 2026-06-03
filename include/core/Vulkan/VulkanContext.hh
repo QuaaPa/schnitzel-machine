@@ -1,10 +1,13 @@
 #ifndef VULKAN_CONTEXT
 #define VULKAN_CONTEXT
 
-#include <GLFW/glfw3.h>
-#include <cstdint>
 #include <vulkan/vk_platform.h>
 #include <vulkan/vulkan_core.h>
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+
+#include <cstdint>
+
 #include <vector>
 #include <optional>
 
@@ -24,12 +27,14 @@ private:
     VkPhysicalDevice m_physcialDevice = VK_NULL_HANDLE;
     VkDevice m_device = VK_NULL_HANDLE;
     VkQueue m_graphicsQueue = VK_NULL_HANDLE;
+    VkSurfaceKHR m_surface;
     
     const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
     struct QueueFamilyIndices {
         std::optional<uint32_t> graphicsFamily;
+        std::optional<uint32_t> presentFamily;
         bool isComplete() {
-            return graphicsFamily.has_value();
+            return graphicsFamily.has_value() && presentFamily.has_value();
         }
     };
     
@@ -38,6 +43,7 @@ public:
     void setupDebugMessenger();
     void pickPhysicalDevice();
     void createLogicalDevice();
+    void createSurface(GLFWwindow* pwindow);
     
     void destroy();
     

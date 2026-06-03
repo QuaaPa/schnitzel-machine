@@ -1,4 +1,5 @@
 #include "core/Vulkan/VulkanContext.hh"
+#include <GLFW/glfw3.h>
 #include <vulkan/vulkan_core.h>
 #include <cstdint>
 #include <stdexcept>
@@ -121,6 +122,7 @@ void VulkanContext::destroy() {
 #ifndef NDEBUG
     DestroyDebugUtilsMessengerEXT(m_instance, m_debugMessenger, nullptr);
 #endif // NDEBUG
+    vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
     vkDestroyInstance(m_instance, nullptr);
 }
 
@@ -167,9 +169,16 @@ VulkanContext::QueueFamilyIndices VulkanContext::findQueueFamilies(VkPhysicalDev
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
     int i = 0;
-    for (const auto& queueFamily : queueFamilies) {
+    for (const auto &queueFamily : queueFamilies) {
+        VkBool32 presentSupport = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_surface, &presentSupport);
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+        
         if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-            indices.graphicsFamily = i;
+          indices.graphicsFamily = i;
+        }
+        if (presentSupport) {
+            indices.presentFamily = i;
         }
         if (indices.isComplete()) {
             break;
@@ -205,4 +214,10 @@ void VulkanContext::createLogicalDevice() {
     }
 
     vkGetDeviceQueue(m_device, indices.graphicsFamily.value(), 0, &m_graphicsQueue);
+}
+
+void VulkanContext::createSurface(GLFWwindow* pwindow) {
+    if(glfwCreateWindowSurface(m_instance, pwindow, nullptr, &m_surface)) {
+        throw std::runtime_error("failed to create window surface");
+    }
 }
