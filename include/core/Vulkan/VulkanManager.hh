@@ -2,15 +2,15 @@
 #define VULKAN_MANAGER_HH
 
 #include "VulkanContext.hh"
-
 #include <GLFW/glfw3.h>
 
 namespace CORE {
     class VulkanManager {
     private:
-        VulkanContext m_vulkanContext;
+        VulkanContext m_ctx;
     public:
         VulkanManager() = default;
+
         void init(const char* appName, GLFWwindow* pwindow);
         void destroy();
     
