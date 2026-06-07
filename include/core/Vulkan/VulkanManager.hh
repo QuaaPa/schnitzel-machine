@@ -2,12 +2,15 @@
 #define VULKAN_MANAGER_HH
 
 #include "VulkanContext.hh"
+#include "core/Vulkan/VulkanSwapchain.hh"
+
 #include <GLFW/glfw3.h>
 
 namespace CORE {
     class VulkanManager {
     private:
         VulkanContext m_ctx;
+        VulkanSwapchain m_swapchain;
     public:
         VulkanManager() = default;
 

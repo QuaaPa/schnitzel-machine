@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <vector>
 #include <vulkan/vulkan_core.h>
+#include <set>
 
 static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physicalDevice,
                                             VkSurfaceKHR surface)
@@ -37,6 +38,8 @@ static VkPhysicalDevice pickPhysicalDevice(VkInstance instance, VkSurfaceKHR sur
     std::vector<VkPhysicalDevice> devices(physicalDeviceCount);
     vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, devices.data());
 
+    // TODO: add extension checker
+    //    
     for (auto device : devices) {
         if (findQueueFamilies(device, surface).isComplete()) {
             return device;
@@ -49,23 +52,26 @@ DeviceBuilder::Result DeviceBuilder::build() const {
     VkPhysicalDevice physicalDevice = pickPhysicalDevice(instance, surface);
     QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice, surface);
 
+    std::set<uint32_t> uniqueQueueFamilyIndices = {
+        queueFamilyIndices.graphicsFamily.value(),
+        queueFamilyIndices.presentFamily.value()};
+        
     float priority = 1.0f;
     std::vector<VkDeviceQueueCreateInfo> deviceQueueCreateInfos;
-    for (uint32_t family : {queueFamilyIndices.graphicsFamily.value(),
-                            queueFamilyIndices.presentFamily.value()}) {
+    for (uint32_t family : uniqueQueueFamilyIndices) {
         VkDeviceQueueCreateInfo deviceQueueCreateInfo{
-            .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+            .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
             .queueFamilyIndex = family,
             .queueCount = 1,
             .pQueuePriorities = &priority,
         };
         deviceQueueCreateInfos.push_back(deviceQueueCreateInfo);
     }
-
     const char *swapchainExt = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
     VkDeviceCreateInfo deviceCreateInfo{
       .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-      .queueCreateInfoCount = (uint32_t)deviceQueueCreateInfos.size(),
+      .queueCreateInfoCount = static_cast<uint32_t>(deviceQueueCreateInfos.size()),
+      .pQueueCreateInfos = deviceQueueCreateInfos.data(),
       .enabledExtensionCount = 1,
       .ppEnabledExtensionNames = &swapchainExt
     };
@@ -82,8 +88,7 @@ DeviceBuilder::Result DeviceBuilder::build() const {
         .presentFamilyIndex = queueFamilyIndices.presentFamily.value(),
     };
     vkGetDeviceQueue(logicalDevice, result.graphicsFamilyIndex, 0, &result.graphicsQueue);
-    vkGetDeviceQueue(logicalDevice, result.presentFamilyIndex, 0,
-                     &result.presentQueue);
+    vkGetDeviceQueue(logicalDevice, result.presentFamilyIndex, 0, &result.presentQueue);
 
     return result;
 }

@@ -4,8 +4,8 @@
 #include <vulkan/vulkan_core.h>
 
 struct DeviceBuilder {
-    VkInstance instance;
-    VkSurfaceKHR surface;
+    VkInstance instance = VK_NULL_HANDLE;
+    VkSurfaceKHR surface = VK_NULL_HANDLE;
 
     struct Result {
         VkPhysicalDevice physicalDevice;

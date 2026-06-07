@@ -6,8 +6,8 @@
 #include <GLFW/glfw3.h>
 
 struct SurfaceBuilder {
-    VkInstance instance;
-    GLFWwindow *pwindow;
+    VkInstance instance = VK_NULL_HANDLE;
+    GLFWwindow *pwindow = nullptr;
 
     VkSurfaceKHR build() const;
 };
