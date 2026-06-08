@@ -24,6 +24,10 @@ static SwapchainSupportDetails querySwapchainSupport(VkPhysicalDevice physicalDe
     return swapchainSupportDetails;
 }
 
+static VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vecotr<VkSurfaceFormatKHR>& availableFormats) {
+    // nothing to do yet
+}
+
 VulkanSwapchain SwapchainBuilder::build() {
     VulkanSwapchain swapchainResult {
         .swapchain = VK_NULL_HANDLE,
@@ -34,7 +38,7 @@ VulkanSwapchain SwapchainBuilder::build() {
     };
 
     SwapchainSupportDetails swapchainSupportDetails = querySwapchainSupport(physicalDevice, surface);
-    if(swapchainSupportDetails.surfaceFormats.empty() && swapchainSupportDetails.presentModes.empty()) {
+    if(swapchainSupportDetails.surfaceFormats.empty() || swapchainSupportDetails.presentModes.empty()) {
         throw std::runtime_error("current physical device does not support swapchain");
     }
     return swapchainResult;
