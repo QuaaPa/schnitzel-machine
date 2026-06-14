@@ -35,33 +35,3 @@ ninja -C build
 cmake -G Ninja -B build . -DCMAKE_BUILD_TYPE=Release
 ninja -C build
 ```
-
-Binary is output to `build/bin/app`.
-
-## Project Structure
-
-```
-schnitzel-machine/
-├── include/
-│   ├── core/
-│   │   └── Vulkan/
-│   │       ├── builders/
-│   │       │   ├── DeviceBuilder.hh
-│   │       │   ├── InstanceBuilder.hh
-│   │       │   ├── SurfaceBuilder.hh
-│   │       │   └── SwapchainBuilder.hh
-│   │       ├── VulkanContext.hh
-│   │       ├── VulkanManager.hh
-│   │       └── VulkanSwapchain.hh
-│   └── utils/
-│       ├── DebugUtils.hh
-│       ├── QueueFamilyIndices.hh
-│       └── SwapchainSupportDetails.hh
-├── source/
-│   ├── core/
-│   │   └── Vulkan/
-│   │       ├── builders/
-│   │       └── VulkanManager.cc
-│   └── main.cc
-└── CMakeLists.txt
-```
