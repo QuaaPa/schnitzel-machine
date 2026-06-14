@@ -7,31 +7,6 @@
 #include <vulkan/vulkan_core.h>
 #include <set>
 
-static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physicalDevice,
-                                            VkSurfaceKHR surface)
-{
-    QueueFamilyIndices queueFamilyIndices;
-    uint32_t deviceQueueFamilyCount = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &deviceQueueFamilyCount, nullptr);
-    std::vector<VkQueueFamilyProperties> families(deviceQueueFamilyCount);
-    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &deviceQueueFamilyCount, families.data());
-
-    for (uint32_t i = 0; i < deviceQueueFamilyCount; i++) {
-        if (families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-            queueFamilyIndices.graphicsFamily = i;
-        }
-        VkBool32 present = false;
-        vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &present);
-        if (present) {
-            queueFamilyIndices.presentFamily = i;
-        }
-        if (queueFamilyIndices.isComplete()) {
-            break;
-        }
-    }
-    return queueFamilyIndices;
-}
-
 static VkPhysicalDevice pickPhysicalDevice(VkInstance instance, VkSurfaceKHR surface) {
     uint32_t physicalDeviceCount = 0;
     vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr);
@@ -55,7 +30,7 @@ DeviceBuilder::Result DeviceBuilder::build() const {
     std::set<uint32_t> uniqueQueueFamilyIndices = {
         queueFamilyIndices.graphicsFamily.value(),
         queueFamilyIndices.presentFamily.value()};
-        
+    
     float priority = 1.0f;
     std::vector<VkDeviceQueueCreateInfo> deviceQueueCreateInfos;
     for (uint32_t family : uniqueQueueFamilyIndices) {
