@@ -4,7 +4,6 @@
 #include "core/Vulkan/builders/SurfaceBuilder.hh"
 #include "core/Vulkan/builders/DeviceBuilder.hh"
 #include "core/Vulkan/builders/SwapchainBuilder.hh"
-#include <system_error>
 #include <vulkan/vulkan_core.h>
 
 void CORE::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
@@ -38,6 +37,9 @@ void CORE::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
 }
 
 void CORE::VulkanManager::destroy() {
+    for(auto imageView : m_swapchain.swapchainImageViews) {
+        vkDestroyImageView(m_ctx.logicalDevice, imageView, nullptr);
+    }
     vkDestroySwapchainKHR(m_ctx.logicalDevice, m_swapchain.swapchain, nullptr);
     vkDestroyDevice(m_ctx.logicalDevice, nullptr);
     vkDestroySurfaceKHR(m_ctx.instance, m_ctx.surface, nullptr);

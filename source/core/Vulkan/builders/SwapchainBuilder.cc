@@ -4,6 +4,7 @@
 #include "utils/QueueFamilyIndices.hh"
 #include "utils/SwapchainSupportDetails.hh"
 #include <GLFW/glfw3.h>
+#include <cstddef>
 #include <cstdint>
 #include <stdexcept>
 #include <vector>
@@ -87,7 +88,7 @@ VulkanSwapchain SwapchainBuilder::build() {
   
     SwapchainSupportDetails swapchainSupportDetails = querySwapchainSupport(physicalDevice, surface);
 
-    VkSurfaceFormatKHR surfaceFormat =
+    VkSurfaceFormatKHR swapchainImageFormat =
         chooseSwapSurfaceFormat(swapchainSupportDetails.surfaceFormats);
     VkPresentModeKHR presentMode =
         chooseSwapPresentMode(swapchainSupportDetails.presentModes);
@@ -106,8 +107,8 @@ VulkanSwapchain SwapchainBuilder::build() {
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
         .surface = surface,
         .minImageCount = imageCount,
-        .imageFormat = surfaceFormat.format,
-        .imageColorSpace = surfaceFormat.colorSpace,
+        .imageFormat = swapchainImageFormat.format,
+        .imageColorSpace = swapchainImageFormat.colorSpace,
         .imageExtent = extent,
         .imageArrayLayers = 1,
         .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
@@ -135,11 +136,39 @@ VulkanSwapchain SwapchainBuilder::build() {
         throw std::runtime_error("failed to create swap chain!");
     }
 
+    std::vector<VkImage> swapchainImages;
     vkGetSwapchainImagesKHR(logicalDevice, result.swapchain, &imageCount, nullptr);
-    result.swapChainImages.resize(imageCount);
-    vkGetSwapchainImagesKHR(logicalDevice, result.swapchain, &imageCount, result.swapChainImages.data());
+    swapchainImages.resize(imageCount);
+    vkGetSwapchainImagesKHR(logicalDevice, result.swapchain, &imageCount, swapchainImages.data());
 
-    result.format = surfaceFormat.format;
+    std::vector<VkImageView> swapchainImageViews(swapchainImages.size());
+    for(size_t i = 0; i < swapchainImageViews.size(); i++) {
+        VkImageViewCreateInfo createInfo {
+            .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+            .image = swapchainImages[i], .viewType = VK_IMAGE_VIEW_TYPE_2D,
+            .format = swapchainImageFormat.format,
+            .components{.r = VK_COMPONENT_SWIZZLE_IDENTITY,
+                        .g = VK_COMPONENT_SWIZZLE_IDENTITY,
+                        .b = VK_COMPONENT_SWIZZLE_IDENTITY,
+                        .a = VK_COMPONENT_SWIZZLE_IDENTITY
+            },
+            .subresourceRange {
+                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                .baseMipLevel = 0,
+                .levelCount = 1,
+                .baseArrayLayer = 0,
+                .layerCount = 1
+            }
+        };
+        if(vkCreateImageView(logicalDevice, &createInfo, nullptr, &swapchainImageViews[i]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create image views!");
+        }
+    }
+
+    result.swapchainImages = swapchainImages;
+    result.swapchainImageViews = swapchainImageViews;
+    
+    result.format = swapchainImageFormat.format;
     result.extent = extent;
     
     return result;
