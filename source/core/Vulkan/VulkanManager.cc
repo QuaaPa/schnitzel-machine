@@ -4,6 +4,8 @@
 #include "core/Vulkan/builders/SurfaceBuilder.hh"
 #include "core/Vulkan/builders/DeviceBuilder.hh"
 #include "core/Vulkan/builders/SwapchainBuilder.hh"
+#include "core/Vulkan/builders/PipelineBuilder.hh"
+
 #include <vulkan/vulkan_core.h>
 
 void CORE::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
@@ -34,6 +36,8 @@ void CORE::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
       .pwindow = pwindow,
       .windowExtent = {800, 600}
     }.build();
+
+    m_pipeline = PipelineBuilder{}.build();
 }
 
 void CORE::VulkanManager::destroy() {
