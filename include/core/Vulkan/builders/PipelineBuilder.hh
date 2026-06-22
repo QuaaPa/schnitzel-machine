@@ -5,6 +5,8 @@
 #include "core/Vulkan/VulkanPipeline.hh"
 
 struct PipelineBuilder {
+    VkDevice logicalDevice = VK_NULL_HANDLE;
+    
     VulkanPipeline build();
 };
 

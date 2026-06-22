@@ -37,13 +37,16 @@ void CORE::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
       .windowExtent = {800, 600}
     }.build();
 
-    m_pipeline = PipelineBuilder{}.build();
+    m_pipeline = PipelineBuilder {
+        .logicalDevice = m_ctx.logicalDevice
+    }.build();
 }
 
 void CORE::VulkanManager::destroy() {
     for(auto imageView : m_swapchain.swapchainImageViews) {
         vkDestroyImageView(m_ctx.logicalDevice, imageView, nullptr);
     }
+
     vkDestroySwapchainKHR(m_ctx.logicalDevice, m_swapchain.swapchain, nullptr);
     vkDestroyDevice(m_ctx.logicalDevice, nullptr);
     vkDestroySurfaceKHR(m_ctx.instance, m_ctx.surface, nullptr);
