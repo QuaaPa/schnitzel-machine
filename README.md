@@ -11,9 +11,8 @@ InstanceBuilder   →  VkInstance
 SurfaceBuilder    →  VkSurfaceKHR
 DeviceBuilder     →  VkPhysicalDevice, VkDevice, VkQueues
 SwapchainBuilder  →  Swapchain
+PipelineBuilder   →  Pipeline
 ```
-
-`VulkanContext` is a plain data aggregate — no creation logic, no hidden dependencies.
 
 ## Dependencies
 
