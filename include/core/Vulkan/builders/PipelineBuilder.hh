@@ -6,6 +6,7 @@
 
 struct PipelineBuilder {
     VkDevice logicalDevice = VK_NULL_HANDLE;
+    VkExtent2D swapchainExtent;
     
     VulkanPipeline build();
 };

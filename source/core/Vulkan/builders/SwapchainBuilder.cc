@@ -165,8 +165,8 @@ VulkanSwapchain SwapchainBuilder::build() {
         }
     }
 
-    result.swapchainImages = swapchainImages;
-    result.swapchainImageViews = swapchainImageViews;
+    result.images = swapchainImages;
+    result.imageViews = swapchainImageViews;
     
     result.format = swapchainImageFormat.format;
     result.extent = extent;

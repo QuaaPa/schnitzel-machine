@@ -38,12 +38,14 @@ void CORE::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
     }.build();
 
     m_pipeline = PipelineBuilder {
-        .logicalDevice = m_ctx.logicalDevice
+        .logicalDevice = m_ctx.logicalDevice,
+        .swapchainExtent = m_swapchain.extent
     }.build();
 }
 
 void CORE::VulkanManager::destroy() {
-    for(auto imageView : m_swapchain.swapchainImageViews) {
+    vkDestroyPipelineLayout(m_ctx.logicalDevice, m_pipeline.pipelineLayout, nullptr);
+    for(auto imageView : m_swapchain.imageViews) {
         vkDestroyImageView(m_ctx.logicalDevice, imageView, nullptr);
     }
 
