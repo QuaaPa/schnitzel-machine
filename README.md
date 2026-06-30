@@ -11,6 +11,7 @@ InstanceBuilder   →  VkInstance
 SurfaceBuilder    →  VkSurfaceKHR
 DeviceBuilder     →  VkPhysicalDevice, VkDevice, VkQueues
 SwapchainBuilder  →  Swapchain
+RenderPassBuilder →  RenderPass, subpasses
 PipelineBuilder   →  Pipeline
 ```
 
@@ -34,3 +35,7 @@ ninja -C build
 cmake -G Ninja -B build . -DCMAKE_BUILD_TYPE=Release
 ninja -C build
 ```
+
+## TODO
+- Add a resource manager. Right now `PipelineBuilder` creates almost all 
+  pipeline components itself, but they're temporary and not tracked anywhere.
