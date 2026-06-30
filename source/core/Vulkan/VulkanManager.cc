@@ -1,4 +1,5 @@
 #include "core/Vulkan/VulkanManager.hh"
+#include "core/Vulkan/builders/RenderPassBuilder.hh"
 #include "core/Vulkan/VulkanContext.hh"
 #include "core/Vulkan/builders/InstanceBuilder.hh"
 #include "core/Vulkan/builders/SurfaceBuilder.hh"
@@ -37,18 +38,28 @@ void CORE::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
       .windowExtent = {800, 600}
     }.build();
 
+    m_renderPass = RenderPassBuilder {
+        .logicalDevice = m_ctx.logicalDevice,
+        .swapchainFormat = m_swapchain.format
+    }.build();
+    
     m_pipeline = PipelineBuilder {
         .logicalDevice = m_ctx.logicalDevice,
-        .swapchainExtent = m_swapchain.extent
+        .renderPass = m_renderPass.renderPass,
+        .swapchainExtent = m_swapchain.extent,
+        .subpass = m_renderPass.subpass
     }.build();
 }
 
 void CORE::VulkanManager::destroy() {
+    vkDestroyPipeline(m_ctx.logicalDevice, m_pipeline.pipeline, nullptr);
     vkDestroyPipelineLayout(m_ctx.logicalDevice, m_pipeline.pipelineLayout, nullptr);
+    vkDestroyRenderPass(m_ctx.logicalDevice, m_pipeline.renderPass, nullptr);
+    
     for(auto imageView : m_swapchain.imageViews) {
         vkDestroyImageView(m_ctx.logicalDevice, imageView, nullptr);
     }
-
+    
     vkDestroySwapchainKHR(m_ctx.logicalDevice, m_swapchain.swapchain, nullptr);
     vkDestroyDevice(m_ctx.logicalDevice, nullptr);
     vkDestroySurfaceKHR(m_ctx.instance, m_ctx.surface, nullptr);

@@ -5,10 +5,10 @@
 #include <cstdint>
 #include <fstream>
 #include <stdexcept>
-#include <type_traits>
 #include <vector>
 #include <string>
 #include <vulkan/vulkan_core.h>
+#include <iostream>
 
 static std::vector<char> readFile(const std::string& filename) {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
@@ -40,31 +40,6 @@ static VkShaderModule createShaderModule(const std::vector<char>& code, VkDevice
     return shaderModule;
 }
 
-static VkPipelineViewportStateCreateInfo createViewportState(VkExtent2D &swapchainExtent) {
-    VkViewport viewport {
-        .x = 0.0f,
-        .y = 0.0f,
-        .width = (float) swapchainExtent.width,
-        .height = (float) swapchainExtent.height,
-        .minDepth = 0.0f,
-        .maxDepth = 1.0f
-    };
-    
-    VkRect2D scissor {
-        .offset = {0, 0},
-        .extent = swapchainExtent
-    };
-    
-    VkPipelineViewportStateCreateInfo pipelineViewportStateCreateInfo {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-        .viewportCount = 1,
-        .pViewports = &viewport,
-        .scissorCount = 1,
-        .pScissors = &scissor
-    };
-    return pipelineViewportStateCreateInfo;
-}
-
 VulkanPipeline PipelineBuilder::build() {
     VulkanPipeline result{};
 
@@ -88,22 +63,8 @@ VulkanPipeline PipelineBuilder::build() {
     };
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
-
-    vkDestroyShaderModule(logicalDevice, vertShaderModule, nullptr);
-    vkDestroyShaderModule(logicalDevice, fragShaderModule, nullptr);
-
-    std::vector<VkDynamicState> dynamicStates = {
-        VK_DYNAMIC_STATE_VIEWPORT,
-        VK_DYNAMIC_STATE_SCISSOR
-    };
-
-    VkPipelineDynamicStateCreateInfo pipelineDynamicStateCreateInfo{
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-        .dynamicStateCount = static_cast<uint32_t>(dynamicStates.size()),
-        .pDynamicStates = dynamicStates.data()
-    };
-
-    VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo {
+    
+    VkPipelineVertexInputStateCreateInfo vertexInputState {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
         .vertexBindingDescriptionCount = 0,
         .pVertexBindingDescriptions = nullptr,
@@ -111,15 +72,35 @@ VulkanPipeline PipelineBuilder::build() {
         .pVertexAttributeDescriptions = nullptr
     };
 
-    VkPipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateCreateInfo {
+    VkPipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateInfo {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
         .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
         .primitiveRestartEnable = VK_FALSE
     };
 
-    createViewportState(swapchainExtent);
+    VkViewport viewport {
+        .x = 0.0f,
+        .y = 0.0f,
+        .width = (float) swapchainExtent.width,
+        .height = (float) swapchainExtent.height,
+        .minDepth = 0.0f,
+        .maxDepth = 1.0f
+    };
+    
+    VkRect2D scissor {
+        .offset = {0, 0},
+        .extent = swapchainExtent
+    };
+    
+    VkPipelineViewportStateCreateInfo pipelineViewportStateInfo {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+        .viewportCount = 1,
+        .pViewports = &viewport,
+        .scissorCount = 1,
+        .pScissors = &scissor
+    };
 
-    VkPipelineRasterizationStateCreateInfo pipelineRasterizationStateCreateInfo {
+    VkPipelineRasterizationStateCreateInfo pipelineRasterizationStateInfo {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
         .depthClampEnable = VK_FALSE,
         .rasterizerDiscardEnable = VK_FALSE,
@@ -133,7 +114,7 @@ VulkanPipeline PipelineBuilder::build() {
         .lineWidth = 1.0f
     };
 
-    VkPipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo {
+    VkPipelineMultisampleStateCreateInfo pipelineMultisampleStateInfo {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
         .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
         .sampleShadingEnable = VK_FALSE,
@@ -148,7 +129,7 @@ VulkanPipeline PipelineBuilder::build() {
         .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
     };
 
-    VkPipelineColorBlendStateCreateInfo colorBlending {
+    VkPipelineColorBlendStateCreateInfo pipelineColorBlendStateInfo {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
         .logicOpEnable = VK_FALSE,
         .logicOp = VK_LOGIC_OP_COPY,
@@ -161,10 +142,20 @@ VulkanPipeline PipelineBuilder::build() {
             0.0f
         }
     };
+    
+    std::vector<VkDynamicState> dynamicStates = {
+        VK_DYNAMIC_STATE_VIEWPORT,
+        VK_DYNAMIC_STATE_SCISSOR
+    };
 
+    VkPipelineDynamicStateCreateInfo pipelineDynamicStateInfo {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+        .dynamicStateCount = static_cast<uint32_t>(dynamicStates.size()),
+        .pDynamicStates = dynamicStates.data()
+    };
+        
     VkPipelineLayout pipelineLayout;
-
-    VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo {
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
         .setLayoutCount = 0,
         .pSetLayouts = nullptr,
@@ -172,13 +163,41 @@ VulkanPipeline PipelineBuilder::build() {
         .pPushConstantRanges = nullptr        
     };
 
-    if (vkCreatePipelineLayout(logicalDevice, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
+    if (vkCreatePipelineLayout(logicalDevice, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
-
-    // createViewportState - NOT USED yet
     
+    VkGraphicsPipelineCreateInfo graphicsPipelineInfo {
+        .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+        .stageCount = 2,
+        .pStages = shaderStages,
+        .pVertexInputState = &vertexInputState,
+        .pInputAssemblyState = &pipelineInputAssemblyStateInfo,
+        .pViewportState = &pipelineViewportStateInfo,
+        .pRasterizationState = &pipelineRasterizationStateInfo,
+        .pMultisampleState = &pipelineMultisampleStateInfo,
+        .pDepthStencilState = nullptr,
+        .pColorBlendState = &pipelineColorBlendStateInfo,
+        .pDynamicState = &pipelineDynamicStateInfo,
+        .layout = pipelineLayout,
+        .renderPass = renderPass,
+        .subpass = 0,
+        .basePipelineHandle = VK_NULL_HANDLE,
+        .basePipelineIndex = -1
+    };
+
+    VkPipeline graphicsPipeline;
+    if(vkCreateGraphicsPipelines(logicalDevice, VK_NULL_HANDLE, 1, &graphicsPipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create graphics pipeline!");
+    }
+
+    vkDestroyShaderModule(logicalDevice, vertShaderModule, nullptr);
+    vkDestroyShaderModule(logicalDevice, fragShaderModule, nullptr);
+
     result.pipelineLayout = pipelineLayout;
+    result.renderPass = renderPass;
+    result.pipeline = graphicsPipeline;
+
     return result;
     
 }
