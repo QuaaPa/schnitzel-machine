@@ -38,16 +38,16 @@ void CORE::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
       .windowExtent = {800, 600}
     }.build();
 
-    m_renderPass = RenderPassBuilder {
+    auto renderPass = RenderPassBuilder {
         .logicalDevice = m_ctx.logicalDevice,
         .swapchainFormat = m_swapchain.format
     }.build();
     
     m_pipeline = PipelineBuilder {
         .logicalDevice = m_ctx.logicalDevice,
-        .renderPass = m_renderPass.renderPass,
+        .renderPass = renderPass.renderPass,
         .swapchainExtent = m_swapchain.extent,
-        .subpass = m_renderPass.subpass
+        .subpass = renderPass.subpass
     }.build();
 }
 
