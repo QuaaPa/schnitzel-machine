@@ -5,8 +5,8 @@
 #include <vulkan/vulkan_core.h>
 
 struct SwapchainSupportDetails {
-    VkSurfaceCapabilitiesKHR surfaceCapabilities;
-    std::vector<VkSurfaceFormatKHR> surfaceFormats;
+    VkSurfaceCapabilitiesKHR capabilities;
+    std::vector<VkSurfaceFormatKHR> formats;
     std::vector<VkPresentModeKHR> presentModes;
 };
 

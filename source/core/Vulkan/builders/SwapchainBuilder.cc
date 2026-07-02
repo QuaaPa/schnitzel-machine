@@ -14,29 +14,22 @@
 #include <vulkan/vulkan_core.h>
 
 static SwapchainSupportDetails querySwapchainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
+
     SwapchainSupportDetails swapchainSupportDetails;
-
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &swapchainSupportDetails.surfaceCapabilities);
-
-    // uint32_t formatCount;
-    // vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, swapchainSupportDetails.surfaceFormats.data());
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &swapchainSupportDetails.capabilities);
 
     uint32_t formatCount;
     vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, nullptr);
     if (formatCount != 0) {
-        swapchainSupportDetails.surfaceFormats.resize(formatCount);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface,
-                                             &formatCount,
-                                             swapchainSupportDetails.surfaceFormats.data());
+        swapchainSupportDetails.formats.resize(formatCount);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, swapchainSupportDetails.formats.data());
     }
 
     uint32_t presentModeCount;
     vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr);
     if (presentModeCount != 0) {
         swapchainSupportDetails.presentModes.resize(presentModeCount);
-        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface,
-                                                  &presentModeCount,
-                                                  swapchainSupportDetails.presentModes.data());
+        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, swapchainSupportDetails.presentModes.data());
     }
 
     return swapchainSupportDetails;
@@ -86,20 +79,19 @@ static VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities,
 VulkanSwapchain SwapchainBuilder::build() {
     VulkanSwapchain result = {};
   
-    SwapchainSupportDetails swapchainSupportDetails = querySwapchainSupport(physicalDevice, surface);
-
-    VkSurfaceFormatKHR swapchainImageFormat =
-        chooseSwapSurfaceFormat(swapchainSupportDetails.surfaceFormats);
-    VkPresentModeKHR presentMode =
-        chooseSwapPresentMode(swapchainSupportDetails.presentModes);
-    VkExtent2D extent = chooseSwapExtent(swapchainSupportDetails.surfaceCapabilities, pwindow);
+    SwapchainSupportDetails swapchainSupportDetails;
+    swapchainSupportDetails = querySwapchainSupport(physicalDevice, surface);
     
-    uint32_t imageCount = swapchainSupportDetails.surfaceCapabilities.minImageCount + 1;
-    if (swapchainSupportDetails.surfaceCapabilities.maxImageCount > 0 && imageCount > swapchainSupportDetails.surfaceCapabilities.maxImageCount) {
-        imageCount = swapchainSupportDetails.surfaceCapabilities.maxImageCount;
+    VkSurfaceFormatKHR swapchainImageFormat = chooseSwapSurfaceFormat(swapchainSupportDetails.formats);
+    VkPresentModeKHR presentMode = chooseSwapPresentMode(swapchainSupportDetails.presentModes);
+    VkExtent2D extent = chooseSwapExtent(swapchainSupportDetails.capabilities, pwindow);
+    
+    uint32_t imageCount = swapchainSupportDetails.capabilities.minImageCount + 1;
+    if (swapchainSupportDetails.capabilities.maxImageCount > 0 && imageCount > swapchainSupportDetails.capabilities.maxImageCount) {
+        imageCount = swapchainSupportDetails.capabilities.maxImageCount;
     }
     
-    if(swapchainSupportDetails.surfaceFormats.empty() || swapchainSupportDetails.presentModes.empty()) {
+    if(swapchainSupportDetails.formats.empty() || swapchainSupportDetails.presentModes.empty()) {
         throw std::runtime_error("current physical device does not support swapchain");
     }
 
@@ -112,7 +104,7 @@ VulkanSwapchain SwapchainBuilder::build() {
         .imageExtent = extent,
         .imageArrayLayers = 1,
         .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-        .preTransform = swapchainSupportDetails.surfaceCapabilities.currentTransform,
+        .preTransform = swapchainSupportDetails.capabilities.currentTransform,
         .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
         .presentMode = presentMode,
         .clipped = VK_TRUE,

@@ -1,6 +1,7 @@
 #include "core/Vulkan/builders/RenderPassBuilder.hh"
 #include "core/Vulkan/VulkanRenderPass.hh"
-#include <iostream>
+#include <stdexcept>
+#include <vulkan/vulkan_core.h>
 
 VulkanRenderPass RenderPassBuilder::build() {
     VkAttachmentDescription colorAttachmentDescription {
@@ -15,10 +16,10 @@ VulkanRenderPass RenderPassBuilder::build() {
     };
 
     VkAttachmentReference colorAttachmentReference {
-        .attachment = 0,
+        .attachment = 0, // id of Attachment
         .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
     };
-
+    
     VkSubpassDescription subpass {
         .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
         .colorAttachmentCount = 1,
@@ -31,7 +32,9 @@ VulkanRenderPass RenderPassBuilder::build() {
         .attachmentCount = 1,
         .pAttachments = &colorAttachmentDescription,
         .subpassCount = 1,
-        .pSubpasses = &subpass
+        .pSubpasses = &subpass,
+        .dependencyCount = 0,
+        .pDependencies = nullptr
     };
 
     if(vkCreateRenderPass(logicalDevice, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
