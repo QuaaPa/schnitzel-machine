@@ -4,6 +4,7 @@
 #include "VulkanContext.hh"
 #include "core/Vulkan/VulkanSwapchain.hh"
 #include "core/Vulkan/VulkanPipeline.hh"
+#include "core/Vulkan/VulkanFramebuffer.hh"
 
 #include <GLFW/glfw3.h>
 
@@ -13,6 +14,7 @@ namespace CORE {
         VulkanContext m_ctx;
         VulkanSwapchain m_swapchain;
         VulkanPipeline m_pipeline;
+        VulkanFramebuffer m_framebuffer;
         
     public:
         VulkanManager() = default;

@@ -1,4 +1,5 @@
 #include "core/Vulkan/VulkanManager.hh"
+#include "core/Vulkan/builders/FramebufferBuilder.hh"
 #include "core/Vulkan/builders/RenderPassBuilder.hh"
 #include "core/Vulkan/VulkanContext.hh"
 #include "core/Vulkan/builders/InstanceBuilder.hh"
@@ -6,6 +7,7 @@
 #include "core/Vulkan/builders/DeviceBuilder.hh"
 #include "core/Vulkan/builders/SwapchainBuilder.hh"
 #include "core/Vulkan/builders/PipelineBuilder.hh"
+#include "core/Vulkan/builders/FramebufferBuilder.hh"
 
 #include <vulkan/vulkan_core.h>
 
@@ -49,9 +51,20 @@ void CORE::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
         .swapchainExtent = m_swapchain.extent,
         .subpass = renderPass.subpass
     }.build();
+
+    m_framebuffer = FramebufferBuilder {
+        .logicalDevice = m_ctx.logicalDevice,
+        .renderPass = renderPass.renderPass,
+        .swapchainExtent = m_swapchain.extent,
+        .swapchainImageViews = m_swapchain.imageViews
+    }.build();    
 }
 
 void CORE::VulkanManager::destroy() {
+    for(auto framebuffer : m_framebuffer.framebuffers) {
+        vkDestroyFramebuffer(m_ctx.logicalDevice, framebuffer, nullptr);
+    }
+    
     vkDestroyPipeline(m_ctx.logicalDevice, m_pipeline.pipeline, nullptr);
     vkDestroyPipelineLayout(m_ctx.logicalDevice, m_pipeline.pipelineLayout, nullptr);
     vkDestroyRenderPass(m_ctx.logicalDevice, m_pipeline.renderPass, nullptr);
