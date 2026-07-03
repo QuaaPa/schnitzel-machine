@@ -76,9 +76,7 @@ static VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities,
     }
 }
 
-VulkanSwapchain SwapchainBuilder::build() {
-    VulkanSwapchain result = {};
-  
+VulkanSwapchain SwapchainBuilder::build() {  
     SwapchainSupportDetails swapchainSupportDetails;
     swapchainSupportDetails = querySwapchainSupport(physicalDevice, surface);
     
@@ -129,9 +127,9 @@ VulkanSwapchain SwapchainBuilder::build() {
     }
 
     std::vector<VkImage> swapchainImages;
-    vkGetSwapchainImagesKHR(logicalDevice, result.swapchain, &imageCount, nullptr);
+    vkGetSwapchainImagesKHR(logicalDevice, swapchain, &imageCount, nullptr);
     swapchainImages.resize(imageCount);
-    vkGetSwapchainImagesKHR(logicalDevice, result.swapchain, &imageCount, swapchainImages.data());
+    vkGetSwapchainImagesKHR(logicalDevice, swapchain, &imageCount, swapchainImages.data());
 
     std::vector<VkImageView> swapchainImageViews(swapchainImages.size());
     for(size_t i = 0; i < swapchainImageViews.size(); i++) {
