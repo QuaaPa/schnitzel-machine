@@ -41,10 +41,8 @@ VulkanRenderPass RenderPassBuilder::build() {
         throw std::runtime_error("failed to create render pass!");
     }
 
-    VulkanRenderPass result {
+    return VulkanRenderPass {
         .renderPass = renderPass,
         .subpass = 0
     };
-    
-    return result;
 }

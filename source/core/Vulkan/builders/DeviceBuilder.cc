@@ -62,8 +62,20 @@ DeviceBuilder::Result DeviceBuilder::build() const {
         .graphicsFamilyIndex = queueFamilyIndices.graphicsFamily.value(),
         .presentFamilyIndex = queueFamilyIndices.presentFamily.value(),
     };
-    vkGetDeviceQueue(logicalDevice, result.graphicsFamilyIndex, 0, &result.graphicsQueue);
-    vkGetDeviceQueue(logicalDevice, result.presentFamilyIndex, 0, &result.presentQueue);
 
-    return result;
+    uint32_t graphicsFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+    uint32_t presentFamilyIndex = queueFamilyIndices.presentFamily.value();
+    VkQueue graphicsQueue;
+    VkQueue presentQueue;
+    vkGetDeviceQueue(logicalDevice, graphicsFamilyIndex, 0, &graphicsQueue);
+    vkGetDeviceQueue(logicalDevice, presentFamilyIndex, 0, &presentQueue);    
+    
+    return Result {
+        .physicalDevice = physicalDevice,
+        .logicalDevice = logicalDevice,
+        .graphicsQueue = graphicsQueue,
+        .presentQueue = presentQueue,
+        .graphicsFamilyIndex = queueFamilyIndices.graphicsFamily.value(),
+        .presentFamilyIndex = queueFamilyIndices.presentFamily.value(),      
+    };
 }

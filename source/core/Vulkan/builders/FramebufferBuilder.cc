@@ -26,9 +26,8 @@ VulkanFramebuffer FramebufferBuilder::build() {
             throw std::runtime_error("failed to create framebuffer!");
         }
     }
-    
-    VulkanFramebuffer result{
+
+    return VulkanFramebuffer {
         .framebuffers = framebuffers
     };
-    return result;
 }

@@ -123,8 +123,8 @@ VulkanSwapchain SwapchainBuilder::build() {
         swapchainCreateInfo.queueFamilyIndexCount = 0; // Optional
         swapchainCreateInfo.pQueueFamilyIndices = nullptr; // Optional
     }
-
-    if (vkCreateSwapchainKHR(logicalDevice, &swapchainCreateInfo, nullptr, &result.swapchain) != VK_SUCCESS) {
+    VkSwapchainKHR swapchain;
+    if (vkCreateSwapchainKHR(logicalDevice, &swapchainCreateInfo, nullptr, &swapchain) != VK_SUCCESS) {
         throw std::runtime_error("failed to create swap chain!");
     }
 
@@ -157,11 +157,11 @@ VulkanSwapchain SwapchainBuilder::build() {
         }
     }
 
-    result.images = swapchainImages;
-    result.imageViews = swapchainImageViews;
-    
-    result.format = swapchainImageFormat.format;
-    result.extent = extent;
-    
-    return result;
+    return VulkanSwapchain {
+        .swapchain = swapchain,
+        .images = swapchainImages,
+        .imageViews = swapchainImageViews,
+        .extent = extent,
+        .format = swapchainImageFormat.format,
+    };
 }

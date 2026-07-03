@@ -2,6 +2,7 @@
 #define VULKAN_MANAGER_HH
 
 #include "VulkanContext.hh"
+#include "core/Vulkan/VulkanCommand.hh"
 #include "core/Vulkan/VulkanSwapchain.hh"
 #include "core/Vulkan/VulkanPipeline.hh"
 #include "core/Vulkan/VulkanFramebuffer.hh"
@@ -15,6 +16,7 @@ namespace CORE {
         VulkanSwapchain m_swapchain;
         VulkanPipeline m_pipeline;
         VulkanFramebuffer m_framebuffer;
+        VulkanCommand m_cmd;
         
     public:
         VulkanManager() = default;

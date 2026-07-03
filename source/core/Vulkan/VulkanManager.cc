@@ -8,6 +8,7 @@
 #include "core/Vulkan/builders/SwapchainBuilder.hh"
 #include "core/Vulkan/builders/PipelineBuilder.hh"
 #include "core/Vulkan/builders/FramebufferBuilder.hh"
+#include "core/Vulkan/builders/CommandBuilder.hh"
 
 #include <vulkan/vulkan_core.h>
 
@@ -57,10 +58,17 @@ void CORE::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
         .renderPass = renderPass.renderPass,
         .swapchainExtent = m_swapchain.extent,
         .swapchainImageViews = m_swapchain.imageViews
-    }.build();    
+    }.build();
+
+    m_cmd = CommandBuilder {
+        .logicalDevice = m_ctx.logicalDevice,
+        .graphicsQueueFamilyIndex = dev.graphicsFamilyIndex
+    }.build();
 }
 
 void CORE::VulkanManager::destroy() {
+    vkDestroyCommandPool(m_ctx.logicalDevice, m_cmd.commandPool, nullptr);
+    
     for(auto framebuffer : m_framebuffer.framebuffers) {
         vkDestroyFramebuffer(m_ctx.logicalDevice, framebuffer, nullptr);
     }

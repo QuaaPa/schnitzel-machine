@@ -194,10 +194,10 @@ VulkanPipeline PipelineBuilder::build() {
     vkDestroyShaderModule(logicalDevice, vertShaderModule, nullptr);
     vkDestroyShaderModule(logicalDevice, fragShaderModule, nullptr);
 
-    result.pipelineLayout = pipelineLayout;
-    result.renderPass = renderPass;
-    result.pipeline = graphicsPipeline;
-
-    return result;
+    return VulkanPipeline {
+        .pipelineLayout = pipelineLayout,
+        .renderPass = renderPass,
+        .pipeline = graphicsPipeline
+    };
     
 }
