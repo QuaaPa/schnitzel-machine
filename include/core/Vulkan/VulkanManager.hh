@@ -8,6 +8,7 @@
 #include "core/Vulkan/VulkanFramebuffer.hh"
 
 #include <GLFW/glfw3.h>
+#include <cstdint>
 
 namespace CORE {
     class VulkanManager {
@@ -22,12 +23,16 @@ namespace CORE {
         VulkanManager() = default;
 
         void init(const char* appName, GLFWwindow* pwindow);
+        void drawFrame();
         void destroy();
     
         VulkanManager(const VulkanManager &other) = delete;
         VulkanManager(VulkanManager &&other) = delete;
         VulkanManager &operator=(const VulkanManager &other) = delete;
         VulkanManager &operator=(VulkanManager &&other) = delete;
+
+    private:
+        void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
     };
 }
 

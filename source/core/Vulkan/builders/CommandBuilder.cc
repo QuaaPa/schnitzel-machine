@@ -1,5 +1,6 @@
 #include "core/Vulkan/builders/CommandBuilder.hh"
 #include "core/Vulkan/VulkanCommand.hh"
+#include <cstdint>
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>
 
@@ -30,12 +31,6 @@ static VkCommandBuffer createCommandBuffer(VkDevice logicalDevice, VkCommandPool
     }
     return commandBuffer;        
 }
-
-// =
-//
-// recording command buffer
-//
-// =
 
 VulkanCommand CommandBuilder::build() {
     VkCommandPool cmdPool;
