@@ -13,7 +13,7 @@ namespace CORE {
     private:
         GLFWwindow *m_pwindow;
 
-        VulkanManager vulkanManager;    
+        VulkanManager m_vulkanManager;    
     
         int m_width;
         int m_height;
@@ -22,7 +22,8 @@ namespace CORE {
         Window(int width, int height, const char* title);
     
         int shouldClose();
-        void pollEvents();    
+        void pollEvents();
+        void drawFrame();
         void destroy();
 
         Window(const Window &other) = delete;

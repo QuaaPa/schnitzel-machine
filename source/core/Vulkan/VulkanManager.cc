@@ -9,9 +9,16 @@
 #include "core/Vulkan/builders/PipelineBuilder.hh"
 #include "core/Vulkan/builders/FramebufferBuilder.hh"
 #include "core/Vulkan/builders/CommandBuilder.hh"
+#include "utils/SyncObjectsUtils.hh"
 
+#include <climits>
+#include <csignal>
+#include <cstddef>
+#include <cstdint>
+#include <ostream>
 #include <vulkan/vulkan_core.h>
 #include <stdexcept>
+#include <iostream>
 
 void CORE::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
     m_ctx.instance = InstanceBuilder {
@@ -65,13 +72,65 @@ void CORE::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
         .logicalDevice = m_ctx.logicalDevice,
         .graphicsQueueFamilyIndex = dev.graphicsFamilyIndex
     }.build();
+
+    for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        m_inFlightFences.push_back(sm::createFence(m_ctx.logicalDevice, VK_FENCE_CREATE_SIGNALED_BIT));
+        m_imageAvailableSemaphores.push_back(sm::createSemaphore(m_ctx.logicalDevice));
+    }
+    for(size_t i = 0; i < m_swapchain.images.size(); i++) {
+        m_renderFinishedSemaphores.push_back(sm::createSemaphore(m_ctx.logicalDevice));
+    }
 }
 
-void CORE::VulkanManager::drawFrame() {
-    // NOTHING (yet)
+void CORE::VulkanManager::drawFrame() {    
+    vkWaitForFences(m_ctx.logicalDevice, 1, &m_inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+    vkResetFences(m_ctx.logicalDevice, 1, &m_inFlightFences[currentFrame]);
+
+    uint32_t imageIndex;
+    vkAcquireNextImageKHR(m_ctx.logicalDevice, m_swapchain.swapchain, UINT64_MAX, m_imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+    vkResetCommandBuffer(m_cmd.commandBuffers[currentFrame], /*VkCommandBufferResetFlagBits*/ 0);
+    recordCommandBuffer(m_cmd.commandBuffers[currentFrame], imageIndex);
+
+    VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+    VkSubmitInfo submitInfo {
+        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+        .waitSemaphoreCount = 1,
+        .pWaitSemaphores = &m_imageAvailableSemaphores[currentFrame],
+        .pWaitDstStageMask = waitStages,
+        .commandBufferCount = 1,
+        .pCommandBuffers = &m_cmd.commandBuffers[currentFrame],
+        .signalSemaphoreCount = 1,
+        .pSignalSemaphores = &m_renderFinishedSemaphores[imageIndex]
+    };
+
+    if (vkQueueSubmit(m_ctx.graphicsQueue, 1, &submitInfo, m_inFlightFences[currentFrame]) != VK_SUCCESS) {
+        throw std::runtime_error("failed to submit draw command buffer!");
+    }
+
+    VkSwapchainKHR swapChains[] = {m_swapchain.swapchain};
+    VkPresentInfoKHR presentInfo {
+        .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+        .waitSemaphoreCount = 1,
+        .pWaitSemaphores = &m_renderFinishedSemaphores[imageIndex],
+        .swapchainCount = 1,
+        .pSwapchains = swapChains,
+        .pImageIndices = &imageIndex
+    };
+    vkQueuePresentKHR(m_ctx.presentQueue, &presentInfo);
+
+    currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
 void CORE::VulkanManager::destroy() {
+    vkDeviceWaitIdle(m_ctx.logicalDevice);
+    for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        vkDestroyFence(m_ctx.logicalDevice, m_inFlightFences[i], nullptr);        
+        vkDestroySemaphore(m_ctx.logicalDevice, m_imageAvailableSemaphores[i], nullptr);
+    }
+    for(size_t i = 0; i < m_swapchain.images.size(); i++) {
+        vkDestroySemaphore(m_ctx.logicalDevice, m_renderFinishedSemaphores[i], nullptr);
+    }
     vkDestroyCommandPool(m_ctx.logicalDevice, m_cmd.commandPool, nullptr);
     
     for(auto framebuffer : m_framebuffer.framebuffers) {
@@ -93,8 +152,9 @@ void CORE::VulkanManager::destroy() {
 }
 
 void CORE::VulkanManager::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
-    VkCommandBufferBeginInfo beginInfo{};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    VkCommandBufferBeginInfo beginInfo {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
+    };
 
     if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
         throw std::runtime_error("failed to begin recording command buffer!");

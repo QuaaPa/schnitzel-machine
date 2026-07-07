@@ -16,6 +16,7 @@ void Engine::initWindow() {
 void Engine::mainLoop() {
     while (!m_pwindow->shouldClose()) {
         m_pwindow->pollEvents();
+        m_pwindow->drawFrame();
     }
 }
 

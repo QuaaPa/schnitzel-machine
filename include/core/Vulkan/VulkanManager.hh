@@ -9,6 +9,9 @@
 
 #include <GLFW/glfw3.h>
 #include <cstdint>
+#include <vulkan/vulkan_core.h>
+
+#define MAX_FRAMES_IN_FLIGHT 2
 
 namespace CORE {
     class VulkanManager {
@@ -18,7 +21,13 @@ namespace CORE {
         VulkanPipeline m_pipeline;
         VulkanFramebuffer m_framebuffer;
         VulkanCommand m_cmd;
-        
+
+
+        uint32_t currentFrame = 0;
+        std::vector<VkSemaphore> m_imageAvailableSemaphores;
+        std::vector<VkSemaphore> m_renderFinishedSemaphores;
+        std::vector<VkFence> m_inFlightFences;
+
     public:
         VulkanManager() = default;
 

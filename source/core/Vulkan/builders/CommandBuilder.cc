@@ -1,7 +1,9 @@
 #include "core/Vulkan/builders/CommandBuilder.hh"
 #include "core/Vulkan/VulkanCommand.hh"
+#include "core/Vulkan/VulkanManager.hh"
 #include <cstdint>
 #include <stdexcept>
+#include <vector>
 #include <vulkan/vulkan_core.h>
 
 static VkCommandPool createCommandPool(VkDevice logicalDevice, uint32_t graphicsQueueFamilyIndex) {
@@ -17,29 +19,29 @@ static VkCommandPool createCommandPool(VkDevice logicalDevice, uint32_t graphics
     return commandPool;
 }
 
-static VkCommandBuffer createCommandBuffer(VkDevice logicalDevice, VkCommandPool cmdPool) {
-    VkCommandBuffer commandBuffer;
+static std::vector<VkCommandBuffer> createCommandBuffers(VkDevice logicalDevice, VkCommandPool cmdPool) {
+    std::vector<VkCommandBuffer> commandBuffers(MAX_FRAMES_IN_FLIGHT);
     VkCommandBufferAllocateInfo commandBufferAllocateInfo {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
         .commandPool = cmdPool,
         .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-        .commandBufferCount = 1
+        .commandBufferCount = (uint32_t) commandBuffers.size()
     };
 
-    if(vkAllocateCommandBuffers(logicalDevice, &commandBufferAllocateInfo, &commandBuffer) != VK_SUCCESS) {
+    if(vkAllocateCommandBuffers(logicalDevice, &commandBufferAllocateInfo, commandBuffers.data()) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
-    return commandBuffer;        
+    return commandBuffers;        
 }
 
 VulkanCommand CommandBuilder::build() {
     VkCommandPool cmdPool;
     cmdPool = createCommandPool(logicalDevice, graphicsQueueFamilyIndex);
-    VkCommandBuffer cmdBuffer;
-    cmdBuffer = createCommandBuffer(logicalDevice, cmdPool);;
+    std::vector<VkCommandBuffer> cmdBuffers;
+    cmdBuffers = createCommandBuffers(logicalDevice, cmdPool);;
     
     return VulkanCommand {
         .commandPool = cmdPool,
-        .commandBuffer = cmdBuffer
+        .commandBuffers = cmdBuffers
     };
 }

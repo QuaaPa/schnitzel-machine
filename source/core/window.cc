@@ -8,15 +8,19 @@ CORE::Window::Window(int width, int height, const char *title)
     glfwInit();
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
     m_pwindow = glfwCreateWindow(m_width, m_height, title, nullptr, nullptr);
 
-    vulkanManager.init("SCHNITZEL", m_pwindow);
+    m_vulkanManager.init("SCHNITZEL", m_pwindow);
 }
 
 int CORE::Window::shouldClose() {
-    return !glfwWindowShouldClose(m_pwindow);
+    return glfwWindowShouldClose(m_pwindow);
+}
+
+void CORE::Window::drawFrame() {
+    m_vulkanManager.drawFrame();
 }
 
 void CORE::Window::pollEvents() {
@@ -24,7 +28,7 @@ void CORE::Window::pollEvents() {
 }
 
 void CORE::Window::destroy() {
-    vulkanManager.destroy();
+    m_vulkanManager.destroy();
   
     glfwDestroyWindow(m_pwindow);
   
