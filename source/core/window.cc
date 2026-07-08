@@ -1,33 +1,32 @@
 #include <GLFW/glfw3.h>
 #include "core/window.hh"
 
-
-CORE::Window::Window(int width, int height, const char *title)
+sm::Window::Window(int width, int height, const char *title)
     : m_width(width), m_height(height) {
 
     glfwInit();
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
     m_pwindow = glfwCreateWindow(m_width, m_height, title, nullptr, nullptr);
 
     m_vulkanManager.init("SCHNITZEL", m_pwindow);
 }
 
-int CORE::Window::shouldClose() {
+bool sm::Window::shouldClose() {
     return glfwWindowShouldClose(m_pwindow);
 }
 
-void CORE::Window::drawFrame() {
+void sm::Window::drawFrame() {
     m_vulkanManager.drawFrame();
 }
 
-void CORE::Window::pollEvents() {
+void sm::Window::pollEvents() {
     glfwPollEvents();
 }
 
-void CORE::Window::destroy() {
+void sm::Window::destroy() {
     m_vulkanManager.destroy();
   
     glfwDestroyWindow(m_pwindow);

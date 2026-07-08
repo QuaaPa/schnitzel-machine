@@ -13,7 +13,7 @@
 
 #define MAX_FRAMES_IN_FLIGHT 2
 
-namespace CORE {
+namespace sm {
     class VulkanManager {
     private:
         VulkanContext m_ctx;
@@ -21,7 +21,6 @@ namespace CORE {
         VulkanPipeline m_pipeline;
         VulkanFramebuffer m_framebuffer;
         VulkanCommand m_cmd;
-
 
         uint32_t currentFrame = 0;
         std::vector<VkSemaphore> m_imageAvailableSemaphores;

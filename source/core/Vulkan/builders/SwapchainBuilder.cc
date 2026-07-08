@@ -15,9 +15,9 @@
 #include <limits>
 #include <algorithm>
 
-static SwapchainSupportDetails querySwapchainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
+static sm::SwapchainSupportDetails querySwapchainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
 
-    SwapchainSupportDetails swapchainSupportDetails;
+    sm::SwapchainSupportDetails swapchainSupportDetails;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &swapchainSupportDetails.capabilities);
 
     uint32_t formatCount;
@@ -78,8 +78,8 @@ static VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities,
     }
 }
 
-VulkanSwapchain SwapchainBuilder::build() {  
-    SwapchainSupportDetails swapchainSupportDetails;
+VulkanSwapchain SwapchainBuilder::build() const {  
+    sm::SwapchainSupportDetails swapchainSupportDetails;
     swapchainSupportDetails = querySwapchainSupport(physicalDevice, surface);
     
     VkSurfaceFormatKHR swapchainImageFormat = chooseSwapSurfaceFormat(swapchainSupportDetails.formats);
@@ -111,7 +111,7 @@ VulkanSwapchain SwapchainBuilder::build() {
         .oldSwapchain = VK_NULL_HANDLE
     };
 
-    QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
+    sm::QueueFamilyIndices indices = sm::findQueueFamilies(physicalDevice, surface);
     uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
 
     if (indices.graphicsFamily != indices.presentFamily) {

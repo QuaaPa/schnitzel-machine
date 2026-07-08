@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>
 
-VulkanRenderPass RenderPassBuilder::build() {
+VulkanRenderPass RenderPassBuilder::build() const {
     VkAttachmentDescription colorAttachmentDescription {
         .format = swapchainFormat,
         .samples = VK_SAMPLE_COUNT_1_BIT,

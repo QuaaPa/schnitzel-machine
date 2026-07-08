@@ -1,20 +1,11 @@
-
 #include <cstdlib>
 #include <exception>
 #include <iostream>
-#include "../include/core/core.hh"
+
+#include "core/core.hh"
 
 
-int main(int argc, char *argv[]) {
-
-#ifndef NDEBUG
-    std::cout << "---- TOGGLE DEBUG MODE ----" << std::endl;
-    std::cout << "Compiled on " << __DATE__ << std::endl;
-    std::cout << "Compiled time " << __TIME__ << std::endl;    
-#endif
-    
-
-  
+int main(int argc, char *argv[]) {      
     Engine &engine = *Engine::getInstance();
 
     try {

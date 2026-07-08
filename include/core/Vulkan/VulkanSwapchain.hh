@@ -6,8 +6,8 @@
 
 struct VulkanSwapchain {
     VkSwapchainKHR swapchain = VK_NULL_HANDLE;
-    std::vector<VkImage> images;
-    std::vector<VkImageView> imageViews;
+    std::vector<VkImage> images{VK_NULL_HANDLE};
+    std::vector<VkImageView> imageViews{VK_NULL_HANDLE};
     VkExtent2D extent;
     VkFormat format;
 };

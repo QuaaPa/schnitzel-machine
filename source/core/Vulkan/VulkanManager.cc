@@ -11,16 +11,12 @@
 #include "core/Vulkan/builders/CommandBuilder.hh"
 #include "utils/SyncObjectsUtils.hh"
 
-#include <climits>
-#include <csignal>
 #include <cstddef>
 #include <cstdint>
-#include <ostream>
 #include <vulkan/vulkan_core.h>
 #include <stdexcept>
-#include <iostream>
 
-void CORE::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
+void sm::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
     m_ctx.instance = InstanceBuilder {
         .appName = appName,
         .validation = true
@@ -82,7 +78,7 @@ void CORE::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
     }
 }
 
-void CORE::VulkanManager::drawFrame() {    
+void sm::VulkanManager::drawFrame() {    
     vkWaitForFences(m_ctx.logicalDevice, 1, &m_inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
     vkResetFences(m_ctx.logicalDevice, 1, &m_inFlightFences[currentFrame]);
 
@@ -122,7 +118,7 @@ void CORE::VulkanManager::drawFrame() {
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void CORE::VulkanManager::destroy() {
+void sm::VulkanManager::destroy() {
     vkDeviceWaitIdle(m_ctx.logicalDevice);
     for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroyFence(m_ctx.logicalDevice, m_inFlightFences[i], nullptr);        
@@ -151,7 +147,7 @@ void CORE::VulkanManager::destroy() {
     vkDestroyInstance(m_ctx.instance, nullptr);
 }
 
-void CORE::VulkanManager::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
+void sm::VulkanManager::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
     VkCommandBufferBeginInfo beginInfo {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
     };

@@ -6,9 +6,9 @@
 
 class Engine {
 private:
-    Engine() {}
+    Engine() {};
 
-    CORE::Window* m_pwindow = nullptr;
+    sm::Window* m_pwindow = nullptr;
 public:
     static Engine* getInstance() {
         static Engine instance;

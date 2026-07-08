@@ -1,7 +1,6 @@
 #include "core/Vulkan/builders/SurfaceBuilder.hh"
 #include <vulkan/vulkan_core.h>
-#include <cstdint>
-#include <iostream>
+#include <stdexcept>
 
 VkSurfaceKHR SurfaceBuilder::build() const {
     VkSurfaceKHR surface;

@@ -12,7 +12,7 @@ struct SwapchainBuilder {
     GLFWwindow* pwindow = nullptr;
     VkExtent2D windowExtent = {0, 0};
 
-    VulkanSwapchain build();
+    VulkanSwapchain build() const;
 };
 
 #endif // SWAPCHAIN_BUILDER_HH

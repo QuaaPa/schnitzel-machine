@@ -7,7 +7,7 @@
 
 struct VulkanCommand {
     VkCommandPool commandPool = VK_NULL_HANDLE;
-    std::vector<VkCommandBuffer> commandBuffers = {VK_NULL_HANDLE};
+    std::vector<VkCommandBuffer> commandBuffers{VK_NULL_HANDLE};
 };
 
 #endif // VULKAN_COMMAND_HH

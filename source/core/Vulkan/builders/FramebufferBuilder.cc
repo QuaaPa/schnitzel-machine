@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>
 
-VulkanFramebuffer FramebufferBuilder::build() {
+VulkanFramebuffer FramebufferBuilder::build() const{
     std::vector<VkFramebuffer> framebuffers;
     framebuffers.resize(swapchainImageViews.size());
     

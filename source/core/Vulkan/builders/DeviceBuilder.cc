@@ -1,6 +1,6 @@
 #include "core/Vulkan/builders/DeviceBuilder.hh"
-
 #include "utils/QueueFamilyIndices.hh"
+
 #include <cstdint>
 #include <stdexcept>
 #include <vector>
@@ -16,7 +16,7 @@ static VkPhysicalDevice pickPhysicalDevice(VkInstance instance, VkSurfaceKHR sur
     // TODO: add extension checker
     //    
     for (auto device : devices) {
-        if (findQueueFamilies(device, surface).isComplete()) {
+        if (sm::findQueueFamilies(device, surface).isComplete()) {
             return device;
         }
     }
@@ -25,7 +25,7 @@ static VkPhysicalDevice pickPhysicalDevice(VkInstance instance, VkSurfaceKHR sur
 
 DeviceBuilder::Result DeviceBuilder::build() const {
     VkPhysicalDevice physicalDevice = pickPhysicalDevice(instance, surface);
-    QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice, surface);
+    sm::QueueFamilyIndices queueFamilyIndices = sm::findQueueFamilies(physicalDevice, surface);
 
     std::set<uint32_t> uniqueQueueFamilyIndices = {
         queueFamilyIndices.graphicsFamily.value(),
