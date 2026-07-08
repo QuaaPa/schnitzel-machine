@@ -1,4 +1,5 @@
 #include "core/core.h"
+
 #include "core/window.h"
 
 void Engine::run(int argc, char* argv[]) {

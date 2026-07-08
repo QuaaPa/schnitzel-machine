@@ -1,9 +1,10 @@
 #ifndef SM_CORE_VULKAN_BUILDERS_SWAPCHAINBUILDER_H_
 #define SM_CORE_VULKAN_BUILDERS_SWAPCHAINBUILDER_H_
 
-#include "core/Vulkan/VulkanSwapchain.h"
-#include <vulkan/vulkan_core.h>
 #include <GLFW/glfw3.h>
+#include <vulkan/vulkan_core.h>
+
+#include "core/Vulkan/VulkanSwapchain.h"
 
 struct SwapchainBuilder {
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;

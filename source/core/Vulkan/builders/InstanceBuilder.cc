@@ -1,6 +1,8 @@
 #include "core/Vulkan/builders/InstanceBuilder.h"
-#include <GLFW/glfw3.h>
+
 #include <stdexcept>
+
+#include <GLFW/glfw3.h>
 #include <vulkan/vulkan_core.h>
 
 VkInstance InstanceBuilder::build() const {

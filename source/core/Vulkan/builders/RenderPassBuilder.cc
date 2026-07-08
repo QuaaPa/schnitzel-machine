@@ -1,7 +1,10 @@
 #include "core/Vulkan/builders/RenderPassBuilder.h"
-#include "core/Vulkan/VulkanRenderPass.h"
+
 #include <stdexcept>
+
 #include <vulkan/vulkan_core.h>
+
+#include "core/Vulkan/VulkanRenderPass.h"
 
 VulkanRenderPass RenderPassBuilder::build() const {
     VkAttachmentDescription colorAttachmentDescription {

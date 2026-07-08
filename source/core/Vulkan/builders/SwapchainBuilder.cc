@@ -1,10 +1,4 @@
 #include "core/Vulkan/builders/SwapchainBuilder.h"
-#include "core/Vulkan/VulkanSwapchain.h"
-#include "utils/QueueFamilyIndices.h"
-#include "utils/SwapchainSupportDetails.h"
-
-#include <vulkan/vulkan_core.h>
-#include <GLFW/glfw3.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -13,6 +7,13 @@
 #include <cstdint>
 #include <limits>
 #include <algorithm>
+
+#include <vulkan/vulkan_core.h>
+#include <GLFW/glfw3.h>
+
+#include "core/Vulkan/VulkanSwapchain.h"
+#include "utils/QueueFamilyIndices.h"
+#include "utils/SwapchainSupportDetails.h"
 
 static sm::SwapchainSupportDetails querySwapchainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
 

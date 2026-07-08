@@ -2,6 +2,7 @@
 #define SM_UTILS_SWAPCHAINSUPPORTDETAILS_H_
 
 #include <vector>
+
 #include <vulkan/vulkan_core.h>
 
 namespace sm {

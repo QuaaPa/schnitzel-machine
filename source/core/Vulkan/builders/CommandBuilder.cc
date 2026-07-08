@@ -1,10 +1,13 @@
 #include "core/Vulkan/builders/CommandBuilder.h"
-#include "core/Vulkan/VulkanCommand.h"
-#include "core/Vulkan/VulkanManager.h"
+
 #include <cstdint>
 #include <stdexcept>
 #include <vector>
+
 #include <vulkan/vulkan_core.h>
+
+#include "core/Vulkan/VulkanCommand.h"
+#include "core/Vulkan/VulkanManager.h"
 
 static VkCommandPool createCommandPool(VkDevice logicalDevice, uint32_t graphicsQueueFamilyIndex) {
     VkCommandPool commandPool;

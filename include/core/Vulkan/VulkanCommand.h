@@ -1,8 +1,9 @@
 #ifndef SM_CORE_VULKAN_VULKANCOMMAND_H_
 #define SM_CORE_VULKAN_VULKANCOMMAND_H_
 
-#include <vulkan/vulkan_core.h>
 #include <vector>
+
+#include <vulkan/vulkan_core.h>
 
 struct VulkanCommand {
     VkCommandPool commandPool = VK_NULL_HANDLE;

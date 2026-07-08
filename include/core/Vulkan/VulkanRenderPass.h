@@ -2,6 +2,7 @@
 #define SM_CORE_VULKAN_VULKANRENDERPASS_H_
 
 #include <cstdint>
+
 #include <vulkan/vulkan_core.h>
 
 struct VulkanRenderPass {

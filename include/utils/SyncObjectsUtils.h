@@ -2,6 +2,7 @@
 #define SM_UTILS_SYNCOBJECTSUTILS_H_
 
 #include <stdexcept>
+
 #include <vulkan/vulkan_core.h>
 
 namespace sm {

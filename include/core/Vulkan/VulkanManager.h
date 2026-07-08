@@ -1,16 +1,17 @@
 #ifndef SM_CORE_VULKAN_VULKANMANAGER_H_
 #define SM_CORE_VULKAN_VULKANMANAGER_H_
 
+#include <cstdint>
+
+#include <GLFW/glfw3.h>
+#include <vulkan/vulkan_core.h>
+
 #include "VulkanContext.h"
 #include "core/Vulkan/VulkanCommand.h"
 #include "core/Vulkan/VulkanRenderPass.h"
 #include "core/Vulkan/VulkanSwapchain.h"
 #include "core/Vulkan/VulkanPipeline.h"
 #include "core/Vulkan/VulkanFramebuffer.h"
-
-#include <GLFW/glfw3.h>
-#include <cstdint>
-#include <vulkan/vulkan_core.h>
 
 #define MAX_FRAMES_IN_FLIGHT 2
 

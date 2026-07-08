@@ -1,4 +1,13 @@
 #include "core/Vulkan/VulkanManager.h"
+
+#include <cstddef>
+#include <cstdint>
+#include <pthread.h>
+#include <stdexcept>
+
+#include <GLFW/glfw3.h>
+#include <vulkan/vulkan_core.h>
+
 #include "core/Vulkan/VulkanRenderPass.h"
 #include "core/Vulkan/builders/FramebufferBuilder.h"
 #include "core/Vulkan/builders/RenderPassBuilder.h"
@@ -12,12 +21,6 @@
 #include "core/Vulkan/builders/CommandBuilder.h"
 #include "utils/SyncObjectsUtils.h"
 
-#include <GLFW/glfw3.h>
-#include <cstddef>
-#include <cstdint>
-#include <pthread.h>
-#include <vulkan/vulkan_core.h>
-#include <stdexcept>
 
 void sm::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
     m_pwindow = pwindow;

@@ -2,6 +2,7 @@
 #define SM_CORE_CORE_H_
 
 #include <vulkan/vulkan.h>
+
 #include "window.h"
 
 class Engine {

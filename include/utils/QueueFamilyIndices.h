@@ -4,6 +4,7 @@
 #include <optional>
 #include <cstdint>
 #include <vector>
+
 #include <vulkan/vulkan.h>
 
 namespace sm {

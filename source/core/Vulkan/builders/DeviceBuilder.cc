@@ -1,11 +1,13 @@
 #include "core/Vulkan/builders/DeviceBuilder.h"
-#include "utils/QueueFamilyIndices.h"
 
 #include <cstdint>
 #include <stdexcept>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 #include <set>
+
+#include <vulkan/vulkan_core.h>
+
+#include "utils/QueueFamilyIndices.h"
 
 static VkPhysicalDevice pickPhysicalDevice(VkInstance instance, VkSurfaceKHR surface) {
     uint32_t physicalDeviceCount = 0;

@@ -2,6 +2,7 @@
 #define SM_CORE_VULKAN_VULKANFRAMEBUFFER_H_
 
 #include <vector>
+
 #include <vulkan/vulkan_core.h>
 
 struct VulkanFramebuffer {

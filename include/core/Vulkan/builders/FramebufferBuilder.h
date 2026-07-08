@@ -1,8 +1,9 @@
 #ifndef SM_CORE_VULKAN_BUILDERS_FRAMEBUFFERBUILDER_H_
 #define SM_CORE_VULKAN_BUILDERS_FRAMEBUFFERBUILDER_H_
 
-#include "core/Vulkan/VulkanFramebuffer.h"
 #include <vulkan/vulkan_core.h>
+
+#include "core/Vulkan/VulkanFramebuffer.h"
 
 struct FramebufferBuilder {
     VkDevice logicalDevice = VK_NULL_HANDLE;

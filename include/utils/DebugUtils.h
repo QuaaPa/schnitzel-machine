@@ -1,10 +1,11 @@
 #ifndef SM_UTILS_DEBUGUTILS_H_
 #define SM_UTILS_DEBUGUTILS_H_
 
+#include <iostream>
+
 #include <vulkan/vk_platform.h>
 #include <vulkan/vulkan_core.h>
 
-#include <iostream>
 namespace sm {
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
                                                         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

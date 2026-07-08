@@ -1,14 +1,17 @@
 #include "core/Vulkan/builders/PipelineBuilder.h"
-#include "core/Vulkan/VulkanPipeline.h"
-#include <GL/gl.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <stdexcept>
 #include <vector>
 #include <string>
-#include <vulkan/vulkan_core.h>
 #include <iostream>
+
+#include <GL/gl.h>
+#include <vulkan/vulkan_core.h>
+
+#include "core/Vulkan/VulkanPipeline.h"
 
 static std::vector<char> readFile(const std::string& filename) {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
