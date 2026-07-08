@@ -1,5 +1,5 @@
-#include "core/Vulkan/builders/RenderPassBuilder.hh"
-#include "core/Vulkan/VulkanRenderPass.hh"
+#include "core/Vulkan/builders/RenderPassBuilder.h"
+#include "core/Vulkan/VulkanRenderPass.h"
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>
 

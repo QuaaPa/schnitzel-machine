@@ -1,5 +1,5 @@
-#include "core/core.hh"
-#include "core/window.hh"
+#include "core/core.h"
+#include "core/window.h"
 
 void Engine::run(int argc, char* argv[]) {
     initWindow();
@@ -9,7 +9,7 @@ void Engine::run(int argc, char* argv[]) {
 }
 
 void Engine::initWindow() {
-    m_pwindow = new sm::Window(600, 800, "Vulkan"); 
+    m_pwindow = new sm::Window(600, 800, "app"); 
 }
 
 void Engine::mainLoop() {

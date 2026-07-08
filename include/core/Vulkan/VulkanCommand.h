@@ -1,13 +1,12 @@
-#ifndef VULKAN_COMMAND_HH
-#define VULKAN_COMMAND_HH
+#ifndef SM_CORE_VULKAN_VULKANCOMMAND_H_
+#define SM_CORE_VULKAN_VULKANCOMMAND_H_
 
 #include <vulkan/vulkan_core.h>
 #include <vector>
-
 
 struct VulkanCommand {
     VkCommandPool commandPool = VK_NULL_HANDLE;
     std::vector<VkCommandBuffer> commandBuffers{VK_NULL_HANDLE};
 };
 
-#endif // VULKAN_COMMAND_HH
+#endif // SM_CORE_VULKAN_VULKANCOMMAND_H_

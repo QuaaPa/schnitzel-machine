@@ -1,5 +1,5 @@
-#ifndef INSTANCE_BUILDER_HH
-#define INSTANCE_BUILDER_HH
+#ifndef SM_CORE_VULKAN_BUILDERS_INSTANCEBUILDER_H_
+#define SM_CORE_VULKAN_BUILDERS_INSTANCEBUILDER_H_
 
 #include <vulkan/vulkan.h>
 
@@ -10,4 +10,4 @@ struct InstanceBuilder {
     VkInstance build() const;
 };
 
-#endif // INSTANCE_BUILDER_HH
+#endif // SM_CORE_VULKAN_BUILDERS_INSTANCEBUILDER_H_

@@ -1,5 +1,5 @@
-#ifndef SURFACE_BUILDER_HH
-#define SURFACE_BUILDER_HH
+#ifndef SM_CORE_VULKAN_BUILDERS_SURFACEBUILDER_H_
+#define SM_CORE_VULKAN_BUILDERS_SURFACEBUILDER_H_
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -13,4 +13,4 @@ struct SurfaceBuilder {
     VkSurfaceKHR build() const;
 };
 
-#endif // SURFACE_BUILDER_HH
+#endif // SM_CORE_VULKAN_BUILDERS_SURFACEBUILDER_H_

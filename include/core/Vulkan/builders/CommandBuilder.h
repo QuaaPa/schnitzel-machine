@@ -1,7 +1,7 @@
-#ifndef COMMAND_BUILDER_HH
-#define COMMAND_BUILDER_HH
+#ifndef SM_CORE_VULKAN_BUILDERS_COMMANDBUILDER_H_
+#define SM_CORE_VULKAN_BUILDERS_COMMANDBUILDER_H_
 
-#include "core/Vulkan/VulkanCommand.hh"
+#include "core/Vulkan/VulkanCommand.h"
 
 #include <vulkan/vulkan_core.h>
 
@@ -13,4 +13,4 @@ struct CommandBuilder {
     VulkanCommand build();
 };
 
-#endif // COMMAND_BUILDER_HH
+#endif // SM_CORE_VULKAN_BUILDERS_COMMANDBUILDER_H_

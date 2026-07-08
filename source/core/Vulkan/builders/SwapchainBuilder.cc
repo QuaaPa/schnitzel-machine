@@ -1,8 +1,7 @@
-#include "core/Vulkan/builders/SwapchainBuilder.hh"
-#include "core/Vulkan/SwapchainBuilder.hh"
-#include "core/Vulkan/VulkanSwapchain.hh"
-#include "utils/QueueFamilyIndices.hh"
-#include "utils/SwapchainSupportDetails.hh"
+#include "core/Vulkan/builders/SwapchainBuilder.h"
+#include "core/Vulkan/VulkanSwapchain.h"
+#include "utils/QueueFamilyIndices.h"
+#include "utils/SwapchainSupportDetails.h"
 
 #include <vulkan/vulkan_core.h>
 #include <GLFW/glfw3.h>

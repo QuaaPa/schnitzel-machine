@@ -1,12 +1,12 @@
-#ifndef VULKAN_MANAGER_HH
-#define VULKAN_MANAGER_HH
+#ifndef SM_CORE_VULKAN_VULKANMANAGER_H_
+#define SM_CORE_VULKAN_VULKANMANAGER_H_
 
-#include "VulkanContext.hh"
-#include "core/Vulkan/VulkanCommand.hh"
-#include "core/Vulkan/VulkanRenderPass.hh"
-#include "core/Vulkan/VulkanSwapchain.hh"
-#include "core/Vulkan/VulkanPipeline.hh"
-#include "core/Vulkan/VulkanFramebuffer.hh"
+#include "VulkanContext.h"
+#include "core/Vulkan/VulkanCommand.h"
+#include "core/Vulkan/VulkanRenderPass.h"
+#include "core/Vulkan/VulkanSwapchain.h"
+#include "core/Vulkan/VulkanPipeline.h"
+#include "core/Vulkan/VulkanFramebuffer.h"
 
 #include <GLFW/glfw3.h>
 #include <cstdint>
@@ -53,4 +53,4 @@ namespace sm {
     };
 }
 
-#endif // VULKAN_MANAGER_HH
+#endif // SM_CORE_VULKAN_VULKANMANAGER_H_

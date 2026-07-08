@@ -1,5 +1,5 @@
-#ifndef VULKAN_RENDERPASS_HH
-#define VULKAN_RENDERPASS_HH
+#ifndef SM_CORE_VULKAN_VULKANRENDERPASS_H_
+#define SM_CORE_VULKAN_VULKANRENDERPASS_H_
 
 #include <cstdint>
 #include <vulkan/vulkan_core.h>
@@ -9,4 +9,4 @@ struct VulkanRenderPass {
     uint32_t subpass;
 };
 
-#endif // VULKAN_RENDERPASS_HH
+#endif // SM_CORE_VULKAN_VULKANRENDERPASS_H_

@@ -1,16 +1,16 @@
-#include "core/Vulkan/VulkanManager.hh"
-#include "core/Vulkan/VulkanRenderPass.hh"
-#include "core/Vulkan/builders/FramebufferBuilder.hh"
-#include "core/Vulkan/builders/RenderPassBuilder.hh"
-#include "core/Vulkan/VulkanContext.hh"
-#include "core/Vulkan/builders/InstanceBuilder.hh"
-#include "core/Vulkan/builders/SurfaceBuilder.hh"
-#include "core/Vulkan/builders/DeviceBuilder.hh"
-#include "core/Vulkan/builders/SwapchainBuilder.hh"
-#include "core/Vulkan/builders/PipelineBuilder.hh"
-#include "core/Vulkan/builders/FramebufferBuilder.hh"
-#include "core/Vulkan/builders/CommandBuilder.hh"
-#include "utils/SyncObjectsUtils.hh"
+#include "core/Vulkan/VulkanManager.h"
+#include "core/Vulkan/VulkanRenderPass.h"
+#include "core/Vulkan/builders/FramebufferBuilder.h"
+#include "core/Vulkan/builders/RenderPassBuilder.h"
+#include "core/Vulkan/VulkanContext.h"
+#include "core/Vulkan/builders/InstanceBuilder.h"
+#include "core/Vulkan/builders/SurfaceBuilder.h"
+#include "core/Vulkan/builders/DeviceBuilder.h"
+#include "core/Vulkan/builders/SwapchainBuilder.h"
+#include "core/Vulkan/builders/PipelineBuilder.h"
+#include "core/Vulkan/builders/FramebufferBuilder.h"
+#include "core/Vulkan/builders/CommandBuilder.h"
+#include "utils/SyncObjectsUtils.h"
 
 #include <GLFW/glfw3.h>
 #include <cstddef>
@@ -167,7 +167,7 @@ void sm::VulkanManager::recordCommandBuffer(VkCommandBuffer commandBuffer, uint3
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = m_swapchain.extent;
 
-    VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+    VkClearValue clearColor = {{{0.0f, 0.f, 0.0f, 1.0f}}};
     renderPassInfo.clearValueCount = 1;
     renderPassInfo.pClearValues = &clearColor;
 

@@ -1,5 +1,5 @@
-#ifndef DEVICE_BUILDER_HH
-#define DEVICE_BUILDER_HH
+#ifndef SM_CORE_VULKAN_BUILDERS_DEVICEBUILDER_H_
+#define SM_CORE_VULKAN_BUILDERS_DEVICEBUILDER_H_
 
 #include <vulkan/vulkan_core.h>
 
@@ -19,4 +19,4 @@ struct DeviceBuilder {
     Result build() const;
 };
 
-#endif // DEVICE_BUILDER_HH
+#endif // SM_CORE_VULKAN_BUILDERS_DEVICEBUILDER_H_

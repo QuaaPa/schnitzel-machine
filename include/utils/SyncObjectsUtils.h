@@ -1,5 +1,9 @@
+#ifndef SM_UTILS_SYNCOBJECTSUTILS_H_
+#define SM_UTILS_SYNCOBJECTSUTILS_H_
+
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>
+
 namespace sm {
     static VkFence createFence(VkDevice logicalDevice, VkFenceCreateFlags flags = 0) {
         VkFence fence;
@@ -30,3 +34,5 @@ namespace sm {
     }
           
 }
+
+#endif // SM_UTILS_SYNCOBJECTSUTILS_H_

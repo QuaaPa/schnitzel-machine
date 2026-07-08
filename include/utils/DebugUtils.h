@@ -1,5 +1,5 @@
-#ifndef DEBUG_UTILS
-#define DEBUG_UTILS
+#ifndef SM_UTILS_DEBUGUTILS_H_
+#define SM_UTILS_DEBUGUTILS_H_
 
 #include <vulkan/vk_platform.h>
 #include <vulkan/vulkan_core.h>
@@ -58,4 +58,4 @@ namespace sm {
 
 }
 
-#endif // DEBUG_UTILS
+#endif // SM_UTILS_DEBUGUTILS_H_

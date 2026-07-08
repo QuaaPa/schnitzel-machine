@@ -1,5 +1,5 @@
-#ifndef QUEUE_FAMILY_INDICIES_HH
-#define QUEUE_FAMILY_INDICIES_HH
+#ifndef SM_UTILS_QUEUEFAMILYINDICIES_H_
+#define SM_UTILS_QUEUEFAMILYINDICIES_H_
 
 #include <optional>
 #include <cstdint>
@@ -42,4 +42,4 @@ namespace sm {
 }
 
 
-#endif // QUEUE_FAMILY_INDICIES_HH
+#endif // SM_UTILS_QUEUEFAMILYINDICIES_H_

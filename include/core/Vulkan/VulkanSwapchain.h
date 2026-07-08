@@ -1,5 +1,5 @@
-#ifndef VULKAN_SWAPCHAIN_HH
-#define VULKAN_SWAPCHAIN_HH
+#ifndef VULKAN_CORE_VULKAN_SWAPCHAIN_H_
+#define VULKAN_CORE_VULKAN_SWAPCHAIN_H_
 
 #include <vulkan/vulkan_core.h>
 #include <vector>
@@ -12,4 +12,4 @@ struct VulkanSwapchain {
     VkFormat format;
 };
 
-#endif // VULKAN_SWAPCHAIN_HH
+#endif // VULKAN_CORE_VULKAN_SWAPCHAIN_H_

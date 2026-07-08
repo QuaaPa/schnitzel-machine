@@ -1,7 +1,7 @@
-#ifndef PIPELINE_BUILDER_HH
-#define PIPELINE_BUILDER_HH
+#ifndef SM_CORE_VULKAN_BUILDERS_PIPELINEBUILDER_H_
+#define SM_CORE_VULKAN_BUILDERS_PIPELINEBUILDER_H_
 
-#include "core/Vulkan/VulkanPipeline.hh"
+#include "core/Vulkan/VulkanPipeline.h"
 
 #include <vulkan/vulkan_core.h>
 
@@ -14,4 +14,4 @@ struct PipelineBuilder {
     VulkanPipeline build();
 };
 
-#endif // PIPELINE_BUILDER_HH
+#endif // SM_CORE_VULKAN_BUILDERS_PIPELINEBUILDER_H_

@@ -1,7 +1,7 @@
-#ifndef FRAMEBUFFER_BUILDER_HH
-#define FRAMEBUFFER_BUILDER_HH
+#ifndef SM_CORE_VULKAN_BUILDERS_FRAMEBUFFERBUILDER_H_
+#define SM_CORE_VULKAN_BUILDERS_FRAMEBUFFERBUILDER_H_
 
-#include "core/Vulkan/VulkanFramebuffer.hh"
+#include "core/Vulkan/VulkanFramebuffer.h"
 #include <vulkan/vulkan_core.h>
 
 struct FramebufferBuilder {
@@ -13,4 +13,4 @@ struct FramebufferBuilder {
     VulkanFramebuffer build() const;
 };
 
-#endif // FRAMEBUFFER_BUILDER_HH
+#endif // SM_CORE_VULKAN_BUILDERS_FRAMEBUFFERBUILDER_H_

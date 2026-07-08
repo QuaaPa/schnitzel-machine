@@ -1,5 +1,5 @@
-#include "core/Vulkan/builders/DeviceBuilder.hh"
-#include "utils/QueueFamilyIndices.hh"
+#include "core/Vulkan/builders/DeviceBuilder.h"
+#include "utils/QueueFamilyIndices.h"
 
 #include <cstdint>
 #include <stdexcept>

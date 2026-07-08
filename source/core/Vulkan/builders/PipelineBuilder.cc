@@ -1,5 +1,5 @@
-#include "core/Vulkan/builders/PipelineBuilder.hh"
-#include "core/Vulkan/VulkanPipeline.hh"
+#include "core/Vulkan/builders/PipelineBuilder.h"
+#include "core/Vulkan/VulkanPipeline.h"
 #include <GL/gl.h>
 #include <cstddef>
 #include <cstdint>

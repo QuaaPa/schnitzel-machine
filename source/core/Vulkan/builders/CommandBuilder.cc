@@ -1,6 +1,6 @@
-#include "core/Vulkan/builders/CommandBuilder.hh"
-#include "core/Vulkan/VulkanCommand.hh"
-#include "core/Vulkan/VulkanManager.hh"
+#include "core/Vulkan/builders/CommandBuilder.h"
+#include "core/Vulkan/VulkanCommand.h"
+#include "core/Vulkan/VulkanManager.h"
 #include <cstdint>
 #include <stdexcept>
 #include <vector>

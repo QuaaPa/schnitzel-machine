@@ -1,5 +1,5 @@
-#ifndef VULKAN_CONTEXT
-#define VULKAN_CONTEXT
+#ifndef SM_CORE_VULKAN_VULKANCONTEXT_H_
+#define SM_CORE_VULKAN_VULKANCONTEXT_H_
 
 #include <vulkan/vulkan_core.h>
 
@@ -12,4 +12,4 @@ struct VulkanContext {
     VkQueue                  graphicsQueue  = VK_NULL_HANDLE;
     VkQueue                  presentQueue   = VK_NULL_HANDLE;    
 };
-#endif // VULKAN_CONTEXT
+#endif // SM_CORE_VULKAN_VULKANCONTEXT_H_

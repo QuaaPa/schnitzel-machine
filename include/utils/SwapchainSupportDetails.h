@@ -1,5 +1,5 @@
-#ifndef SWAPCHAIN_SUPPORT_DETAILS_HH
-#define SWAPCHAIN_SUPPORT_DETAILS_HH
+#ifndef SM_UTILS_SWAPCHAINSUPPORTDETAILS_H_
+#define SM_UTILS_SWAPCHAINSUPPORTDETAILS_H_
 
 #include <vector>
 #include <vulkan/vulkan_core.h>
@@ -12,4 +12,4 @@ namespace sm {
     };    
 }
 
-#endif // SWAPCHAIN_SUPPORT_DETAILS_HH    
+#endif // SM_UTILS_SWAPCHAINSUPPORTDETAILS_H_

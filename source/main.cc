@@ -2,8 +2,7 @@
 #include <exception>
 #include <iostream>
 
-#include "core/core.hh"
-
+#include "core/core.h"
 
 int main(int argc, char *argv[]) {      
     Engine &engine = *Engine::getInstance();

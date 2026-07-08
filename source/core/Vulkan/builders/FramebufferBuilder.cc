@@ -1,5 +1,5 @@
-#include "core/Vulkan/builders/FramebufferBuilder.hh"
-#include "core/Vulkan/VulkanFramebuffer.hh"
+#include "core/Vulkan/builders/FramebufferBuilder.h"
+#include "core/Vulkan/VulkanFramebuffer.h"
 #include <cstddef>
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>

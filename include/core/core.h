@@ -1,8 +1,8 @@
-#ifndef CORE_HH
-#define CORE_HH
+#ifndef SM_CORE_CORE_H_
+#define SM_CORE_CORE_H_
 
 #include <vulkan/vulkan.h>
-#include "window.hh"
+#include "window.h"
 
 class Engine {
 private:
@@ -27,4 +27,4 @@ private:
     Engine& operator=(const Engine&) = delete;
 };
 
-#endif // CORE_HH
+#endif // SM_CORE_CORE_H_

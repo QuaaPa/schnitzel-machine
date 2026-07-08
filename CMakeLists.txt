@@ -26,7 +26,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 file(GLOB_RECURSE SOURCES "source/*.cc")
-file(GLOB_RECURSE HEADERS "include/*.hh")
+file(GLOB_RECURSE HEADERS "include/*.h")
 
 find_package(Vulkan REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)

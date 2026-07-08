@@ -1,5 +1,4 @@
-// builders/InstanceBuilder.cpp
-#include "core/Vulkan/builders/InstanceBuilder.hh"
+#include "core/Vulkan/builders/InstanceBuilder.h"
 #include <GLFW/glfw3.h>
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>

@@ -1,4 +1,4 @@
-#include "core/Vulkan/builders/SurfaceBuilder.hh"
+#include "core/Vulkan/builders/SurfaceBuilder.h"
 #include <vulkan/vulkan_core.h>
 #include <stdexcept>
 

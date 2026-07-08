@@ -1,5 +1,5 @@
-#ifndef VULKAN_PIPELINE_HH
-#define VULKAN_PIPELINE_HH
+#ifndef SM_CORE_VULKAN_VULKANPIPELINE_H_
+#define SM_CORE_VULKAN_VULKANPIPELINE_H_
 
 #include <vulkan/vulkan_core.h>
 
@@ -9,4 +9,4 @@ struct VulkanPipeline {
     VkPipeline pipeline = VK_NULL_HANDLE;
 };
 
-#endif //  VULKAN_PIPELINE_HH
+#endif //  SM_CORE_VULKAN_VULKANPIPELINE_H_
