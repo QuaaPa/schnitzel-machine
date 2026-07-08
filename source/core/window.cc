@@ -1,5 +1,11 @@
 #include <GLFW/glfw3.h>
 #include "core/window.hh"
+#include "core/Vulkan/VulkanManager.hh"
+
+static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+    auto app = reinterpret_cast<sm::VulkanManager*>(glfwGetWindowUserPointer(window));
+    app->framebufferResized = true;
+}
 
 sm::Window::Window(int width, int height, const char *title)
     : m_width(width), m_height(height) {
@@ -7,10 +13,14 @@ sm::Window::Window(int width, int height, const char *title)
     glfwInit();
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
+    glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
+    glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);    
+    
     m_pwindow = glfwCreateWindow(m_width, m_height, title, nullptr, nullptr);
-
+    glfwSetWindowUserPointer(m_pwindow, this);
+    glfwSetFramebufferSizeCallback(m_pwindow, framebufferResizeCallback);
     m_vulkanManager.init("SCHNITZEL", m_pwindow);
 }
 

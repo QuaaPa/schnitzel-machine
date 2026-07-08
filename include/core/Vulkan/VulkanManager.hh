@@ -3,6 +3,7 @@
 
 #include "VulkanContext.hh"
 #include "core/Vulkan/VulkanCommand.hh"
+#include "core/Vulkan/VulkanRenderPass.hh"
 #include "core/Vulkan/VulkanSwapchain.hh"
 #include "core/Vulkan/VulkanPipeline.hh"
 #include "core/Vulkan/VulkanFramebuffer.hh"
@@ -16,18 +17,24 @@
 namespace sm {
     class VulkanManager {
     private:
+        GLFWwindow* m_pwindow = nullptr;
+        
         VulkanContext m_ctx;
         VulkanSwapchain m_swapchain;
         VulkanPipeline m_pipeline;
         VulkanFramebuffer m_framebuffer;
         VulkanCommand m_cmd;
+        VulkanRenderPass m_renderPass;
 
         uint32_t currentFrame = 0;
         std::vector<VkSemaphore> m_imageAvailableSemaphores;
         std::vector<VkSemaphore> m_renderFinishedSemaphores;
         std::vector<VkFence> m_inFlightFences;
 
+        
     public:
+        bool framebufferResized = false;
+        
         VulkanManager() = default;
 
         void init(const char* appName, GLFWwindow* pwindow);
@@ -41,6 +48,8 @@ namespace sm {
 
     private:
         void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+        void recreateSwapchain();
+        void cleanupSwapChain();
     };
 }
 

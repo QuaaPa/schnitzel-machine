@@ -1,4 +1,5 @@
 #include "core/Vulkan/VulkanManager.hh"
+#include "core/Vulkan/VulkanRenderPass.hh"
 #include "core/Vulkan/builders/FramebufferBuilder.hh"
 #include "core/Vulkan/builders/RenderPassBuilder.hh"
 #include "core/Vulkan/VulkanContext.hh"
@@ -11,12 +12,16 @@
 #include "core/Vulkan/builders/CommandBuilder.hh"
 #include "utils/SyncObjectsUtils.hh"
 
+#include <GLFW/glfw3.h>
 #include <cstddef>
 #include <cstdint>
+#include <pthread.h>
 #include <vulkan/vulkan_core.h>
 #include <stdexcept>
 
 void sm::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
+    m_pwindow = pwindow;
+    
     m_ctx.instance = InstanceBuilder {
         .appName = appName,
         .validation = true
@@ -41,25 +46,25 @@ void sm::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
       .physicalDevice = m_ctx.physcialDevice,
       .logicalDevice = m_ctx.logicalDevice,
       .surface = m_ctx.surface,
-      .pwindow = pwindow,
+      .pwindow = m_pwindow,
       .windowExtent = {800, 600}
     }.build();
 
-    auto renderPass = RenderPassBuilder {
+    m_renderPass = RenderPassBuilder {
         .logicalDevice = m_ctx.logicalDevice,
         .swapchainFormat = m_swapchain.format
     }.build();
     
     m_pipeline = PipelineBuilder {
         .logicalDevice = m_ctx.logicalDevice,
-        .renderPass = renderPass.renderPass,
+        .renderPass = m_renderPass.renderPass,
         .swapchainExtent = m_swapchain.extent,
-        .subpass = renderPass.subpass
+        .subpass = m_renderPass.subpass
     }.build();
 
     m_framebuffer = FramebufferBuilder {
         .logicalDevice = m_ctx.logicalDevice,
-        .renderPass = renderPass.renderPass,
+        .renderPass = m_renderPass.renderPass,
         .swapchainExtent = m_swapchain.extent,
         .swapchainImageViews = m_swapchain.imageViews
     }.build();
@@ -80,11 +85,18 @@ void sm::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
 
 void sm::VulkanManager::drawFrame() {    
     vkWaitForFences(m_ctx.logicalDevice, 1, &m_inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-    vkResetFences(m_ctx.logicalDevice, 1, &m_inFlightFences[currentFrame]);
 
     uint32_t imageIndex;
-    vkAcquireNextImageKHR(m_ctx.logicalDevice, m_swapchain.swapchain, UINT64_MAX, m_imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+    VkResult result = vkAcquireNextImageKHR(m_ctx.logicalDevice, m_swapchain.swapchain, UINT64_MAX, m_imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
+    if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
+        framebufferResized = false;
+        recreateSwapchain();
+    } else if (result != VK_SUCCESS) {
+        throw std::runtime_error("failed to acquire swap chain image!");
+    }
+    
+    vkResetFences(m_ctx.logicalDevice, 1, &m_inFlightFences[currentFrame]);
     vkResetCommandBuffer(m_cmd.commandBuffers[currentFrame], /*VkCommandBufferResetFlagBits*/ 0);
     recordCommandBuffer(m_cmd.commandBuffers[currentFrame], imageIndex);
 
@@ -128,20 +140,12 @@ void sm::VulkanManager::destroy() {
         vkDestroySemaphore(m_ctx.logicalDevice, m_renderFinishedSemaphores[i], nullptr);
     }
     vkDestroyCommandPool(m_ctx.logicalDevice, m_cmd.commandPool, nullptr);
-    
-    for(auto framebuffer : m_framebuffer.framebuffers) {
-        vkDestroyFramebuffer(m_ctx.logicalDevice, framebuffer, nullptr);
-    }
-    
+
+    cleanupSwapChain();    
     vkDestroyPipeline(m_ctx.logicalDevice, m_pipeline.pipeline, nullptr);
     vkDestroyPipelineLayout(m_ctx.logicalDevice, m_pipeline.pipelineLayout, nullptr);
     vkDestroyRenderPass(m_ctx.logicalDevice, m_pipeline.renderPass, nullptr);
     
-    for(auto imageView : m_swapchain.imageViews) {
-        vkDestroyImageView(m_ctx.logicalDevice, imageView, nullptr);
-    }
-    
-    vkDestroySwapchainKHR(m_ctx.logicalDevice, m_swapchain.swapchain, nullptr);
     vkDestroyDevice(m_ctx.logicalDevice, nullptr);
     vkDestroySurfaceKHR(m_ctx.instance, m_ctx.surface, nullptr);
     vkDestroyInstance(m_ctx.instance, nullptr);
@@ -192,4 +196,41 @@ void sm::VulkanManager::recordCommandBuffer(VkCommandBuffer commandBuffer, uint3
     if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to record command buffer!");
     }
+}
+void sm::VulkanManager::recreateSwapchain(){
+    int width = 0, height = 0;
+    glfwGetFramebufferSize(m_pwindow, &width, &height);
+    while (width == 0 || height == 0) {
+        glfwGetFramebufferSize(m_pwindow, &width, &height);
+        glfwWaitEvents();
+    }
+    
+    vkDeviceWaitIdle(m_ctx.logicalDevice);
+        
+    m_swapchain = SwapchainBuilder {
+      .physicalDevice = m_ctx.physcialDevice,
+      .logicalDevice = m_ctx.logicalDevice,
+      .surface = m_ctx.surface,
+      .pwindow = m_pwindow,
+      .windowExtent = {800, 600}
+    }.build();
+
+    m_framebuffer = FramebufferBuilder {
+        .logicalDevice = m_ctx.logicalDevice,
+        .renderPass = m_renderPass.renderPass,
+        .swapchainExtent = m_swapchain.extent,
+        .swapchainImageViews = m_swapchain.imageViews
+    }.build();
+}
+
+void sm::VulkanManager::cleanupSwapChain() {
+    for(auto framebuffer : m_framebuffer.framebuffers) {
+        vkDestroyFramebuffer(m_ctx.logicalDevice, framebuffer, nullptr);
+    }
+    
+    for(auto imageView : m_swapchain.imageViews) {
+        vkDestroyImageView(m_ctx.logicalDevice, imageView, nullptr);
+    }
+
+    vkDestroySwapchainKHR(m_ctx.logicalDevice, m_swapchain.swapchain, nullptr);
 }

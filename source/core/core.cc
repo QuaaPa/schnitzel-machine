@@ -9,7 +9,7 @@ void Engine::run(int argc, char* argv[]) {
 }
 
 void Engine::initWindow() {
-    m_pwindow = new sm::Window(800, 600, "Vulkan"); 
+    m_pwindow = new sm::Window(600, 800, "Vulkan"); 
 }
 
 void Engine::mainLoop() {
