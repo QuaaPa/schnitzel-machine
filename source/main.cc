@@ -5,7 +5,7 @@
 #include "core/core.h"
 
 int main(int argc, char *argv[]) {      
-    Engine &engine = *Engine::getInstance();
+    sm::Engine &engine = *sm::Engine::getInstance();
 
     try {
         engine.run(argc, argv);

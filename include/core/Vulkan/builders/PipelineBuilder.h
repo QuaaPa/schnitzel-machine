@@ -1,9 +1,10 @@
 #ifndef SM_CORE_VULKAN_BUILDERS_PIPELINEBUILDER_H_
 #define SM_CORE_VULKAN_BUILDERS_PIPELINEBUILDER_H_
 
-#include "core/Vulkan/VulkanPipeline.h"
-
 #include <vulkan/vulkan_core.h>
+#include <glm/glm.hpp>
+
+#include "core/Vulkan/VulkanPipeline.h"
 
 struct PipelineBuilder {
     VkDevice logicalDevice = VK_NULL_HANDLE;

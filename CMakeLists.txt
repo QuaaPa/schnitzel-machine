@@ -1,22 +1,3 @@
-# ----------------------------------------
-#
-# release configurations with this command:
-#     cmake -B build . -DCMAKE_BUILD_TYPE=Release
-#
-# ninja generator:
-#     cmake -G Ninja -B build . -DCMAKE_BUILD_TYPE=Release
-#
-# ----------------------------------------
-# ----------------------------------------
-#
-# debug configurations with this command:
-#     cmake -B build . -DCMAKE_BUILD_TYPE=Debug
-#
-# ninja generator:
-#     cmake -G Ninja -B build . -DCMAKE_BUILD_TYPE=Debug
-#
-# ----------------------------------------
-
 cmake_minimum_required(VERSION 3.10)
 
 set(PROJECT_NAME app)
@@ -30,17 +11,29 @@ file(GLOB_RECURSE HEADERS "include/*.h")
 
 find_package(Vulkan REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
+find_package(glm REQUIRED)
+
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
-
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
-
-target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan glfw)
-
-
+target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan glfw glm)
 set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/)
 
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resource $<TARGET_FILE_DIR:${PROJECT_NAME}>/resource
+file(GLOB_RECURSE RESOURCE_FILES CONFIGURE_DEPENDS
+     ${CMAKE_SOURCE_DIR}/resource/*
 )
- 
+
+set(RESOURCE_STAMP ${CMAKE_BINARY_DIR}/bin/resource/.stamp)
+
+add_custom_command(
+    OUTPUT ${RESOURCE_STAMP}
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/resource
+            ${CMAKE_BINARY_DIR}/bin/resource
+    COMMAND ${CMAKE_COMMAND} -E touch ${RESOURCE_STAMP}
+    DEPENDS ${RESOURCE_FILES}
+    COMMENT "Copying resources"
+)
+
+add_custom_target(copy_resources ALL DEPENDS ${RESOURCE_STAMP})
+add_dependencies(${PROJECT_NAME} copy_resources) 

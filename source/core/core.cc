@@ -2,24 +2,29 @@
 
 #include "core/window.h"
 
-void Engine::run(int argc, char* argv[]) {
-    initWindow();
+void sm::Engine::run(int argc, char* argv[]) {
+    init();
 
     mainLoop();
     cleanup();
 }
 
-void Engine::initWindow() {
-    m_pwindow = new sm::Window(600, 800, "app"); 
+void sm::Engine::init() {
+    m_pwindow = sm::Window::getInstance();
+    m_pwindow->init(800, 600, "SCHNITZEL");
+    
+    auto win = m_pwindow->getGlfwWindow();
+    m_vulkanManager.init("SCHNITZEL", win);
 }
 
-void Engine::mainLoop() {
+void sm::Engine::mainLoop() {
     while (!m_pwindow->shouldClose()) {
         m_pwindow->pollEvents();
-        m_pwindow->drawFrame();
+        m_vulkanManager.drawFrame();
     }
 }
 
-void Engine::cleanup() {
+void sm::Engine::cleanup() {
+    m_vulkanManager.destroy();
     m_pwindow->destroy();
 }
