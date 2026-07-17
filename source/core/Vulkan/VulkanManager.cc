@@ -1,3 +1,4 @@
+
 #include "core/Vulkan/VulkanManager.h"
 
 #include <cstddef>
@@ -60,6 +61,7 @@ void sm::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
     
     m_pipeline = PipelineBuilder {
         .logicalDevice = m_ctx.logicalDevice,
+        .physicaldevice = m_ctx.physcialDevice,
         .renderPass = m_renderPass.renderPass,
         .swapchainExtent = m_swapchain.extent,
         .subpass = m_renderPass.subpass
@@ -149,6 +151,9 @@ void sm::VulkanManager::destroy() {
     vkDestroyPipelineLayout(m_ctx.logicalDevice, m_pipeline.pipelineLayout, nullptr);
     vkDestroyRenderPass(m_ctx.logicalDevice, m_pipeline.renderPass, nullptr);
     
+    vkDestroyBuffer(m_ctx.logicalDevice, m_pipeline.vertexBuffer, nullptr);
+    vkFreeMemory(m_ctx.logicalDevice, m_pipeline.vertexBufferMemory, nullptr);
+
     vkDestroyDevice(m_ctx.logicalDevice, nullptr);
     vkDestroySurfaceKHR(m_ctx.instance, m_ctx.surface, nullptr);
     vkDestroyInstance(m_ctx.instance, nullptr);
@@ -162,7 +167,7 @@ void sm::VulkanManager::recordCommandBuffer(VkCommandBuffer commandBuffer, uint3
     if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
         throw std::runtime_error("failed to begin recording command buffer!");
     }
-
+        
     VkRenderPassBeginInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     renderPassInfo.renderPass = m_pipeline.renderPass;
@@ -192,7 +197,18 @@ void sm::VulkanManager::recordCommandBuffer(VkCommandBuffer commandBuffer, uint3
     scissor.extent = m_swapchain.extent;
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);            
 
-    vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline.pipeline);
+
+    VkBuffer vertexBuffers[] = {m_pipeline.vertexBuffer};
+    VkDeviceSize offsets[] = {0};
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+    
+    //
+    // vertices.size = 60
+    // we are not interested in that right now
+    //
+    
+    vkCmdDraw(commandBuffer, 60, 1, 0, 0);
 
     vkCmdEndRenderPass(commandBuffer);
 

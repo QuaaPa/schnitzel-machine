@@ -2,8 +2,11 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <stdexcept>
+#include <type_traits>
 #include <vector>
 #include <string>
 #include <iostream>
@@ -14,6 +17,17 @@
 #include <glm/glm.hpp>
 
 #include "core/Vulkan/VulkanPipeline.h"
+
+static uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, VkPhysicalDevice physicalDevice) {
+    VkPhysicalDeviceMemoryProperties physicalDeviceMemoryProperties;
+    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &physicalDeviceMemoryProperties);
+    for (uint32_t i = 0; i < physicalDeviceMemoryProperties.memoryTypeCount; i++) {
+        if ((typeFilter & (1 << i)) && (physicalDeviceMemoryProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+            return i;
+        }
+    }
+    throw std::runtime_error("failed to find suitable memory type!");
+}
 
 struct Vertex {
     glm::vec2 pos;
@@ -46,7 +60,7 @@ struct Vertex {
         return attributeDescriptions;
     }    
 };
-    
+
 static std::vector<char> readFile(const std::string& filename) {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
@@ -86,12 +100,6 @@ VulkanPipeline PipelineBuilder::build() {
     VkShaderModule vertShaderModule = createShaderModule(vertShaderCode, logicalDevice);
     VkShaderModule fragShaderModule = createShaderModule(fragShaderCode, logicalDevice);
 
-    const std::vector<Vertex> vertices = {
-        {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-        {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
-    };
-    
     VkPipelineShaderStageCreateInfo vertShaderStageInfo{
         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
         .stage = VK_SHADER_STAGE_VERTEX_BIT,
@@ -107,7 +115,6 @@ VulkanPipeline PipelineBuilder::build() {
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
     
-
     auto bindingDescription = Vertex::getBindingDescription();
     auto attributeDescriptions = Vertex::getAttributeDescriptio();
     VkPipelineVertexInputStateCreateInfo vertexInputState {
@@ -118,13 +125,53 @@ VulkanPipeline PipelineBuilder::build() {
         .pVertexAttributeDescriptions = attributeDescriptions.data(),
     };
 
-    
     VkPipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateInfo {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
         .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
         .primitiveRestartEnable = VK_FALSE
     };
 
+    const std::vector<Vertex> vertices = {
+        {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, 0.5f}, {1.0f, 1.0f, 0.0f}},
+        {{-0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}}
+    };
+    
+    VkBuffer vertexBuffer;
+    VkBufferCreateInfo bufferInfo {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .size = sizeof(vertices[0]) * vertices.size(),
+        .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE  
+    };
+    if(vkCreateBuffer(logicalDevice, &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create vertex buffer!");
+    }
+
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(logicalDevice, vertexBuffer, &memRequirements);
+
+    VkMemoryAllocateInfo memoryAllocateInfo {
+        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+        .allocationSize = memRequirements.size,
+        .memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits,
+                                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                          VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                                          physicaldevice)
+    };
+
+    VkDeviceMemory vertexBufferMemory;
+    if(vkAllocateMemory(logicalDevice, &memoryAllocateInfo, nullptr, &vertexBufferMemory) != VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate vertex buffer memory!");
+    }
+
+    vkBindBufferMemory(logicalDevice, vertexBuffer, vertexBufferMemory, 0);
+
+    void* data;
+    vkMapMemory(logicalDevice, vertexBufferMemory, 0, bufferInfo.size, 0, &data);
+    memcpy(data, vertices.data(), (size_t) bufferInfo.size);
+    vkUnmapMemory(logicalDevice, vertexBufferMemory);
+    
     VkViewport viewport {
         .x = 0.0f,
         .y = 0.0f,
@@ -244,7 +291,9 @@ VulkanPipeline PipelineBuilder::build() {
     return VulkanPipeline {
         .pipelineLayout = pipelineLayout,
         .renderPass = renderPass,
-        .pipeline = graphicsPipeline
+        .pipeline = graphicsPipeline,
+        .vertexBuffer = vertexBuffer,
+        .vertexBufferMemory = vertexBufferMemory       
     };
     
 }

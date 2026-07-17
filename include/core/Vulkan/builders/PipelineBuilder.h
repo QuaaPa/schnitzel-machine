@@ -8,6 +8,7 @@
 
 struct PipelineBuilder {
     VkDevice logicalDevice = VK_NULL_HANDLE;
+    VkPhysicalDevice physicaldevice = VK_NULL_HANDLE;
     VkRenderPass renderPass = VK_NULL_HANDLE;
     VkExtent2D swapchainExtent;
     uint32_t subpass;

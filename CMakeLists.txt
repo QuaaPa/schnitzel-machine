@@ -12,8 +12,7 @@ file(GLOB_RECURSE HEADERS "include/*.h")
 find_package(Vulkan REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm REQUIRED)
-
-
+ 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan glfw glm)
