@@ -11,6 +11,6 @@ struct VulkanContext {
     VkDevice                 logicalDevice   = VK_NULL_HANDLE;
     VkQueue                  graphicsQueue   = VK_NULL_HANDLE;
     VkQueue                  presentQueue    = VK_NULL_HANDLE;
-    VkQueue                  transferQueue   = VK_NULL_HANDLE;
+    // VkQueue                  transferQueue   = VK_NULL_HANDLE;
 };
 #endif // SM_CORE_VULKAN_VULKANCONTEXT_H_

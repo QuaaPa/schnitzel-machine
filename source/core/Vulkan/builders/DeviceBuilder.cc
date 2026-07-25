@@ -32,7 +32,7 @@ DeviceBuilder::Result DeviceBuilder::build() const {
     std::set<uint32_t> uniqueQueueFamilyIndices = {
         queueFamilyIndices.graphicsFamily.value(),
         queueFamilyIndices.presentFamily.value(),
-        queueFamilyIndices.transferFamily.value()
+        // queueFamilyIndices.transferFamily.value()
     };
     
     float priority = 1.0f;
@@ -62,22 +62,22 @@ DeviceBuilder::Result DeviceBuilder::build() const {
 
     VkQueue graphicsQueue;
     VkQueue presentQueue;
-    VkQueue transferQueue;
+    // VkQueue transferQueue;
     uint32_t graphicsFamilyIndex = queueFamilyIndices.graphicsFamily.value();
     uint32_t presentFamilyIndex = queueFamilyIndices.presentFamily.value();
-    uint32_t transferFamilyIndex = queueFamilyIndices.transferFamily.value();
+    // uint32_t transferFamilyIndex = queueFamilyIndices.transferFamily.value();
     vkGetDeviceQueue(logicalDevice, graphicsFamilyIndex, 0, &graphicsQueue);
     vkGetDeviceQueue(logicalDevice, presentFamilyIndex, 0, &presentQueue);    
-    vkGetDeviceQueue(logicalDevice, transferFamilyIndex, 0, &transferQueue);
+    // vkGetDeviceQueue(logicalDevice, transferFamilyIndex, 0, &transferQueue);
     
     return Result {
         .physicalDevice = physicalDevice,
         .logicalDevice = logicalDevice,
         .graphicsQueue = graphicsQueue,
         .presentQueue = presentQueue,
-        .transferQueue = transferQueue,
+        // .transferQueue = transferQueue,
         .graphicsFamilyIndex = queueFamilyIndices.graphicsFamily.value(),
         .presentFamilyIndex = queueFamilyIndices.presentFamily.value(),
-        .transferFamilyIndex = queueFamilyIndices.transferFamily.value()
+        // .transferFamilyIndex = queueFamilyIndices.transferFamily.value()
     };
 }

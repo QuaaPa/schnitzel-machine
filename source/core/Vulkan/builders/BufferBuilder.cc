@@ -1,5 +1,6 @@
 #include "core/Vulkan/builders/BufferBuilder.h"
 
+#include <cstdint>
 #include <stdexcept>
 #include <cstring>
 
@@ -26,8 +27,11 @@ static void createBuffer(VkDevice logicalDevice, VkPhysicalDevice physicalDevice
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
         .size = size,
         .usage = usage,
-        .sharingMode = VK_SHARING_MODE_EXCLUSIVE  
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        // .queueFamilyIndexCount = 1,
+        // .pQueueFamilyIndices = &family,
     };
+
     if(vkCreateBuffer(logicalDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to create vertex buffer!");
     }

@@ -47,7 +47,7 @@ void sm::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
     m_ctx.logicalDevice = dev.logicalDevice;
     m_ctx.graphicsQueue = dev.graphicsQueue;
     m_ctx.presentQueue = dev.presentQueue;
-    m_ctx.transferQueue = dev.transferQueue;
+    // m_ctx.transferQueue = dev.transferQueue;
     
     m_swapchain = SwapchainBuilder {
       .physicalDevice = m_ctx.physcialDevice,
@@ -77,8 +77,8 @@ void sm::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
     m_vertexBuffer = BufferBuilder {
         .logicalDevice = m_ctx.logicalDevice,
         .physicalDevice = m_ctx.physcialDevice,
-        .cmdPool = m_cmd.commandPool,
-        .queue = m_ctx.transferQueue,
+        .cmdPool = m_cmd.graphicsCommandPool,
+        .queue = m_ctx.graphicsQueue,
         .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         .srcData = vertices.data(),
         .bufferSize = vertexBufferSize,
@@ -92,8 +92,8 @@ void sm::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
     m_indicesBuffer = BufferBuilder {
         .logicalDevice = m_ctx.logicalDevice,
         .physicalDevice = m_ctx.physcialDevice,
-        .cmdPool = m_cmd.commandPool,
-        .queue = m_ctx.transferQueue,
+        .cmdPool = m_cmd.graphicsCommandPool,
+        .queue = m_ctx.graphicsQueue,
         .usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
         .srcData = indices.data(),
         .bufferSize = indicesBufferSize,
@@ -138,8 +138,8 @@ void sm::VulkanManager::drawFrame() {
     }
     
     vkResetFences(m_ctx.logicalDevice, 1, &m_inFlightFences[currentFrame]);
-    vkResetCommandBuffer(m_cmd.commandBuffers[currentFrame], /*VkCommandBufferResetFlagBits*/ 0);
-    recordCommandBuffer(m_cmd.commandBuffers[currentFrame], imageIndex);
+    vkResetCommandBuffer(m_cmd.graphicsCommandBuffers[currentFrame], /*VkCommandBufferResetFlagBits*/ 0);
+    recordCommandBuffer(m_cmd.graphicsCommandBuffers[currentFrame], imageIndex);
 
     VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
     VkSubmitInfo submitInfo {
@@ -148,7 +148,7 @@ void sm::VulkanManager::drawFrame() {
         .pWaitSemaphores = &m_imageAvailableSemaphores[currentFrame],
         .pWaitDstStageMask = waitStages,
         .commandBufferCount = 1,
-        .pCommandBuffers = &m_cmd.commandBuffers[currentFrame],
+        .pCommandBuffers = &m_cmd.graphicsCommandBuffers[currentFrame],
         .signalSemaphoreCount = 1,
         .pSignalSemaphores = &m_renderFinishedSemaphores[imageIndex]
     };
@@ -180,8 +180,9 @@ void sm::VulkanManager::destroy() {
     for(size_t i = 0; i < m_swapchain.images.size(); i++) {
         vkDestroySemaphore(m_ctx.logicalDevice, m_renderFinishedSemaphores[i], nullptr);
     }
-    vkDestroyCommandPool(m_ctx.logicalDevice, m_cmd.commandPool, nullptr);
-
+    vkDestroyCommandPool(m_ctx.logicalDevice, m_cmd.graphicsCommandPool, nullptr);
+    vkDestroyCommandPool(m_ctx.logicalDevice, m_cmd.transferCommandPool, nullptr);
+    
     cleanupSwapChain();    
     vkDestroyPipeline(m_ctx.logicalDevice, m_pipeline.pipeline, nullptr);
     vkDestroyPipelineLayout(m_ctx.logicalDevice, m_pipeline.pipelineLayout, nullptr);

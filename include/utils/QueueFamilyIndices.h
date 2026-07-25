@@ -12,12 +12,12 @@ namespace sm {
     struct QueueFamilyIndices {
         std::optional<uint32_t> graphicsFamily;
         std::optional<uint32_t> presentFamily;
-        std::optional<uint32_t> transferFamily;
+        // std::optional<uint32_t> transferFamily;
 
         bool isComplete() const {
-            return graphicsFamily.has_value() &&
-                   presentFamily.has_value()  &&
-                   transferFamily.has_value();
+            return graphicsFamily.has_value()
+                && presentFamily.has_value()
+                /* && transferFamily.has_value() */ ; 
         }
     };
 
@@ -33,9 +33,9 @@ namespace sm {
             if (families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
                 queueFamilyIndices.graphicsFamily = i;
             }
-            if(families[i].queueFlags & VK_QUEUE_TRANSFER_BIT) {
-                queueFamilyIndices.transferFamily = i;
-            }
+            // if(families[i].queueFlags & VK_QUEUE_TRANSFER_BIT) {
+            //     queueFamilyIndices.transferFamily = i;
+            // }
             VkBool32 present = false;
             vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &present);
             if (present) {

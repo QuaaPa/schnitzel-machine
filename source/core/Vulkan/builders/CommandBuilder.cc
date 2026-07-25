@@ -37,14 +37,22 @@ static std::vector<VkCommandBuffer> createCommandBuffers(VkDevice logicalDevice,
     return commandBuffers;        
 }
 
-VulkanCommand CommandBuilder::build() {
-    VkCommandPool cmdPool;
-    cmdPool = createCommandPool(logicalDevice, graphicsQueueFamilyIndex);
-    std::vector<VkCommandBuffer> cmdBuffers;
-    cmdBuffers = createCommandBuffers(logicalDevice, cmdPool);;
+VulkanCommand CommandBuilder::build() {    
+    VkCommandPool gCmdPool;
+    std::vector<VkCommandBuffer> gCmdBuffers;
+    gCmdPool = createCommandPool(logicalDevice, graphicsQueueFamilyIndex);
+    gCmdBuffers = createCommandBuffers(logicalDevice, gCmdPool);
+
+    // VkCommandPool tCmdPool;
+    // std::vector<VkCommandBuffer> tCmdBuffers;
+    // tCmdPool = createCommandPool(logicalDevice, transferQueueFamilyIndex);
+    // tCmdBuffers = createCommandBuffers(logicalDevice, tCmdPool);
+    
     
     return VulkanCommand {
-        .commandPool = cmdPool,
-        .commandBuffers = cmdBuffers
+        .graphicsCommandPool = gCmdPool,
+        // .transferCommandPool = tCmdPool,
+        .graphicsCommandBuffers = gCmdBuffers,
+        // .transfercommandBuffers = tCmdBuffers,
     };
 }

@@ -12,10 +12,10 @@ struct DeviceBuilder {
         VkDevice         logicalDevice = VK_NULL_HANDLE;
         VkQueue          graphicsQueue = VK_NULL_HANDLE;
         VkQueue          presentQueue = VK_NULL_HANDLE;
-        VkQueue          transferQueue = VK_NULL_HANDLE;
+        // VkQueue          transferQueue = VK_NULL_HANDLE;
         uint32_t         graphicsFamilyIndex;
         uint32_t         presentFamilyIndex;
-        uint32_t         transferFamilyIndex;
+        // uint32_t         transferFamilyIndex;
     };
     
     Result build() const;
