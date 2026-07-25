@@ -47,7 +47,8 @@ void sm::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
     m_ctx.logicalDevice = dev.logicalDevice;
     m_ctx.graphicsQueue = dev.graphicsQueue;
     m_ctx.presentQueue = dev.presentQueue;
-
+    m_ctx.transferQueue = dev.transferQueue;
+    
     m_swapchain = SwapchainBuilder {
       .physicalDevice = m_ctx.physcialDevice,
       .logicalDevice = m_ctx.logicalDevice,
@@ -77,7 +78,7 @@ void sm::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
         .logicalDevice = m_ctx.logicalDevice,
         .physicalDevice = m_ctx.physcialDevice,
         .cmdPool = m_cmd.commandPool,
-        .queue = m_ctx.graphicsQueue, // must be transfer queue
+        .queue = m_ctx.transferQueue,
         .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         .srcData = vertices.data(),
         .bufferSize = vertexBufferSize,
@@ -92,7 +93,7 @@ void sm::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
         .logicalDevice = m_ctx.logicalDevice,
         .physicalDevice = m_ctx.physcialDevice,
         .cmdPool = m_cmd.commandPool,
-        .queue = m_ctx.graphicsQueue, // must be transfer queue
+        .queue = m_ctx.transferQueue,
         .usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
         .srcData = indices.data(),
         .bufferSize = indicesBufferSize,

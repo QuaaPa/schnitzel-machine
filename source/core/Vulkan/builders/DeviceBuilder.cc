@@ -31,7 +31,9 @@ DeviceBuilder::Result DeviceBuilder::build() const {
 
     std::set<uint32_t> uniqueQueueFamilyIndices = {
         queueFamilyIndices.graphicsFamily.value(),
-        queueFamilyIndices.presentFamily.value()};
+        queueFamilyIndices.presentFamily.value(),
+        queueFamilyIndices.transferFamily.value()
+    };
     
     float priority = 1.0f;
     std::vector<VkDeviceQueueCreateInfo> deviceQueueCreateInfos;
@@ -58,26 +60,24 @@ DeviceBuilder::Result DeviceBuilder::build() const {
         throw std::runtime_error("failed to create logical device");
     }
 
-    Result result {
-        .physicalDevice = physicalDevice,
-        .logicalDevice = logicalDevice,
-        .graphicsFamilyIndex = queueFamilyIndices.graphicsFamily.value(),
-        .presentFamilyIndex = queueFamilyIndices.presentFamily.value(),
-    };
-
-    uint32_t graphicsFamilyIndex = queueFamilyIndices.graphicsFamily.value();
-    uint32_t presentFamilyIndex = queueFamilyIndices.presentFamily.value();
     VkQueue graphicsQueue;
     VkQueue presentQueue;
+    VkQueue transferQueue;
+    uint32_t graphicsFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+    uint32_t presentFamilyIndex = queueFamilyIndices.presentFamily.value();
+    uint32_t transferFamilyIndex = queueFamilyIndices.transferFamily.value();
     vkGetDeviceQueue(logicalDevice, graphicsFamilyIndex, 0, &graphicsQueue);
     vkGetDeviceQueue(logicalDevice, presentFamilyIndex, 0, &presentQueue);    
+    vkGetDeviceQueue(logicalDevice, transferFamilyIndex, 0, &transferQueue);
     
     return Result {
         .physicalDevice = physicalDevice,
         .logicalDevice = logicalDevice,
         .graphicsQueue = graphicsQueue,
         .presentQueue = presentQueue,
+        .transferQueue = transferQueue,
         .graphicsFamilyIndex = queueFamilyIndices.graphicsFamily.value(),
-        .presentFamilyIndex = queueFamilyIndices.presentFamily.value(),      
+        .presentFamilyIndex = queueFamilyIndices.presentFamily.value(),
+        .transferFamilyIndex = queueFamilyIndices.transferFamily.value()
     };
 }
