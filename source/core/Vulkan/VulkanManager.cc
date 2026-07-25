@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <pthread.h>
 #include <stdexcept>
+#include <vector>
 
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan_core.h>
@@ -20,8 +21,9 @@
 #include "core/Vulkan/builders/PipelineBuilder.h"
 #include "core/Vulkan/builders/FramebufferBuilder.h"
 #include "core/Vulkan/builders/CommandBuilder.h"
+#include "core/Vulkan/builders/BufferBuilder.h"
 #include "utils/SyncObjectsUtils.h"
-
+#include "utils/Types.h"
 
 void sm::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
     m_pwindow = pwindow;
@@ -59,9 +61,47 @@ void sm::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
         .swapchainFormat = m_swapchain.format
     }.build();
     
+    m_cmd = CommandBuilder {
+        .logicalDevice = m_ctx.logicalDevice,
+        .graphicsQueueFamilyIndex = dev.graphicsFamilyIndex
+    }.build();
+    
+    const std::vector<sm::Vertex> vertices = {
+        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}},
+        {{0.5f, 0.5f}, {1.0f, 1.0f, 0.0f}},
+        {{-0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}},
+    };
+    VkDeviceSize vertexBufferSize = sizeof(vertices[0]) * vertices.size();    
+    m_vertexBuffer = BufferBuilder {
+        .logicalDevice = m_ctx.logicalDevice,
+        .physicalDevice = m_ctx.physcialDevice,
+        .cmdPool = m_cmd.commandPool,
+        .queue = m_ctx.graphicsQueue, // must be transfer queue
+        .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        .srcData = vertices.data(),
+        .bufferSize = vertexBufferSize,
+        .count = vertices.size()
+    }.build();
+
+    const std::vector<uint16_t> indices = {
+        0, 1, 2, 2, 3, 0
+    };    
+    VkDeviceSize indicesBufferSize = sizeof(indices[0]) * indices.size();
+    m_indicesBuffer = BufferBuilder {
+        .logicalDevice = m_ctx.logicalDevice,
+        .physicalDevice = m_ctx.physcialDevice,
+        .cmdPool = m_cmd.commandPool,
+        .queue = m_ctx.graphicsQueue, // must be transfer queue
+        .usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+        .srcData = indices.data(),
+        .bufferSize = indicesBufferSize,
+        .count = indices.size()
+    }.build();
+    
     m_pipeline = PipelineBuilder {
         .logicalDevice = m_ctx.logicalDevice,
-        .physicaldevice = m_ctx.physcialDevice,
+        .physicalDevice = m_ctx.physcialDevice,
         .renderPass = m_renderPass.renderPass,
         .swapchainExtent = m_swapchain.extent,
         .subpass = m_renderPass.subpass
@@ -72,11 +112,6 @@ void sm::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
         .renderPass = m_renderPass.renderPass,
         .swapchainExtent = m_swapchain.extent,
         .swapchainImageViews = m_swapchain.imageViews
-    }.build();
-
-    m_cmd = CommandBuilder {
-        .logicalDevice = m_ctx.logicalDevice,
-        .graphicsQueueFamilyIndex = dev.graphicsFamilyIndex
     }.build();
 
     for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -151,9 +186,12 @@ void sm::VulkanManager::destroy() {
     vkDestroyPipelineLayout(m_ctx.logicalDevice, m_pipeline.pipelineLayout, nullptr);
     vkDestroyRenderPass(m_ctx.logicalDevice, m_pipeline.renderPass, nullptr);
     
-    vkDestroyBuffer(m_ctx.logicalDevice, m_pipeline.vertexBuffer, nullptr);
-    vkFreeMemory(m_ctx.logicalDevice, m_pipeline.vertexBufferMemory, nullptr);
+    vkDestroyBuffer(m_ctx.logicalDevice, m_vertexBuffer.buffer, nullptr);
+    vkDestroyBuffer(m_ctx.logicalDevice, m_indicesBuffer.buffer, nullptr);
+    vkFreeMemory(m_ctx.logicalDevice, m_vertexBuffer.bufferMemory, nullptr);
+    vkFreeMemory(m_ctx.logicalDevice, m_indicesBuffer.bufferMemory, nullptr);
 
+    
     vkDestroyDevice(m_ctx.logicalDevice, nullptr);
     vkDestroySurfaceKHR(m_ctx.instance, m_ctx.surface, nullptr);
     vkDestroyInstance(m_ctx.instance, nullptr);
@@ -175,7 +213,7 @@ void sm::VulkanManager::recordCommandBuffer(VkCommandBuffer commandBuffer, uint3
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = m_swapchain.extent;
 
-    VkClearValue clearColor = {{{0.0f, 0.f, 0.0f, 1.0f}}};
+    VkClearValue clearColor = {{{0.3f, 0.4f, 0.0f, 1.0f}}};
     renderPassInfo.clearValueCount = 1;
     renderPassInfo.pClearValues = &clearColor;
 
@@ -199,16 +237,12 @@ void sm::VulkanManager::recordCommandBuffer(VkCommandBuffer commandBuffer, uint3
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline.pipeline);
 
-    VkBuffer vertexBuffers[] = {m_pipeline.vertexBuffer};
+    VkBuffer vertexBuffers[] = {m_vertexBuffer.buffer};
     VkDeviceSize offsets[] = {0};
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+    vkCmdBindIndexBuffer(commandBuffer, m_indicesBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
     
-    //
-    // vertices.size = 60
-    // we are not interested in that right now
-    //
-    
-    vkCmdDraw(commandBuffer, 60, 1, 0, 0);
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_indicesBuffer.size), 1, 0, 0, 0);
 
     vkCmdEndRenderPass(commandBuffer);
 

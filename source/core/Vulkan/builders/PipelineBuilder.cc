@@ -17,49 +17,7 @@
 #include <glm/glm.hpp>
 
 #include "core/Vulkan/VulkanPipeline.h"
-
-static uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, VkPhysicalDevice physicalDevice) {
-    VkPhysicalDeviceMemoryProperties physicalDeviceMemoryProperties;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &physicalDeviceMemoryProperties);
-    for (uint32_t i = 0; i < physicalDeviceMemoryProperties.memoryTypeCount; i++) {
-        if ((typeFilter & (1 << i)) && (physicalDeviceMemoryProperties.memoryTypes[i].propertyFlags & properties) == properties) {
-            return i;
-        }
-    }
-    throw std::runtime_error("failed to find suitable memory type!");
-}
-
-struct Vertex {
-    glm::vec2 pos;
-    glm::vec3 color;
-
-    static VkVertexInputBindingDescription getBindingDescription() {
-        VkVertexInputBindingDescription bindingDescription{
-            .binding = 0,
-            .stride = sizeof(Vertex),
-            .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
-        };
-        return bindingDescription;
-    }
-
-    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptio() {
-        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions {};
-        attributeDescriptions[0] = {
-            .location = 0,
-            .binding = 0,
-            .format = VK_FORMAT_R32G32_SFLOAT,
-            .offset = offsetof(Vertex, pos)
-        };
-        attributeDescriptions[1] = {
-            .location = 1,
-            .binding = 0,
-            .format = VK_FORMAT_R32G32B32_SFLOAT,
-            .offset = offsetof(Vertex, color)
-        };
-    
-        return attributeDescriptions;
-    }    
-};
+#include "utils/Types.h"
 
 static std::vector<char> readFile(const std::string& filename) {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
@@ -91,6 +49,33 @@ static VkShaderModule createShaderModule(const std::vector<char>& code, VkDevice
     return shaderModule;
 }
 
+static VkVertexInputBindingDescription getBindingDescription() {
+    VkVertexInputBindingDescription bindingDescription{
+        .binding = 0,
+        .stride = sizeof(sm::Vertex),
+        .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
+    };
+    return bindingDescription;
+}
+
+static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptio() {
+    std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions {};
+    attributeDescriptions[0] = {
+        .location = 0,
+        .binding = 0,
+        .format = VK_FORMAT_R32G32_SFLOAT,
+        .offset = offsetof(sm::Vertex, pos)
+    };
+    attributeDescriptions[1] = {
+        .location = 1,
+        .binding = 0,
+        .format = VK_FORMAT_R32G32B32_SFLOAT,
+        .offset = offsetof(sm::Vertex, color)
+    };
+    
+    return attributeDescriptions;
+}    
+
 VulkanPipeline PipelineBuilder::build() {
     VulkanPipeline result{};
 
@@ -115,8 +100,8 @@ VulkanPipeline PipelineBuilder::build() {
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
     
-    auto bindingDescription = Vertex::getBindingDescription();
-    auto attributeDescriptions = Vertex::getAttributeDescriptio();
+    auto bindingDescription = getBindingDescription();
+    auto attributeDescriptions = getAttributeDescriptio();
     VkPipelineVertexInputStateCreateInfo vertexInputState {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
         .vertexBindingDescriptionCount = 1,
@@ -128,51 +113,10 @@ VulkanPipeline PipelineBuilder::build() {
     VkPipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateInfo {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
         .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-        .primitiveRestartEnable = VK_FALSE
+        .primitiveRestartEnable = VK_FALSE 
     };
-
-    const std::vector<Vertex> vertices = {
-        {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f, 0.5f}, {1.0f, 1.0f, 0.0f}},
-        {{-0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}}
-    };
-    
-    VkBuffer vertexBuffer;
-    VkBufferCreateInfo bufferInfo {
-        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-        .size = sizeof(vertices[0]) * vertices.size(),
-        .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-        .sharingMode = VK_SHARING_MODE_EXCLUSIVE  
-    };
-    if(vkCreateBuffer(logicalDevice, &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create vertex buffer!");
-    }
-
-    VkMemoryRequirements memRequirements;
-    vkGetBufferMemoryRequirements(logicalDevice, vertexBuffer, &memRequirements);
-
-    VkMemoryAllocateInfo memoryAllocateInfo {
-        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-        .allocationSize = memRequirements.size,
-        .memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits,
-                                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                                          VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                                          physicaldevice)
-    };
-
-    VkDeviceMemory vertexBufferMemory;
-    if(vkAllocateMemory(logicalDevice, &memoryAllocateInfo, nullptr, &vertexBufferMemory) != VK_SUCCESS) {
-        throw std::runtime_error("failed to allocate vertex buffer memory!");
-    }
-
-    vkBindBufferMemory(logicalDevice, vertexBuffer, vertexBufferMemory, 0);
-
-    void* data;
-    vkMapMemory(logicalDevice, vertexBufferMemory, 0, bufferInfo.size, 0, &data);
-    memcpy(data, vertices.data(), (size_t) bufferInfo.size);
-    vkUnmapMemory(logicalDevice, vertexBufferMemory);
-    
-    VkViewport viewport {
+          
+    VkViewport viewport { 
         .x = 0.0f,
         .y = 0.0f,
         .width = (float) swapchainExtent.width,
@@ -291,9 +235,7 @@ VulkanPipeline PipelineBuilder::build() {
     return VulkanPipeline {
         .pipelineLayout = pipelineLayout,
         .renderPass = renderPass,
-        .pipeline = graphicsPipeline,
-        .vertexBuffer = vertexBuffer,
-        .vertexBufferMemory = vertexBufferMemory       
+        .pipeline = graphicsPipeline
     };
     
 }

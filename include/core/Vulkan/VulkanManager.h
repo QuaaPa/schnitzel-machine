@@ -5,6 +5,7 @@
 
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan_core.h>
+#include <glm/glm.hpp>
 
 #include "VulkanContext.h"
 #include "core/Vulkan/VulkanCommand.h"
@@ -12,6 +13,7 @@
 #include "core/Vulkan/VulkanSwapchain.h"
 #include "core/Vulkan/VulkanPipeline.h"
 #include "core/Vulkan/VulkanFramebuffer.h"
+#include "core/Vulkan/VulkanBuffer.h"
 
 #define MAX_FRAMES_IN_FLIGHT 2
 
@@ -22,16 +24,17 @@ namespace sm {
         
         VulkanContext m_ctx;
         VulkanSwapchain m_swapchain;
+        VulkanCommand m_cmd;
+        VulkanBuffer m_vertexBuffer;
+        VulkanBuffer m_indicesBuffer;
         VulkanPipeline m_pipeline;
         VulkanFramebuffer m_framebuffer;
-        VulkanCommand m_cmd;
         VulkanRenderPass m_renderPass;
-
+        
         uint32_t currentFrame = 0;
         std::vector<VkSemaphore> m_imageAvailableSemaphores;
         std::vector<VkSemaphore> m_renderFinishedSemaphores;
         std::vector<VkFence> m_inFlightFences;
-
         
     public:
         bool framebufferResized = false;
@@ -51,6 +54,7 @@ namespace sm {
         void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
         void recreateSwapchain();
         void cleanupSwapChain();
+        
     };
 }
 
