@@ -16,7 +16,7 @@ void sm::Window::init(int width, int height, const char *title) {
     glfwInit();
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
 
     m_pwindow = glfwCreateWindow(m_width, m_height, title, nullptr, nullptr);

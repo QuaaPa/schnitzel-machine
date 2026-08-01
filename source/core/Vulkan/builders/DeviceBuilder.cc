@@ -7,6 +7,8 @@
 
 #include <vulkan/vulkan_core.h>
 
+#include "core/Vulkan/VulkanContext.h"
+
 #include "utils/QueueFamilyIndices.h"
 
 static VkPhysicalDevice pickPhysicalDevice(VkInstance instance, VkSurfaceKHR surface) {

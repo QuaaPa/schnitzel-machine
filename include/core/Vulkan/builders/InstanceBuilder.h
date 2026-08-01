@@ -4,10 +4,10 @@
 #include <vulkan/vulkan.h>
 
 struct InstanceBuilder {
-    const char *appName = "appName";
+    const char *appName = "sm-application-name";
     bool validation = false;
 
-    VkInstance build() const;
+    [[nodiscard]] VkInstance build() const;
 };
 
 #endif // SM_CORE_VULKAN_BUILDERS_INSTANCEBUILDER_H_

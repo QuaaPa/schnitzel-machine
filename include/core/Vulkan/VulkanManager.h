@@ -9,12 +9,13 @@
 
 #include "VulkanContext.h"
 #include "core/Vulkan/VulkanCommand.h"
+#include "core/Vulkan/VulkanDescriptroSet.h"
 #include "core/Vulkan/VulkanRenderPass.h"
 #include "core/Vulkan/VulkanSwapchain.h"
 #include "core/Vulkan/VulkanPipeline.h"
 #include "core/Vulkan/VulkanFramebuffer.h"
 #include "core/Vulkan/VulkanBuffer.h"
-
+#include "utils/Types.h"
 #define MAX_FRAMES_IN_FLIGHT 2
 
 namespace sm {
@@ -27,6 +28,7 @@ namespace sm {
         VulkanCommand m_cmd;
         VulkanBuffer m_vertexBuffer;
         VulkanBuffer m_indicesBuffer;
+        VulkanDescriptorSet m_dscrSet;
         VulkanPipeline m_pipeline;
         VulkanFramebuffer m_framebuffer;
         VulkanRenderPass m_renderPass;
@@ -35,6 +37,18 @@ namespace sm {
         std::vector<VkSemaphore> m_imageAvailableSemaphores;
         std::vector<VkSemaphore> m_renderFinishedSemaphores;
         std::vector<VkFence> m_inFlightFences;
+        
+    private:            
+        const std::vector<sm::Vertex> vertices = {
+            {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+            {{0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}},
+            {{0.5f, 0.5f}, {1.0f, 1.0f, 0.0f}},
+            {{-0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}},
+        };
+
+        const std::vector<uint16_t> indices = {
+            0, 1, 2, 2, 3, 0
+        };            
         
     public:
         bool framebufferResized = false;

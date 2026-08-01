@@ -11,7 +11,7 @@ struct FramebufferBuilder {
     VkExtent2D swapchainExtent;
     std::vector<VkImageView> swapchainImageViews{VK_NULL_HANDLE};
     
-    VulkanFramebuffer build() const;
+    [[nodiscard]] VulkanFramebuffer build() const;
 };
 
 #endif // SM_CORE_VULKAN_BUILDERS_FRAMEBUFFERBUILDER_H_

@@ -12,7 +12,7 @@ struct PipelineBuilder {
     VkExtent2D swapchainExtent;
     uint32_t subpass;
     
-    VulkanPipeline build();
+    [[nodiscard]] VulkanPipeline build();
 };
 
 #endif // SM_CORE_VULKAN_BUILDERS_PIPELINEBUILDER_H_

@@ -18,6 +18,7 @@
 #include "core/Vulkan/builders/SurfaceBuilder.h"
 #include "core/Vulkan/builders/DeviceBuilder.h"
 #include "core/Vulkan/builders/SwapchainBuilder.h"
+#include "core/Vulkan/builders/DescriptorSetBuilder.h"
 #include "core/Vulkan/builders/PipelineBuilder.h"
 #include "core/Vulkan/builders/FramebufferBuilder.h"
 #include "core/Vulkan/builders/CommandBuilder.h"
@@ -66,13 +67,7 @@ void sm::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
         .logicalDevice = m_ctx.logicalDevice,
         .graphicsQueueFamilyIndex = dev.graphicsFamilyIndex
     }.build();
-    
-    const std::vector<sm::Vertex> vertices = {
-        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}},
-        {{0.5f, 0.5f}, {1.0f, 1.0f, 0.0f}},
-        {{-0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}},
-    };
+
     VkDeviceSize vertexBufferSize = sizeof(vertices[0]) * vertices.size();    
     m_vertexBuffer = BufferBuilder {
         .logicalDevice = m_ctx.logicalDevice,
@@ -85,9 +80,6 @@ void sm::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
         .count = vertices.size()
     }.build();
 
-    const std::vector<uint16_t> indices = {
-        0, 1, 2, 2, 3, 0
-    };    
     VkDeviceSize indicesBufferSize = sizeof(indices[0]) * indices.size();
     m_indicesBuffer = BufferBuilder {
         .logicalDevice = m_ctx.logicalDevice,
@@ -98,6 +90,11 @@ void sm::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
         .srcData = indices.data(),
         .bufferSize = indicesBufferSize,
         .count = indices.size()
+    }.build();
+
+    
+    m_dscrSet = DescriptorSetBuilder {
+        .logicalDevice = m_ctx.logicalDevice
     }.build();
     
     m_pipeline = PipelineBuilder {
@@ -183,7 +180,8 @@ void sm::VulkanManager::destroy() {
     vkDestroyCommandPool(m_ctx.logicalDevice, m_cmd.graphicsCommandPool, nullptr);
     vkDestroyCommandPool(m_ctx.logicalDevice, m_cmd.transferCommandPool, nullptr);
     
-    cleanupSwapChain();    
+    cleanupSwapChain();
+    vkDestroyDescriptorSetLayout(m_ctx.logicalDevice, m_dscrSet.descriptorSetLayout, nullptr);
     vkDestroyPipeline(m_ctx.logicalDevice, m_pipeline.pipeline, nullptr);
     vkDestroyPipelineLayout(m_ctx.logicalDevice, m_pipeline.pipelineLayout, nullptr);
     vkDestroyRenderPass(m_ctx.logicalDevice, m_pipeline.renderPass, nullptr);

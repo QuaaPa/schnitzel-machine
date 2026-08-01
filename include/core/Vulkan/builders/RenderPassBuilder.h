@@ -9,7 +9,7 @@ struct RenderPassBuilder {
     VkDevice logicalDevice = VK_NULL_HANDLE;
     VkFormat swapchainFormat;
     
-    VulkanRenderPass build() const;
+    [[nodiscard]] VulkanRenderPass build() const;
 };
 
 #endif // SM_CORE_VULKAN_BUILDERS_RENDERPASSBUILDER_H_

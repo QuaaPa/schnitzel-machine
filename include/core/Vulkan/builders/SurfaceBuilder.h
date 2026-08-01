@@ -9,7 +9,7 @@ struct SurfaceBuilder {
     VkInstance instance = VK_NULL_HANDLE;
     GLFWwindow *pwindow = nullptr;
 
-    VkSurfaceKHR build() const;
+    [[nodiscard]] VkSurfaceKHR build() const;
 };
 
 #endif // SM_CORE_VULKAN_BUILDERS_SURFACEBUILDER_H_

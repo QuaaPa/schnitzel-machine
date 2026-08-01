@@ -19,7 +19,7 @@ struct BufferBuilder {
     VkDeviceSize bufferSize;
     std::size_t count;
     
-    VulkanBuffer build();
+    [[nodiscard]] VulkanBuffer build();
 };
 
 #endif // SM_CORE_VULKAN_BUILDERS_BUFFERBUILDER_H_

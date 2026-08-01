@@ -13,7 +13,7 @@ struct CommandBuilder {
     uint32_t graphicsQueueFamilyIndex;
     // uint32_t transferQueueFamilyIndex;
 
-    VulkanCommand build();
+    [[nodiscard]] VulkanCommand build();
 };
 
 #endif // SM_CORE_VULKAN_BUILDERS_COMMANDBUILDER_H_
