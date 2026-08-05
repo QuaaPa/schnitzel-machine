@@ -11,6 +11,8 @@ struct PipelineBuilder {
     VkRenderPass renderPass = VK_NULL_HANDLE;
     VkExtent2D swapchainExtent;
     uint32_t subpass;
+
+    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
     
     [[nodiscard]] VulkanPipeline build();
 };

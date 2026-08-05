@@ -18,6 +18,7 @@ void sm::Engine::init() {
 }
 
 void sm::Engine::mainLoop() {
+
     while (!m_pwindow->shouldClose()) {
         m_pwindow->pollEvents();
         m_vulkanManager.drawFrame();
