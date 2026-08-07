@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(PROJECT_NAME app)
+set(PROJECT_NAME Schnitzel-Machine)
 project(${PROJECT_NAME})
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 file(GLOB_RECURSE SOURCES "source/*.cc")
@@ -12,10 +12,11 @@ file(GLOB_RECURSE HEADERS "include/*.h")
 find_package(Vulkan REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm REQUIRED)
- 
+find_package(spdlog REQUIRED)
+
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
-target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan glfw glm)
+target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan glfw glm spdlog::spdlog)
 set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/)
 
 file(GLOB_RECURSE RESOURCE_FILES CONFIGURE_DEPENDS
@@ -36,3 +37,7 @@ add_custom_command(
 
 add_custom_target(copy_resources ALL DEPENDS ${RESOURCE_STAMP})
 add_dependencies(${PROJECT_NAME} copy_resources) 
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE SM_DEBUG)
+endif()

@@ -1,8 +1,10 @@
 #include "core/core.h"
 
 #include "core/window.h"
+#include "core/Log.h"
 
 void sm::Engine::run(int argc, char* argv[]) {
+    SM_LOG_INIT("SCHNITZEL");
     init();
 
     mainLoop();

@@ -32,6 +32,7 @@
 #include "core/Vulkan/builders/FramebufferBuilder.h"
 #include "core/Vulkan/builders/CommandBuilder.h"
 #include "utils/SyncObjectsUtils.h"
+#include "core/Log.h"
 
 void sm::VulkanManager::init(const char* appName, GLFWwindow* pwindow) {
     m_pwindow = pwindow;
