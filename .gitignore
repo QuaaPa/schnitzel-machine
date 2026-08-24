@@ -18,10 +18,8 @@ CTestTestfile.cmake
 *.dylib
 bin/
 lib/
-
 *.tmp
 
 *.spv
-shaders/*.spv
 
-*.log
+logs/
