@@ -3,8 +3,8 @@
 #include <vulkan/vulkan_core.h>
 
 #include "core/Log.h"
-#include "core/TypesDefs.h"
 #include "RHI/AdapterFeatures.h"
+#include "RHI/AdapterSwapchainProperties.h"
 
 std::vector<VkExtensionProperties> SM::Adapter::extensions() const
 {
@@ -345,4 +345,65 @@ bool SM::Adapter::supportsPresentation(const VkSurfaceKHR surfaceHandle, uint32_
         SM_LOG_ERROR("RHI/Adapter", "Failed to check presentation support for queue family index {}", queueFamilyIndex);
     }
     return canPresent;
+}
+
+SM::AdapterSwapchainProperties SM::Adapter::querySwapchainProperties(const VkSurfaceKHR &surfaceHandle)
+{
+    AdapterSwapchainProperties properties = {};
+
+    // Get the capabilities
+    if(surfaceHandle == VK_NULL_HANDLE) {
+        SM_LOG_CRITICAL("RHI/Adapter", "Failed to query swapchain properties, invalid surface handle, aborting...");
+        return {};
+    }
+    VkSurfaceCapabilitiesKHR capabilities;
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_handle, surfaceHandle, &capabilities);
+
+    properties.capabilities = {
+        .minImageCount = capabilities.minImageCount,
+        .maxImageCount = capabilities.maxImageCount,
+        .currentExtent = { capabilities.currentExtent.width, capabilities.currentExtent.height },
+        .minImageExtent = { capabilities.minImageExtent.width, capabilities.minImageExtent.height },
+        .maxImageExtent = { capabilities.maxImageExtent.width, capabilities.maxImageExtent.height },
+        .maxImageArrayLayers = capabilities.maxImageArrayLayers,
+        .supportedTransforms = capabilities.supportedTransforms,
+        .currentTransform = capabilities.currentTransform,
+        .supportedCompositeAlpha = capabilities.supportedCompositeAlpha,
+        .supportedUsageFlags = capabilities.supportedUsageFlags
+    };
+
+    // Get the supported formats and colorspaces
+    uint32_t formatCount = 0;
+    std::vector<VkSurfaceFormatKHR> vkFormats;
+    vkGetPhysicalDeviceSurfaceFormatsKHR(m_handle, surfaceHandle, &formatCount, nullptr);
+    if (formatCount != 0) {
+        vkFormats.resize(formatCount);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(m_handle, surfaceHandle, &formatCount, vkFormats.data());
+    }
+
+    std::vector<SurfaceFormat> formats;
+    formats.reserve(formatCount);
+    for (uint32_t i = 0; i < formatCount; ++i) {
+        formats.emplace_back(SurfaceFormat{
+                vkFormats[i].format,
+                vkFormats[i].colorSpace });
+    }
+    properties.formats = std::move(formats);
+
+    // Get the supported present modes
+    uint32_t presentModeCount = 0;
+    std::vector<VkPresentModeKHR> vkPresentModes;
+    vkGetPhysicalDeviceSurfacePresentModesKHR(m_handle, surfaceHandle, &presentModeCount, nullptr);
+    if (presentModeCount != 0) {
+        vkPresentModes.resize(presentModeCount);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(m_handle, surfaceHandle, &presentModeCount, vkPresentModes.data());
+    }
+
+    std::vector<VkPresentModeKHR> presentModes;
+    presentModes.reserve(presentModeCount);
+    for (uint32_t i = 0; i < presentModeCount; ++i)
+        presentModes.emplace_back(vkPresentModes[i]);
+    properties.presentModes = std::move(presentModes);
+
+    return properties;
 }

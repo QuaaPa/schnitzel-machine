@@ -8,10 +8,11 @@
 #include "RHI/Device.h"
 #include "RHI/Instance.h"
 #include "RHI/Queue.h"
+#include "RHI/Swapchain.h"
 #include "core/TypesDefs.h"
 #include "core/Log.h"
 #include "RHI/Queue.h"
-
+#include "RHI/AdapterSwapchainProperties.h"
 
 VkInstance SM::VulkanRHI::createInstance(const SM::InstanceOptions& options) {
     if(m_instance.initialize(options) != SM_SUCCESS) {
@@ -31,7 +32,7 @@ VkSurfaceKHR SM::VulkanRHI::createSurface(const SM::WindowHandle &window) {
     return m_surface.getHandle();    
 }
 
-SM::Adapter SM::VulkanRHI::selectAdapter() {
+VkPhysicalDevice SM::VulkanRHI::selectAdapter() {
     auto getAdapterScore = [](SM::Adapter adapter) {
         switch (adapter.properties().deviceType) {
         case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
@@ -55,20 +56,18 @@ SM::Adapter SM::VulkanRHI::selectAdapter() {
         if(getAdapterScore(adapter) >= adapterBestScore) {
             best = adapter;
         }                
-    }   
-    SM_LOG_DEBUG("RHI", "Selected adapter: {}", best.properties().deviceName);
-    return best;    
-}
-
-VkDevice SM::VulkanRHI::createDevice(const SM::DeviceOptions &options) {
-    // Enumerate the adapters (physical devices) and select one to use. Here we look for
-    // a discrete GPU. In a real app, we could fallback to an integrated one.
-    m_adapter = selectAdapter();
+    }
+    m_adapter = best;
+    
+    SM_LOG_DEBUG("RHI", "Selected adapter: {}", m_adapter.properties().deviceName);
     if (m_adapter.getHandle() == VK_NULL_HANDLE) {
         SM_LOG_CRITICAL("RHI", "Unable to find a suitable Adapter. Aborting...");
         return {};
-    }
+    }    
+    return m_adapter.getHandle();    
+}
 
+VkDevice SM::VulkanRHI::createDevice(const SM::DeviceOptions &options) {
     const auto queueFamilies = m_adapter.queryQueueFamily();
 
     SM_LOG_INFO("RHI", "Found {} queue famil{}", queueFamilies.size(), queueFamilies.size() == 1 ? "y" : "ies");
@@ -105,14 +104,14 @@ VkDevice SM::VulkanRHI::createDevice(const SM::DeviceOptions &options) {
         SM_LOG_DEBUG("RHI", "  - Presentation:    {}", presentation);
     }
     // We are now able to query the adapter for swapchain properties and presentation support with the window surface
-    // const auto swapchainProperties = selectedAdapter.swapchainProperties(surface);
-    // SM_LOG_INFO("RHI", "Supported swapchain present modes:");
-    // for (const auto &mode : swapchainProperties.presentModes) {
-    //     SM_LOG_INFO("RHI", "  - {}", presentModeToString(mode));
-    // }
+    const auto swapchainProperties = m_adapter.querySwapchainProperties(m_surface.getHandle());
+    SM_LOG_INFO("RHI", "Swapchain support {} present mode:", swapchainProperties.presentModes.size());
+    for (const auto &mode : swapchainProperties.presentModes) {
+        SM_LOG_DEBUG("RHI", "  - {}", SM::presentModeToString(mode));
+    }
 
     const auto adapterExtensions = m_adapter.extensions();
-    SM_LOG_DEBUG("RHI", "Supported adapter extensions:");
+    SM_LOG_INFO("RHI", "Adapter has {} available extensions:", adapterExtensions.size());
     for (const auto &extension : adapterExtensions) {
         SM_LOG_DEBUG("RHI", "  - {} Version {}", extension.extensionName, extension.specVersion);
     }
@@ -159,12 +158,20 @@ VkDevice SM::VulkanRHI::createDevice(const SM::DeviceOptions &options) {
     return m_device.getHandle();
 }
 
+VkSwapchainKHR SM::VulkanRHI::createSwapchain(const SM::SwapchainOptions& options) {
+    if(m_swapchain.initialize(m_adapter, m_device.getHandle(), options) != SM_SUCCESS) {
+        SM_LOG_CRITICAL("RHI", "Failed to initialize swapchain");
+    }
+    return m_swapchain.getHandle();
+}
+
 SM::SMResult SM::VulkanRHI::destroy() {
     SM_LOG_DEBUG("RHI", "Waiting for a device to become idle, before RHI destroying...");
     // vkDeviceWaitIdle(m_device.getHandle());
 
     // reseting vulkan objects...
     // in correct order
+    m_swapchain.destroy();
     m_device.destroy();
     m_surface.destroy();
     m_instance.destroy();

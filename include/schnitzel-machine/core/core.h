@@ -16,7 +16,7 @@ namespace SM {
         ~Engine() = default;
 
         std::unique_ptr<SM::VulkanRHI> rhi;
-        Window* GLFWwin = nullptr;
+        Window* win = nullptr;
         
     public:
         static Engine* getInstance() {

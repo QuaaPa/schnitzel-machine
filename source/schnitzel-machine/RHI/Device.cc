@@ -24,7 +24,7 @@ SM::SMResult SM::Device::initialize(SM::Adapter adapter, const SM::DeviceOptions
     std::vector<const char *> requestedDeviceExtensions;
     auto defaultRequestedDeviceExtensions = getDefaultRequestedDeviceExtensions();
 
-    // Add requested device extensions set by user in the options
+    // Add requested device extensions set by user in the optionsxp
     for (const std::string &userRequestedExtension : options.extensions)
         defaultRequestedDeviceExtensions.push_back(userRequestedExtension.c_str());
 

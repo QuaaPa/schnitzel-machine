@@ -1,11 +1,13 @@
 #include "core/core.h"
 
+#include <GLFW/glfw3.h>
 #include <filesystem>
 
 #include <memory>
 #include <vulkan/vulkan_core.h>
 
 #include "RHI/Device.h"
+#include "RHI/Swapchain.h"
 #include "RHI/VulkanRHI.h"
 #include "core/Window.h"
 #include "core/Macros.h"
@@ -39,8 +41,8 @@ void SM::Engine::init(std::filesystem::path exeDir) {
     rhi = std::make_unique<VulkanRHI>();
 
     // TODO: creationg different surface by different WindowType
-    GLFWwin = SM::Window::getInstance();
-    GLFWwin->init(800, 600, "SCHNITZEL");
+    win = SM::Window::getInstance();
+    win->init(800, 600, "SCHNITZEL");
 
     rhi->createInstance(SM::InstanceOptions {
             .applicationName = "SM_APP_NAME",
@@ -48,10 +50,24 @@ void SM::Engine::init(std::filesystem::path exeDir) {
             .engineVersion = SM_MAKE_VERSION(0, 0, 1),
             .extensions = {"VK_KHR_wayland_surface"},            
         });
-    rhi->createSurface(GLFWwin->getGlfwWindow());    
-    rhi->createDevice(SM::DeviceOptions {});
-    
-    
+    rhi->selectAdapter();
+    auto surface = rhi->createSurface(win->getGlfwWindow());    
+    rhi->createDevice(SM::DeviceOptions {
+            // nothing needed
+            // it default create one queue 
+        });
+
+    rhi->createSwapchain(SM::SwapchainOptions {
+            .surface = surface,
+            .format = VK_FORMAT_B8G8R8A8_SRGB,
+            .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+            .imageExtent = VkExtent2D{
+                .width = 800, // replace hardcoded extent 
+                .height = 600 // replace hardcoded extent 
+            },
+            .imageUsageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+            .presentMode = VK_PRESENT_MODE_MAILBOX_KHR                        
+        });
 }
 void SM::Engine::mainLoop() {
     SM_LOG_INFO("CORE", "Engine starting...");
@@ -61,5 +77,5 @@ void SM::Engine::mainLoop() {
 void SM::Engine::cleanup() {
     SM_LOG_INFO("CORE", "Engine destroying...");
     rhi->destroy();
-    delete GLFWwin;
+    delete win;
 }
