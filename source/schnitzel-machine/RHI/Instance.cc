@@ -7,7 +7,8 @@
 #include "core/Log.h"
 #include "RHI/Adapter.h"
 #include "RHI/VulkanConfig.h"
-#include "core/TypesDefs.h"
+#include "core/SMResult.h"
+#include "RHI/ExtensionProperties.h"
 
 #ifdef SM_BUILD_DEBUG_MODE
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -64,27 +65,20 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 }
 #endif // SM_BUILD_DEBUG_MODE
 
-SM::Instance::~Instance() {
-    if (m_handle != VK_NULL_HANDLE) {
-        SM_LOG_CRITICAL("RHI/Instance", "Instance was not explicitly destroyed, forcing cleanup");
-        destroy();
-    }
-}
-
-SM::SMResult SM::Instance::initialize(const SM::InstanceOptions& options) {
+void SM::Instance::initialize(const SM::InstanceOptions& options) {
     uint32_t apiVersion;
     if(auto result = vkEnumerateInstanceVersion(&apiVersion); result != VK_SUCCESS) {
-        SM_LOG_WARN("RHI", "Failed to enumerate api version, setting default value...");
+        SM_LOG_WARN("RHI", "{} :Failed to enumerate api version, setting default value...", toString(result));
         apiVersion = VK_API_VERSION_1_2; // default API version        
     }
     
     VkApplicationInfo appInfo = {
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
         .pNext = nullptr,
-        .pApplicationName = options.applicationName.data(),
+        .pApplicationName = options.applicationName,
         .applicationVersion = options.applicationVersion,
-        .pEngineName = "Schnitzel-Machine",
-        .engineVersion = VK_MAKE_VERSION(0, 1, 0),
+        .pEngineName = options.engineName,
+        .engineVersion = options.engineVersion,
         .apiVersion = apiVersion        
     };
 
@@ -95,7 +89,6 @@ SM::SMResult SM::Instance::initialize(const SM::InstanceOptions& options) {
         .pApplicationInfo = &appInfo        
     };
     
-
     // On macOS we need to enable the VK_KHR_PORTABILITY_subset instance extension so that
     // the MoltenVK driver is allowed to be used even though it is technically non-conformant
     // at present. Also see vulkan_config.h. For more detail see the
@@ -111,11 +104,10 @@ SM::SMResult SM::Instance::initialize(const SM::InstanceOptions& options) {
         requestedLayers.push_back(userLayer.c_str());
     }
 
-    std::vector<const char *> layers;
-
     // Query the available instance layers
-    const auto availableLayers = getAvailableInstanceLayers();
+    const auto availableLayers = queryAvailableLayers();
 
+    std::vector<const char *> layers;
     for (const char *requestedLayer : requestedLayers) {
         if (std::find(availableLayers.begin(), availableLayers.end(), requestedLayer) != availableLayers.end()) {
             layers.push_back(requestedLayer);
@@ -131,7 +123,7 @@ SM::SMResult SM::Instance::initialize(const SM::InstanceOptions& options) {
     std::vector<const char *> requestedInstanceExtensions;
 
     // Query the available instance extensions
-    const auto availableExtensions = queryInstanceExtensions();
+    const auto availableExtensions = queryExtensions();
 
     const auto defaultRequestedExtensions = SM::getDefaultRequestedInstanceExtensions();
     for (const char *requestedExtension : defaultRequestedExtensions) {
@@ -175,9 +167,8 @@ SM::SMResult SM::Instance::initialize(const SM::InstanceOptions& options) {
 #endif // SM_BUILD_DEBUG_MODE
     
     // Try to create the instance    
-    if(vkCreateInstance(&createInfo, nullptr, &m_handle) != VK_SUCCESS) {
-        SM_LOG_CRITICAL("RHI", "Failed to create Instance, aborting...");
-        return SM_FAILURE;
+    if(auto result = vkCreateInstance(&createInfo, nullptr, &m_handle); result != VK_SUCCESS) {
+        SM_LOG_CRITICAL("RHI", "{}: Failed to create Instance, aborting...", SM::toString(result));
     }
 
 #ifdef SM_BUILD_DEBUG_MODE
@@ -190,11 +181,9 @@ SM::SMResult SM::Instance::initialize(const SM::InstanceOptions& options) {
         }
     }
 #endif // SM_BUILD_DEBUG_MODE
-
-    return SM_SUCCESS;
 }
 
-SM::SMResult SM::Instance::destroy() {
+void SM::Instance::destroy() {
     if (m_handle != VK_NULL_HANDLE) {
         if (m_debugMessenger != VK_NULL_HANDLE) {
             auto destroyFn = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(m_handle, "vkDestroyDebugUtilsMessengerEXT"));
@@ -204,48 +193,7 @@ SM::SMResult SM::Instance::destroy() {
 
         m_handle = VK_NULL_HANDLE;
         m_debugMessenger = VK_NULL_HANDLE;        
-    }
-
-    return SM_SUCCESS;
-}
-
-std::vector<std::string> SM::Instance::getAvailableInstanceLayers() const {
-    uint32_t layerCount{ 0 };
-    if (vkEnumerateInstanceLayerProperties(&layerCount, nullptr) != VK_SUCCESS) {
-        SM_LOG_ERROR("RHI", "Unable to enumerate instance layers");
-        return { };
-    }
-
-    std::vector<VkLayerProperties> vkLayers(layerCount);
-    if (vkEnumerateInstanceLayerProperties(&layerCount, vkLayers.data()) != VK_SUCCESS) {
-        SM_LOG_ERROR("RHI", "Unable to query instance layers");
-        return { };
-    }
-
-    std::vector<std::string> layers;
-    layers.reserve(layerCount);
-    for (const auto &properties : vkLayers) {
-        layers.push_back(properties.layerName);
-    }
-
-    return layers;
-}
-
-
-std::vector<VkExtensionProperties> SM::Instance::queryInstanceExtensions() const {    
-    uint32_t extensionCount{ 0 };
-    if (vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr) != VK_SUCCESS) {
-        SM_LOG_ERROR("RHI/Instance", "Failed to enumerate instance extensions");
-        return {};
-    };
-
-    std::vector<VkExtensionProperties> extensions(extensionCount);
-    if (vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data()) != VK_SUCCESS) {
-        SM_LOG_ERROR("RHI/Instance", "Failed to query instance extensions");
-        return {};
-    }
-
-    return extensions;
+    }    
 }
 
 std::vector<SM::Adapter> SM::Instance::queryAdapters() const {
@@ -253,27 +201,69 @@ std::vector<SM::Adapter> SM::Instance::queryAdapters() const {
         SM_LOG_ERROR("RHI/Instance", "Failed to query adapters, instance is invalid");
         return {};
     }
-    uint32_t physicalDeviceCount{ 0 };
-    if (vkEnumeratePhysicalDevices(m_handle, &physicalDeviceCount, nullptr) != VK_SUCCESS) {
-        SM_LOG_ERROR("RHI/Instance", "Failed to enumerate adapters");
-        return {};
-    };
-
-    if (physicalDeviceCount == 0) {
-        SM_LOG_CRITICAL("RHI/Instance", "No valid physical devices found");
-        return {};
-    }
     
-    std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);   
-    if (vkEnumeratePhysicalDevices(m_handle, &physicalDeviceCount, physicalDevices.data()) != VK_SUCCESS) {        
-        SM_LOG_ERROR("RHI/Instance", "Failed to query adapters");
-        return {};
+    uint32_t vkPhysicalDeviceCount{ 0 };
+    vkEnumeratePhysicalDevices(m_handle, &vkPhysicalDeviceCount, nullptr);
+    
+    std::vector<VkPhysicalDevice> vkPhysicalDevices;
+    vkPhysicalDevices.resize(vkPhysicalDeviceCount);
+    if (vkPhysicalDeviceCount != 0) {
+        if (auto result = vkEnumeratePhysicalDevices(m_handle, &vkPhysicalDeviceCount, vkPhysicalDevices.data()); result != VK_SUCCESS) {        
+            SM_LOG_ERROR("RHI/Instance", "{}: Failed to query adapters", SM::toString(result));
+        }
     }
 
-    std::vector<SM::Adapter> adapters(physicalDeviceCount);
-    for (uint32_t i = 0; i < physicalDeviceCount; ++i) {
-        adapters[i].setHandle(physicalDevices[i]);
+    std::vector<SM::Adapter> adapters;
+    adapters.resize(vkPhysicalDeviceCount);
+    for (uint32_t i = 0; i < vkPhysicalDeviceCount; ++i) {
+        adapters[i].setHandle(vkPhysicalDevices[i]);
     }
     return adapters;
 }
 
+std::vector<std::string> SM::Instance::queryAvailableLayers() const {
+    uint32_t vkLayerPropertyCount{ 0 };
+    vkEnumerateInstanceLayerProperties(&vkLayerPropertyCount, nullptr);
+
+    std::vector<VkLayerProperties> vkLayersProperties;
+    vkLayersProperties.resize(vkLayerPropertyCount);
+    if(vkLayerPropertyCount != 0) {        
+        if (auto result = vkEnumerateInstanceLayerProperties(&vkLayerPropertyCount, vkLayersProperties.data()); result != VK_SUCCESS) {
+            SM_LOG_ERROR("RHI", "{}: Failed to query instance layers", SM::toString(result));
+        }
+    }
+
+    std::vector<std::string> layers;
+    layers.reserve(vkLayerPropertyCount);
+    for (const auto &properties : vkLayersProperties) {
+        layers.push_back(properties.layerName);
+    }
+
+    return layers;
+}
+
+std::vector<SM::ExtensionProperties> SM::Instance::queryExtensions() const {    
+    uint32_t vkExtensionPropertyCount{ 0 };
+    vkEnumerateInstanceExtensionProperties(nullptr, &vkExtensionPropertyCount, nullptr);
+    
+    std::vector<VkExtensionProperties> vkExtensionProperties;
+    vkExtensionProperties.resize(vkExtensionPropertyCount);
+    if(vkExtensionPropertyCount != 0) {        
+        if (vkEnumerateInstanceExtensionProperties(nullptr, &vkExtensionPropertyCount, vkExtensionProperties.data()) != VK_SUCCESS) {
+            SM_LOG_ERROR("RHI/Instance", "Failed to query instance extensions");
+            return {};
+        }
+    }
+
+    std::vector<SM::ExtensionProperties> extensionProperties;
+    extensionProperties.reserve(vkExtensionPropertyCount);
+    for (uint32_t i = 0; i < vkExtensionPropertyCount; ++i) {
+        const auto &prop = vkExtensionProperties[i];
+        SM::ExtensionProperties extProp{ };
+        std::strncpy(extProp.extensionName, vkExtensionProperties[i].extensionName, VK_MAX_EXTENSION_NAME_SIZE); // copying extension name 
+        extProp.specVersion = vkExtensionProperties[i].specVersion;
+        extensionProperties.emplace_back(extProp);
+    }
+   
+    return extensionProperties;
+}

@@ -15,9 +15,6 @@
 
 namespace SM {    
     class VulkanRHI {
-    public:
-        VulkanRHI() { };
-        ~VulkanRHI() { };
     public:        
         VkInstance createInstance(const SM::InstanceOptions& options);
         // TODO: create obtaining different types of windows
@@ -28,10 +25,10 @@ namespace SM {
 
         std::vector<SM::Queue> queryQueues() { return m_queues; };
         
-        SM::SMResult destroy();
+        void destroy();
         
     private:
-        std::vector<QueueDescription> getQueues(const std::vector<QueueRequest> &queueRequests, std::vector<AdapterQueueType> queueTypes);
+        std::vector<QueueDescription> getQueues(const std::vector<QueueRequest> &queueRequests, std::vector<SM::QueueFamilyProperties> queueTypes);
         
     private:
         SM::Swapchain m_swapchain;

@@ -7,22 +7,18 @@
 #include "core/TypesDefs.h"
 
 namespace SM {    
-    class Surface {
-    public:
-        ~Surface();
-        
+    class Surface {        
     public:
         // TODO: not sure about the parameters of initialize() yet —
         // in the future, different platforms will need different window types
         // (e.g. GLFWwindow*, HWND, wl_surface*, ...)
-        SM::SMResult initialize(const SM::WindowHandle &window, VkInstance instance);
+        void initialize(const SM::WindowHandle &window, const VkInstance &instanceHandle);
 
-        SM_NODISCARD VkSurfaceKHR getHandle() const { return m_handle; };
+        SM_NODISCARD VkSurfaceKHR getHandle() const noexcept { return m_handle; };
 
-        SM::SMResult destroy();
+        void destroy(const VkInstance &instanceHandle);
     private:        
-        VkSurfaceKHR m_handle{ VK_NULL_HANDLE };
-        VkInstance m_instanceHandle{ VK_NULL_HANDLE };
+        VkSurfaceKHR m_handle{ VK_NULL_HANDLE };        
     };    
 }; // namespace SM
 

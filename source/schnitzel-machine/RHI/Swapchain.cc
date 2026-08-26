@@ -1,19 +1,11 @@
 #include "RHI/Swapchain.h"
 
 #include "RHI/Adapter.h"
-#include "core/TypesDefs.h"
 #include "core/Log.h"
+#include "core/SMResult.h"
 #include <vulkan/vulkan_core.h>
 
-SM::Swapchain::~Swapchain() {
-    if (m_handle != VK_NULL_HANDLE) {
-        SM_LOG_CRITICAL("RHI/Instance", "Instance was not explicitly destroyed, forcing cleanup");
-        destroy();
-    }
-}
-
-SM::SMResult SM::Swapchain::initialize(SM::Adapter adapter,  VkDevice device, const SM::SwapchainOptions &options) {
-    m_deviceHandle = device;
+void SM::Swapchain::initialize(const SM::Adapter &adapter, const VkDevice &deviceHandle, const SM::SwapchainOptions &options) {   
     SM::AdapterSwapchainProperties properties = adapter.querySwapchainProperties(options.surface);           
     VkSwapchainCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -34,20 +26,15 @@ SM::SMResult SM::Swapchain::initialize(SM::Adapter adapter,  VkDevice device, co
     createInfo.presentMode = options.presentMode;
     createInfo.clipped = options.clipped;
     createInfo.oldSwapchain = VK_NULL_HANDLE;
-    
-    if (vkCreateSwapchainKHR(device, &createInfo, nullptr, &m_handle) != VK_SUCCESS) {
-        SM_LOG_ERROR("RHI/Swapchain", "Failed to create swapchain");
-        return {};
-    }
-    
-    return SM_SUCCESS;
+
+    if (auto result = vkCreateSwapchainKHR(deviceHandle, &createInfo, nullptr, &m_handle); result != VK_SUCCESS) {
+        SM_LOG_ERROR("RHI/Swapchain", "{}: Failed to create swapchain", SM::toString(result));     
+    }    
 }
 
-SM::SMResult SM::Swapchain::destroy() {
+void SM::Swapchain::destroy(const VkDevice &deviceHandle) {
     if(m_handle !=  VK_NULL_HANDLE) {
-        vkDestroySwapchainKHR(m_deviceHandle, m_handle, nullptr);        
-    }
-    m_handle = VK_NULL_HANDLE;
-    
-    return SM_SUCCESS;
+        vkDestroySwapchainKHR(deviceHandle, m_handle, nullptr);        
+        m_handle = VK_NULL_HANDLE;
+    }    
 }

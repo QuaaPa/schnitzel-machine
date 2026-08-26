@@ -3,7 +3,6 @@
 
 #include <vulkan/vulkan_core.h>
 
-#include "core/TypesDefs.h"
 #include "RHI/Adapter.h"
 
 namespace SM {
@@ -26,17 +25,14 @@ namespace SM {
     
     class Swapchain {
     public:
-        ~Swapchain();
-
-        SMResult initialize(SM::Adapter adapter, VkDevice device, const SM::SwapchainOptions &options);
+        void initialize(const SM::Adapter &adapter,  const VkDevice &deviceHandle, const SM::SwapchainOptions &options);
 
         VkSwapchainKHR getHandle() { return m_handle; }
         
-        SMResult destroy();
+        void destroy(const VkDevice &deviceHandle);
         
     private:        
         VkSwapchainKHR m_handle{ VK_NULL_HANDLE };
-        VkDevice m_deviceHandle{ VK_NULL_HANDLE };
     };
 };
 

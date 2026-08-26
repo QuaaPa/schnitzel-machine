@@ -3,7 +3,7 @@
 
 #include <vulkan/vulkan_core.h>
 
-#include "core/TypesDefs.h"
+#include "RHI/QueueDescription.h"
 
 namespace SM {    
     struct Queue {
@@ -11,15 +11,15 @@ namespace SM {
         Queue(const VkDevice &device, const SM::QueueDescription &queueDescription);
         ~Queue();
 
-        VkFlags flags() const noexcept { return m_flags; }
+        VkQueueFlags flags() const noexcept { return m_flags; }
         uint32_t timestampValidBits() const noexcept { return m_timestampValidBits; }
         VkExtent3D minImageTransferGranularity() const noexcept { return m_minImageTransferGranularity; }
         uint32_t queueFamilyIndex() const noexcept { return m_queueFamilyIndex; }
 
     private:
-        VkDevice m_device;
-        VkQueue m_queue;
-        VkFlags m_flags;
+        const VkDevice* m_device{ nullptr };
+        VkQueue m_queue{ VK_NULL_HANDLE };
+        VkQueueFlags m_flags;
         uint32_t m_timestampValidBits;
         VkExtent3D m_minImageTransferGranularity;
         uint32_t m_queueFamilyIndex;

@@ -2,34 +2,28 @@
 
 #include <vulkan/vulkan_core.h>
 
+#include "RHI/QueueDescription.h"
+#include "RHI/ExtensionProperties.h"
+#include "RHI/QueueFamilyProperties.h"
 #include "RHI/VulkanConfig.h"
+#include "core/SMResult.h"
 #include "core/TypesDefs.h"
 #include "core/Log.h"
 #include "RHI/VulkanConfig.h"
-
-SM::Device::Device() {
-    
-}
-
-SM::Device::~Device() {
-    if (m_handle != VK_NULL_HANDLE) {
-        SM_LOG_CRITICAL("RHI/Device", "Device was not explicitly destroyed, forcing cleanup");
-        destroy();
-    }
-}
         
-SM::SMResult SM::Device::initialize(SM::Adapter adapter, const SM::DeviceOptions& options, std::vector<QueueRequest> &queueRequests) {    
+void SM::Device::initialize(const SM::Adapter &adapter, const SM::DeviceOptions &options, std::vector<QueueRequest> &queueRequests) {    
     // Merge requested device extensions and layers with our defaults
     const auto availableDeviceExtensions = adapter.extensions();
     std::vector<const char *> requestedDeviceExtensions;
     auto defaultRequestedDeviceExtensions = getDefaultRequestedDeviceExtensions();
 
     // Add requested device extensions set by user in the optionsxp
-    for (const std::string &userRequestedExtension : options.extensions)
-        defaultRequestedDeviceExtensions.push_back(userRequestedExtension.c_str());
+    for (const std::string &userRequestedExtension : options.extensions) {
+        defaultRequestedDeviceExtensions.push_back(userRequestedExtension.c_str());        
+    }
 
     for (const char *requestedDeviceExtension : defaultRequestedDeviceExtensions) {
-        if (hasExtension(availableDeviceExtensions, requestedDeviceExtension)) {
+        if (SM::hasExtension(availableDeviceExtensions, requestedDeviceExtension)) {
             requestedDeviceExtensions.push_back(requestedDeviceExtension);
         } else {
             SM_LOG_WARN("RHI/Device", "Unable to find default requested device extension {}", requestedDeviceExtension);
@@ -390,10 +384,11 @@ SM::SMResult SM::Device::initialize(SM::Adapter adapter, const SM::DeviceOptions
 #endif
 #endif
 
-    const bool hasVulkan12 = apiVersion >= VK_API_VERSION_1_2;
+    // const bool hasVulkan12 = apiVersion >= VK_API_VERSION_1_2;
     const bool hasVulkan11 = apiVersion >= VK_API_VERSION_1_1;
-    if (!hasVulkan12 && !hasVulkan11) {
-        throw std::runtime_error("At least Vulkan 1.1 is required!");
+    if (!hasVulkan11) {
+        SM_LOG_CRITICAL("RHI/Device", "At least Vulkan 1.1 is required!");
+        abort();
     }
 
     if (!requestedDeviceExtensions.empty()) {
@@ -402,14 +397,12 @@ SM::SMResult SM::Device::initialize(SM::Adapter adapter, const SM::DeviceOptions
         createInfo.ppEnabledExtensionNames = requestedDeviceExtensions.data();
     }
 
-    if(vkCreateDevice(adapter.getHandle(), &createInfo, nullptr, &m_handle)) {
-        return SM_FAILURE;
-    }
-    
-    return SM_SUCCESS;
+    if(auto result = vkCreateDevice(adapter.getHandle(), &createInfo, nullptr, &m_handle); result != VK_SUCCESS) {
+        SM_LOG_CRITICAL("RHI/Device", "{}: Failed to create device", SM::toString(result));
+    }   
 }
 
-std::vector<SM::QueueDescription> SM::Device::getQueues(const std::vector<QueueRequest> &queueRequests, std::vector<SM::AdapterQueueType> queueTypes)
+std::vector<SM::QueueDescription> SM::Device::getQueues(const std::vector<QueueRequest> &queueRequests, const std::vector<SM::QueueFamilyProperties> &queueProperties)
 { 
     uint32_t queueCount = 0;
     for (const auto &queueRequest : queueRequests)
@@ -427,9 +420,9 @@ std::vector<SM::QueueDescription> SM::Device::getQueues(const std::vector<QueueR
 
             QueueDescription queueDescription{
                 .queue = vkQueue,
-                .flags = queueTypes[queueRequest.familyIndex].flags,
-                .timestampValidBits = queueTypes[queueRequest.familyIndex].timestampValidBits,
-                .minImageTransferGranularity = queueTypes[queueRequest.familyIndex].minImageTransferGranularity,
+                .flags = queueProperties[queueRequest.familyIndex].flags,
+                .timestampValidBits = queueProperties[queueRequest.familyIndex].timestampValidBits,
+                .minImageTransferGranularity = queueProperties[queueRequest.familyIndex].minImageTransferGranularity,
                 .familyIndex = queueRequest.familyIndex
             };
             m_queueDescriptions.push_back(queueDescription);
@@ -439,11 +432,9 @@ std::vector<SM::QueueDescription> SM::Device::getQueues(const std::vector<QueueR
     return m_queueDescriptions;
 }
 
-SM::SMResult SM::Device::destroy() {
+void SM::Device::destroy() {
     if (m_handle != VK_NULL_HANDLE) {
         vkDestroyDevice(m_handle, nullptr);
     }
-
-    return SM_SUCCESS;
 }
         

@@ -4,30 +4,19 @@
 #include <vulkan/vulkan_core.h>
 
 #include "core/Macros.h"
+#include "core/SMResult.h"
 #include "core/TypesDefs.h"
 #include "core/Log.h"
 
-SM::Surface::~Surface() {
-    if (m_handle != VK_NULL_HANDLE) {
-        SM_LOG_CRITICAL("RHI/Surface", "Surface was not explicitly destroyed, forcing cleanup");
-        destroy();
-    }
+void SM::Surface::initialize(const SM::WindowHandle &window, const VkInstance &instanceHandle) {        
+    if(auto result = glfwCreateWindowSurface(instanceHandle, static_cast<GLFWwindow*>(window.nativeHandle), nullptr, &m_handle); result != VK_SUCCESS) {
+        SM_LOG_CRITICAL("RHI", "{}: Failed to create surface", SM::toString(result));
+    }       
 }
 
-SM::SMResult SM::Surface::initialize(const SM::WindowHandle &window, VkInstance instance) {    
-    m_instanceHandle = instance;
-    
-    if(glfwCreateWindowSurface(instance, static_cast<GLFWwindow*>(window.nativeHandle), nullptr, &m_handle) != VK_SUCCESS) {
-        SM_LOG_CRITICAL("RHI", "Failed to create surface");
-        return SM_FAILURE;
+void SM::Surface::destroy(const VkInstance &instanceHandle) {
+    if(m_handle != VK_NULL_HANDLE) {
+        vkDestroySurfaceKHR(instanceHandle, m_handle, nullptr);        
+        m_handle = VK_NULL_HANDLE;
     }
-        
-    return SM_SUCCESS;
-}
-
-SM::SMResult SM::Surface::destroy() {
-    vkDestroySurfaceKHR(m_instanceHandle, m_handle, nullptr);
-    m_handle = VK_NULL_HANDLE;
-    
-    return SM_SUCCESS;
 }

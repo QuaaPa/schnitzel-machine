@@ -1,31 +1,12 @@
 #ifndef SM_RHI_VULKANCONFIG_H_
 #define SM_RHI_VULKANCONFIG_H_
 
-#include <algorithm>
 #include <array>
-#include <cstring>
 #include <vector>
 
 #include <vulkan/vulkan.h>
 
-namespace SM {
-    inline bool hasExtension(const std::vector<VkExtensionProperties> &extensions, const std::string_view &name)
-    {
-        const auto it = std::find_if(extensions.begin(),
-                                     extensions.end(),
-                                     [name](const VkExtensionProperties &ext) { return ext.extensionName == name; });
-        return it != extensions.end();
-    };
-
-    inline bool hasExtension(const std::vector<const char *> &extensions, const char *targetExtension) 
-    {
-        const auto it = std::find_if(extensions.begin(),
-                                     extensions.end(),
-                                     [&](const char *ext) { return strcmp(ext, targetExtension) == 0; });
-        return it != extensions.end();
-    }
-
-    
+namespace SM {    
     // RELEASE    
 #if defined(SM_BUILD_RELEASE_MODE) || defined(__arm__)
     const std::vector<const char *> requestedInstanceLayers = {

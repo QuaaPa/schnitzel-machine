@@ -3,24 +3,17 @@
 
 #include <vector>
 #include <string>
-#include <span>
 
 #include <stdint.h>
 #include <vulkan/vulkan_core.h>
 
+#include "RHI/QueueFamilyProperties.h"
 #include "core/Macros.h"
-#include "core/TypesDefs.h"
+#include "RHI/QueueDescription.h"
 #include "RHI/Adapter.h"
-#include "RHI/AdapterQueueType.h"
+#include "RHI/QueueRequest.h"
 
 namespace SM {    
-    struct QueueRequest {
-        uint32_t familyIndex;
-        VkQueueFlags flags;
-        uint32_t count;
-        std::vector<float> priorities;
-    };
-
     struct DeviceOptions {
         // Version we want the device to use, can be less than the apiVersion requested for the instance
         uint32_t apiVersion{ SM_MAKE_VERSION(1, 2, 0) };
@@ -30,18 +23,14 @@ namespace SM {
         std::vector<QueueRequest> queues;
     };
 
-    struct Device {
+    class Device {
     public:
-        Device();
-        ~Device();        
+        void initialize(const SM::Adapter &adapter, const SM::DeviceOptions &options, std::vector<QueueRequest> &queueRequests);
+        std::vector<QueueDescription> getQueues(const std::vector<QueueRequest> &queueRequests, const std::vector<SM::QueueFamilyProperties> &queueTypes);
         
-    public:
-        SM::SMResult initialize(SM::Adapter adapter, const SM::DeviceOptions& options, std::vector<QueueRequest> &queueRequests);
-        std::vector<QueueDescription> getQueues(const std::vector<QueueRequest> &queueRequests, std::vector<SM::AdapterQueueType> queueTypes);
-        
-        SM_NODISCARD VkDevice getHandle() { return m_handle; };
+        SM_NODISCARD VkDevice getHandle() const noexcept { return m_handle; };
 
-        SM::SMResult destroy();
+        void destroy();
         
     private:        
         VkDevice m_handle { VK_NULL_HANDLE };

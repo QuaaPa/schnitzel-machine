@@ -2,30 +2,41 @@
 
 #include <vulkan/vulkan_core.h>
 
+#include "RHI/ExtensionProperties.h"
 #include "core/Log.h"
 #include "RHI/AdapterFeatures.h"
 #include "RHI/AdapterSwapchainProperties.h"
+#include "core/SMResult.h"
 
-std::vector<VkExtensionProperties> SM::Adapter::extensions() const
-{
+std::vector<SM::ExtensionProperties> SM::Adapter::extensions() const {
     if(m_handle == VK_NULL_HANDLE) {
         SM_LOG_ERROR("RHI/Adapter", "Failed to query adapter's extensions, invalid adapter");
         return {};
     }
 
-    uint32_t extensionCount = 0;
-    if (vkEnumerateDeviceExtensionProperties(m_handle, nullptr, &extensionCount, nullptr) != VK_SUCCESS) {
-        SM_LOG_ERROR("RHI/Adapter", "Unable to enumerate instance extensions");
-        return {};
+    uint32_t vkExtensionPropertyCount{ 0 };
+    vkEnumerateDeviceExtensionProperties(m_handle, nullptr, &vkExtensionPropertyCount, nullptr);
+
+    std::vector<VkExtensionProperties> vkExtensionProperties;
+    vkExtensionProperties.resize(vkExtensionPropertyCount);        
+    if(vkExtensionPropertyCount != 0) {
+        if(auto result = vkEnumerateDeviceExtensionProperties(m_handle, nullptr, &vkExtensionPropertyCount, vkExtensionProperties.data()); result != VK_SUCCESS) {
+            SM_LOG_ERROR("RHI/Adapter", "{}: Failed to query instance extensions", SM::toString(result));
+            return {};
+        }            
     }
-
-    std::vector<VkExtensionProperties> vkExtensions(extensionCount);
-    if (vkEnumerateDeviceExtensionProperties(m_handle, nullptr, &extensionCount, vkExtensions.data()) != VK_SUCCESS) {
-        SM_LOG_ERROR("RHI/Adapter", "Unable to query instance extensions");
-        return {};
-    }    
-
-    return vkExtensions;
+    
+    std::vector<SM::ExtensionProperties> extensionProperties;
+    extensionProperties.reserve(vkExtensionPropertyCount);
+    for (uint32_t i = 0; i < vkExtensionPropertyCount; ++i) {
+        const auto &prop = vkExtensionProperties[i];
+        SM::ExtensionProperties extProp{ };
+        std::strncpy(extProp.extensionName, vkExtensionProperties[i].extensionName, VK_MAX_EXTENSION_NAME_SIZE); // copying extension name 
+        extProp.specVersion = vkExtensionProperties[i].specVersion;
+        extensionProperties.emplace_back(extProp);
+    }
+        
+    return extensionProperties;
 }
 
 VkPhysicalDeviceProperties SM::Adapter::properties() const{
@@ -302,35 +313,43 @@ SM::AdapterFeatures SM::Adapter::features() {
 }
 
 
-std::vector<SM::AdapterQueueType> SM::Adapter::queryQueueFamily() {
+std::vector<SM::QueueFamilyProperties> SM::Adapter::queryQueueFamilyProperties() {
     if(m_handle == VK_NULL_HANDLE) {
-        SM_LOG_ERROR("RHI/Adapter", "Failed to query adapter's queue types, invalid adapter");
+        SM_LOG_ERROR("RHI/Adapter", "Failed to query adapter's queue properties, invalid adapter");
         return {};
-    }    
-    
-    uint32_t queueFamilyCount = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(m_handle, &queueFamilyCount, nullptr);
-        
-    std::vector<VkQueueFamilyProperties> queueFamilies;
-    queueFamilies.resize(queueFamilyCount);   
-    vkGetPhysicalDeviceQueueFamilyProperties(m_handle, &queueFamilyCount, queueFamilies.data());            
-
-    for (uint32_t i = 0; i < queueFamilyCount; ++i) {
-        const auto &queueFamily = queueFamilies[i];
-        m_queueFamilies.emplace_back(SM::AdapterQueueType{
-                .flags = queueFamily.queueFlags,
-                .availableQueues = queueFamily.queueCount,
-                .timestampValidBits = queueFamily.timestampValidBits,
-                .minImageTransferGranularity = {
-                    .width = queueFamily.minImageTransferGranularity.width,
-                    .height = queueFamily.minImageTransferGranularity.height,
-                    .depth = queueFamily.minImageTransferGranularity.depth } });
     }
     
-    return m_queueFamilies;
+    uint32_t vkQueueFamilyCount{ 0 };
+    vkGetPhysicalDeviceQueueFamilyProperties(m_handle, &vkQueueFamilyCount, nullptr);
+        
+    if(vkQueueFamilyCount == 0) {
+        SM_LOG_ERROR("RHI/Adapter", "Failed to query adapter's queue properties, invalid adapter, family count: {}, aborting...", vkQueueFamilyCount);
+        return {};
+    }
+    std::vector<VkQueueFamilyProperties> vkQueueFamilyProperties;
+    vkQueueFamilyProperties.resize(vkQueueFamilyCount);   
+    vkGetPhysicalDeviceQueueFamilyProperties(m_handle, &vkQueueFamilyCount, vkQueueFamilyProperties.data());            
+    
+    std::vector<SM::QueueFamilyProperties> queueFamilies;
+    for (uint32_t i = 0; i < vkQueueFamilyCount; ++i) {
+        const auto &prop = vkQueueFamilyProperties[i];
+        queueFamilies.emplace_back(SM::QueueFamilyProperties{
+                .flags = prop.queueFlags,
+                .availableQueues = prop.queueCount,
+                .timestampValidBits = prop.timestampValidBits,
+                .minImageTransferGranularity = {
+                    .width = prop.minImageTransferGranularity.width,
+                    .height = prop.minImageTransferGranularity.height,
+                    .depth = prop.minImageTransferGranularity.depth
+                }
+            }
+            );
+    }
+    
+    return queueFamilies;
 }
 
-bool SM::Adapter::supportsPresentation(const VkSurfaceKHR surfaceHandle, uint32_t queueFamilyIndex) const {
+bool SM::Adapter::supportsPresentation(const VkSurfaceKHR &surfaceHandle, uint32_t queueFamilyIndex) const {
     if(surfaceHandle == VK_NULL_HANDLE) {
         SM_LOG_ERROR("RHI/Adapter", "Failed to check presentation support for queue {}, invalid surface m_handle", queueFamilyIndex);
         return {};
@@ -340,68 +359,79 @@ bool SM::Adapter::supportsPresentation(const VkSurfaceKHR surfaceHandle, uint32_
         return {};
     }
     
-    VkBool32 canPresent = false;
-    if(vkGetPhysicalDeviceSurfaceSupportKHR(m_handle, queueFamilyIndex, surfaceHandle, &canPresent) != VK_SUCCESS) {
-        SM_LOG_ERROR("RHI/Adapter", "Failed to check presentation support for queue family index {}", queueFamilyIndex);
+    VkBool32 canPresent{ false };
+    if(auto result = vkGetPhysicalDeviceSurfaceSupportKHR(m_handle, queueFamilyIndex, surfaceHandle, &canPresent); result != VK_SUCCESS) {
+        SM_LOG_ERROR("RHI/Adapter", "{}: Failed to check presentation support for queue family index {}", SM::toString(result), queueFamilyIndex);
     }
     return canPresent;
 }
 
-SM::AdapterSwapchainProperties SM::Adapter::querySwapchainProperties(const VkSurfaceKHR &surfaceHandle)
+SM::AdapterSwapchainProperties SM::Adapter::querySwapchainProperties(const VkSurfaceKHR &surfaceHandle) const
 {
-    AdapterSwapchainProperties properties = {};
-
-    // Get the capabilities
     if(surfaceHandle == VK_NULL_HANDLE) {
         SM_LOG_CRITICAL("RHI/Adapter", "Failed to query swapchain properties, invalid surface handle, aborting...");
         return {};
     }
-    VkSurfaceCapabilitiesKHR capabilities;
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_handle, surfaceHandle, &capabilities);
-
-    properties.capabilities = {
-        .minImageCount = capabilities.minImageCount,
-        .maxImageCount = capabilities.maxImageCount,
-        .currentExtent = { capabilities.currentExtent.width, capabilities.currentExtent.height },
-        .minImageExtent = { capabilities.minImageExtent.width, capabilities.minImageExtent.height },
-        .maxImageExtent = { capabilities.maxImageExtent.width, capabilities.maxImageExtent.height },
-        .maxImageArrayLayers = capabilities.maxImageArrayLayers,
-        .supportedTransforms = capabilities.supportedTransforms,
-        .currentTransform = capabilities.currentTransform,
-        .supportedCompositeAlpha = capabilities.supportedCompositeAlpha,
-        .supportedUsageFlags = capabilities.supportedUsageFlags
-    };
-
-    // Get the supported formats and colorspaces
-    uint32_t formatCount = 0;
-    std::vector<VkSurfaceFormatKHR> vkFormats;
-    vkGetPhysicalDeviceSurfaceFormatsKHR(m_handle, surfaceHandle, &formatCount, nullptr);
-    if (formatCount != 0) {
-        vkFormats.resize(formatCount);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(m_handle, surfaceHandle, &formatCount, vkFormats.data());
+    
+    VkSurfaceCapabilitiesKHR vkSurfaceCapabilities;
+    if(auto result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_handle, surfaceHandle, &vkSurfaceCapabilities); result != VK_SUCCESS) {
+        SM_LOG_ERROR("RHI/Adapter", "{}: Failed to query surface capabilities", toString(result));
     }
 
-    std::vector<SurfaceFormat> formats;
-    formats.reserve(formatCount);
-    for (uint32_t i = 0; i < formatCount; ++i) {
-        formats.emplace_back(SurfaceFormat{
+    SM::AdapterSwapchainProperties properties{ };
+    properties.capabilities = {
+        .minImageCount = vkSurfaceCapabilities.minImageCount,
+        .maxImageCount = vkSurfaceCapabilities.maxImageCount,
+        .currentExtent = { vkSurfaceCapabilities.currentExtent.width,
+                           vkSurfaceCapabilities.currentExtent.height
+        },
+        .minImageExtent = { vkSurfaceCapabilities.minImageExtent.width,
+                            vkSurfaceCapabilities.minImageExtent.height
+        },
+        .maxImageExtent = { vkSurfaceCapabilities.maxImageExtent.width,
+                            vkSurfaceCapabilities.maxImageExtent.height
+        },
+        .maxImageArrayLayers = vkSurfaceCapabilities.maxImageArrayLayers,
+        .supportedTransforms = vkSurfaceCapabilities.supportedTransforms,
+        .currentTransform = vkSurfaceCapabilities.currentTransform,
+        .supportedCompositeAlpha = vkSurfaceCapabilities.supportedCompositeAlpha,
+        .supportedUsageFlags = vkSurfaceCapabilities.supportedUsageFlags
+    };
+
+    uint32_t vkFormatCount{ 0 };
+    std::vector<VkSurfaceFormatKHR> vkFormats;
+
+    vkGetPhysicalDeviceSurfaceFormatsKHR(m_handle, surfaceHandle, &vkFormatCount, nullptr);
+    if (vkFormatCount != 0) {
+        vkFormats.resize(vkFormatCount);
+        if(auto result = vkGetPhysicalDeviceSurfaceFormatsKHR(m_handle, surfaceHandle, &vkFormatCount, vkFormats.data()); result != VK_SUCCESS) {
+            SM_LOG_ERROR("RHI/Adapter", "{}: Failed to query surface formats", SM::toString(result));
+        }
+    }
+
+    std::vector<SM::SurfaceFormat> formats;
+    formats.reserve(vkFormatCount);
+    for (uint32_t i = 0; i < vkFormatCount; ++i) {
+        formats.emplace_back(SM::SurfaceFormat {
                 vkFormats[i].format,
                 vkFormats[i].colorSpace });
     }
     properties.formats = std::move(formats);
-
-    // Get the supported present modes
-    uint32_t presentModeCount = 0;
+    
+    
+    uint32_t vkPresentModeCount{ 0 };
     std::vector<VkPresentModeKHR> vkPresentModes;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(m_handle, surfaceHandle, &presentModeCount, nullptr);
-    if (presentModeCount != 0) {
-        vkPresentModes.resize(presentModeCount);
-        vkGetPhysicalDeviceSurfacePresentModesKHR(m_handle, surfaceHandle, &presentModeCount, vkPresentModes.data());
+    vkGetPhysicalDeviceSurfacePresentModesKHR(m_handle, surfaceHandle, &vkPresentModeCount, nullptr);
+    if (vkPresentModeCount != 0) {
+        vkPresentModes.resize(vkPresentModeCount);
+        if(auto result = vkGetPhysicalDeviceSurfacePresentModesKHR(m_handle, surfaceHandle, &vkPresentModeCount, vkPresentModes.data()); result != VK_SUCCESS) {
+            SM_LOG_ERROR("RHI/Adapter", "{}: Failed to query surface present modes", SM::toString(result));
+        }
     }
 
     std::vector<VkPresentModeKHR> presentModes;
-    presentModes.reserve(presentModeCount);
-    for (uint32_t i = 0; i < presentModeCount; ++i)
+    presentModes.reserve(vkPresentModeCount);
+    for (uint32_t i = 0; i < vkPresentModeCount; ++i)
         presentModes.emplace_back(vkPresentModes[i]);
     properties.presentModes = std::move(presentModes);
 

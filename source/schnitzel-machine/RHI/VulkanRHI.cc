@@ -4,31 +4,23 @@
 #include <vulkan/vulkan_core.h>
 #include <GLFW/glfw3.h>
 
+#include "core/Log.h"
 #include "RHI/Adapter.h"
 #include "RHI/Device.h"
 #include "RHI/Instance.h"
 #include "RHI/Queue.h"
 #include "RHI/Swapchain.h"
 #include "core/TypesDefs.h"
-#include "core/Log.h"
-#include "RHI/Queue.h"
-#include "RHI/AdapterSwapchainProperties.h"
 
 VkInstance SM::VulkanRHI::createInstance(const SM::InstanceOptions& options) {
-    if(m_instance.initialize(options) != SM_SUCCESS) {
-        SM_LOG_CRITICAL("RHI", "Failed to initialize instance");
-        return {};
-    }
+    m_instance.initialize(options);    
     return m_instance.getHandle();
 }
 
 VkSurfaceKHR SM::VulkanRHI::createSurface(const SM::WindowHandle &window) {
     // Release window creation for diffrent window type
     //
-    if(m_surface.initialize(window, m_instance.getHandle()) != SM_SUCCESS) {
-        SM_LOG_CRITICAL("RHI", "Failed to initialize surface");
-        return {};
-    }
+    m_surface.initialize(window, m_instance.getHandle());
     return m_surface.getHandle();    
 }
 
@@ -68,15 +60,15 @@ VkPhysicalDevice SM::VulkanRHI::selectAdapter() {
 }
 
 VkDevice SM::VulkanRHI::createDevice(const SM::DeviceOptions &options) {
-    const auto queueFamilies = m_adapter.queryQueueFamily();
+    const auto queueFamilyProperties = m_adapter.queryQueueFamilyProperties();
 
-    SM_LOG_INFO("RHI", "Found {} queue famil{}", queueFamilies.size(), queueFamilies.size() == 1 ? "y" : "ies");
+    SM_LOG_INFO("RHI", "Found {} queue famil{}", queueFamilyProperties.size(), queueFamilyProperties.size() == 1 ? "y" : "ies");
 
     const bool supportsPresentation = m_adapter.supportsPresentation(m_surface.getHandle(), 0); 
-    const bool hasGraphicsAndCompute = queueFamilies[0].supportsFeature(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
+    const bool hasGraphicsAndCompute = queueFamilyProperties[0].supportsFeature(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
     
-    for (uint32_t i = 0; i < queueFamilies.size(); ++i) {
-        const auto &family = queueFamilies[i];
+    for (uint32_t i = 0; i < queueFamilyProperties.size(); ++i) {
+        const auto &family = queueFamilyProperties[i];
 
         const bool graphics       = family.supportsFeature(VK_QUEUE_GRAPHICS_BIT);
         const bool compute         = family.supportsFeature(VK_QUEUE_COMPUTE_BIT);
@@ -147,7 +139,7 @@ VkDevice SM::VulkanRHI::createDevice(const SM::DeviceOptions &options) {
                         DeviceOptions{},
                         queueRequests);
         
-    std::vector<QueueDescription>  queueDescriptions = m_device.getQueues(queueRequests, queueFamilies);
+    std::vector<QueueDescription>  queueDescriptions = m_device.getQueues(queueRequests, queueFamilyProperties);
 
     const uint32_t queueCount = queueDescriptions.size();
     m_queues.reserve(queueCount);
@@ -159,22 +151,18 @@ VkDevice SM::VulkanRHI::createDevice(const SM::DeviceOptions &options) {
 }
 
 VkSwapchainKHR SM::VulkanRHI::createSwapchain(const SM::SwapchainOptions& options) {
-    if(m_swapchain.initialize(m_adapter, m_device.getHandle(), options) != SM_SUCCESS) {
-        SM_LOG_CRITICAL("RHI", "Failed to initialize swapchain");
-    }
+    m_swapchain.initialize(m_adapter, m_device.getHandle(), options);    
     return m_swapchain.getHandle();
 }
 
-SM::SMResult SM::VulkanRHI::destroy() {
+void SM::VulkanRHI::destroy() {
     SM_LOG_DEBUG("RHI", "Waiting for a device to become idle, before RHI destroying...");
-    // vkDeviceWaitIdle(m_device.getHandle());
+    vkDeviceWaitIdle(m_device.getHandle());
 
     // reseting vulkan objects...
     // in correct order
-    m_swapchain.destroy();
+    m_swapchain.destroy(m_device.getHandle());
     m_device.destroy();
-    m_surface.destroy();
-    m_instance.destroy();
-    
-    return SM_SUCCESS;
+    m_surface.destroy(m_instance.getHandle());
+    m_instance.destroy();    
 }
