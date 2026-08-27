@@ -66,12 +66,6 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 #endif // SM_BUILD_DEBUG_MODE
 
 void SM::Instance::initialize(const SM::InstanceOptions& options) {
-    uint32_t apiVersion;
-    if(auto result = vkEnumerateInstanceVersion(&apiVersion); result != VK_SUCCESS) {
-        SM_LOG_WARN("RHI", "{} :Failed to enumerate api version, setting default value...", toString(result));
-        apiVersion = VK_API_VERSION_1_2; // default API version        
-    }
-    
     VkApplicationInfo appInfo = {
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
         .pNext = nullptr,
@@ -79,7 +73,7 @@ void SM::Instance::initialize(const SM::InstanceOptions& options) {
         .applicationVersion = options.applicationVersion,
         .pEngineName = options.engineName,
         .engineVersion = options.engineVersion,
-        .apiVersion = apiVersion        
+        .apiVersion = options.apiVersion        
     };
 
     VkInstanceCreateInfo createInfo = {

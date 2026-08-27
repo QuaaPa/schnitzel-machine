@@ -7,7 +7,6 @@
 #include "RHI/QueueFamilyProperties.h"
 #include "RHI/VulkanConfig.h"
 #include "core/SMResult.h"
-#include "core/TypesDefs.h"
 #include "core/Log.h"
 #include "RHI/VulkanConfig.h"
         
@@ -286,7 +285,7 @@ void SM::Device::initialize(const SM::Adapter &adapter, const SM::DeviceOptions 
     // Enable the VK_KHR_Synchronization2 extension features by chaining this into the createInfo chain.
     VkPhysicalDeviceSynchronization2FeaturesKHR sync2Features = {};
     sync2Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES_KHR;
-    sync2Features.synchronization2 = adapter.supportsSynchronization2;
+    sync2Features.synchronization2 = adapter.features().supportsSynchronization2;
     addToChain(&sync2Features);
 #endif
 
@@ -339,51 +338,22 @@ void SM::Device::initialize(const SM::Adapter &adapter, const SM::DeviceOptions 
     // check for Vulkan API support, fall back to extensions if needed
     auto maxApiVersionSupportedByPhysicalDevice = adapter.properties().apiVersion;
     auto apiVersion = options.apiVersion;
-    SM_LOG_INFO(
-                       "RHI/Device", "Requested Vulkan API Version {}.{}.{}",
-                       VK_VERSION_MAJOR(apiVersion), VK_VERSION_MINOR(apiVersion), VK_VERSION_PATCH(apiVersion));
-    SM_LOG_INFO(
-                       "RHI/Device", "Physical Device supports Vulkan API Version {}.{}.{}",
-                       VK_VERSION_MAJOR(maxApiVersionSupportedByPhysicalDevice),
-                       VK_VERSION_MINOR(maxApiVersionSupportedByPhysicalDevice),
-                       VK_VERSION_PATCH(maxApiVersionSupportedByPhysicalDevice));
-
+    SM_LOG_INFO("RHI/Device", "Requested Vulkan API Version {}.{}.{}",
+                VK_VERSION_MAJOR(apiVersion), VK_VERSION_MINOR(apiVersion), VK_VERSION_PATCH(apiVersion));
+    
+    SM_LOG_INFO("RHI/Device", "Physical Device supports Vulkan API Version {}.{}.{}",
+                VK_VERSION_MAJOR(maxApiVersionSupportedByPhysicalDevice),
+                VK_VERSION_MINOR(maxApiVersionSupportedByPhysicalDevice),
+                VK_VERSION_PATCH(maxApiVersionSupportedByPhysicalDevice));
+    
     if (maxApiVersionSupportedByPhysicalDevice < apiVersion) {
         SM_LOG_WARN("RHI/Device", "Downgrading requested Vulkan API Version {}.{}.{} because physical device only supports {}.{}.{}",
-                           VK_VERSION_MAJOR(apiVersion), VK_VERSION_MINOR(apiVersion), VK_VERSION_PATCH(apiVersion),
-                           VK_VERSION_MAJOR(maxApiVersionSupportedByPhysicalDevice),
-                           VK_VERSION_MINOR(maxApiVersionSupportedByPhysicalDevice),
-                           VK_VERSION_PATCH(maxApiVersionSupportedByPhysicalDevice));
+                    VK_VERSION_MAJOR(apiVersion), VK_VERSION_MINOR(apiVersion), VK_VERSION_PATCH(apiVersion),
+                    VK_VERSION_MAJOR(maxApiVersionSupportedByPhysicalDevice),
+                    VK_VERSION_MINOR(maxApiVersionSupportedByPhysicalDevice),
+                    VK_VERSION_PATCH(maxApiVersionSupportedByPhysicalDevice));
         apiVersion = maxApiVersionSupportedByPhysicalDevice;
     }
-
-#if defined(VMA_VULKAN_VERSION)
-    // If we are constraining Vulkan API used by the memory allocator, for compatibility,
-    // we must restrict the API version here.
-#if VMA_VULKAN_VERSION < 1001000
-    if (apiVersion > VK_API_VERSION_1_0) {
-        apiVersion = VK_API_VERSION_1_0;
-        SPDLOG_LOGGER_WARN(Logger::logger(), "Downgrading requested Vulkan API Version {}.{}.{} because VMA Allocator only supports {}.{}.{}",
-                           VK_VERSION_MAJOR(apiVersion), VK_VERSION_MINOR(apiVersion), VK_VERSION_PATCH(apiVersion),
-                           1, 0, 0);
-    }
-#elif VMA_VULKAN_VERSION < 1002000
-    if (apiVersion > VK_API_VERSION_1_1) {
-        apiVersion = VK_API_VERSION_1_1;
-        SPDLOG_LOGGER_WARN(Logger::logger(), "Downgrading requested Vulkan API Version {}.{}.{} because VMA Allocator only supports {}.{}.{}",
-                           VK_VERSION_MAJOR(apiVersion), VK_VERSION_MINOR(apiVersion), VK_VERSION_PATCH(apiVersion),
-                           1, 1, 0);
-    }
-#elif VMA_VULKAN_VERSION < 1003000
-    if (apiVersion > VK_API_VERSION_1_2) {
-        apiVersion = VK_API_VERSION_1_2;
-        SPDLOG_LOGGER_WARN(Logger::logger(), "Downgrading requested Vulkan API Version {}.{}.{} because VMA Allocator only supports {}.{}.{}",
-                           VK_VERSION_MAJOR(apiVersion), VK_VERSION_MINOR(apiVersion), VK_VERSION_PATCH(apiVersion),
-                           1, 2, 0);
-    }
-#endif
-#endif
-
     // const bool hasVulkan12 = apiVersion >= VK_API_VERSION_1_2;
     const bool hasVulkan11 = apiVersion >= VK_API_VERSION_1_1;
     if (!hasVulkan11) {

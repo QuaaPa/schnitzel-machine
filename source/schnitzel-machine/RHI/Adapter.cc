@@ -59,7 +59,7 @@ VkPhysicalDeviceProperties SM::Adapter::properties() const{
 //     return vkFeatures;
 // }
 
-SM::AdapterFeatures SM::Adapter::features() {
+SM::AdapterFeatures SM::Adapter::features() const {
    VkBaseOutStructure *chainCurrent{ nullptr };
    auto addToChain = [&chainCurrent](auto *next) {
        auto n = reinterpret_cast<VkBaseOutStructure *>(next);
@@ -283,7 +283,7 @@ SM::AdapterFeatures SM::Adapter::features() {
 #endif
 
 #if VK_KHR_synchronization2
-   supportsSynchronization2 = synchronization2Features.synchronization2;
+   features.supportsSynchronization2 = synchronization2Features.synchronization2;
 #endif
 
 #if VK_EXT_host_image_copy
@@ -313,7 +313,7 @@ SM::AdapterFeatures SM::Adapter::features() {
 }
 
 
-std::vector<SM::QueueFamilyProperties> SM::Adapter::queryQueueFamilyProperties() {
+std::vector<SM::QueueFamilyProperties> SM::Adapter::queryQueueFamilyProperties() const {
     if(m_handle == VK_NULL_HANDLE) {
         SM_LOG_ERROR("RHI/Adapter", "Failed to query adapter's queue properties, invalid adapter");
         return {};

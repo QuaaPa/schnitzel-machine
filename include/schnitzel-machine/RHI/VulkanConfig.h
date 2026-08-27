@@ -6,7 +6,10 @@
 
 #include <vulkan/vulkan.h>
 
-namespace SM {    
+namespace SM {
+
+#define SM_MIN_REQUIRED_VULKAN_API_VERSION VK_API_VERSION_1_2
+    
     // RELEASE    
 #if defined(SM_BUILD_RELEASE_MODE) || defined(__arm__)
     const std::vector<const char *> requestedInstanceLayers = {

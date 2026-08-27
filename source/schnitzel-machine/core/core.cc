@@ -45,14 +45,16 @@ void SM::Engine::init(std::filesystem::path exeDir) {
     win->init(800, 600, "SCHNITZEL");
 
     rhi->createInstance(SM::InstanceOptions {
+            .apiVersion = VK_API_VERSION_1_2, // explicitly selected default api version
             .applicationName = "SM_APP_NAME",
             .applicationVersion = SM_MAKE_VERSION(0, 0, 1),
             .engineVersion = SM_MAKE_VERSION(0, 0, 1),
-            .extensions = {"VK_KHR_wayland_surface"},            
+            .extensions = {"VK_KHR_wayland_surface"},           
         });
-    rhi->selectAdapter();
     auto surface = rhi->createSurface(win->getGlfwWindow());    
+    rhi->createAdapter();
     rhi->createDevice(SM::DeviceOptions {
+            .apiVersion = VK_API_VERSION_1_2
             // nothing needed
             // it default create one queue 
         });
@@ -69,6 +71,7 @@ void SM::Engine::init(std::filesystem::path exeDir) {
             .presentMode = VK_PRESENT_MODE_MAILBOX_KHR                        
         });
 }
+
 void SM::Engine::mainLoop() {
     SM_LOG_INFO("CORE", "Engine starting...");
     // while(true) { };

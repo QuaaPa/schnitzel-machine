@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan_core.h>
 
+#include "RHI/Instance.h"
 #include "core/Macros.h"
 #include "core/SMResult.h"
 #include "core/TypesDefs.h"

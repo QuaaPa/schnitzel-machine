@@ -6,14 +6,19 @@
 #include <vulkan/vulkan_core.h>
 
 void SM::Swapchain::initialize(const SM::Adapter &adapter, const VkDevice &deviceHandle, const SM::SwapchainOptions &options) {   
+
     SM::AdapterSwapchainProperties properties = adapter.querySwapchainProperties(options.surface);           
+
     VkSwapchainCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     createInfo.surface = options.surface;
     createInfo.minImageCount = options.minImageCount;
     createInfo.imageFormat = options.format;
     createInfo.imageColorSpace = options.colorSpace;
-    createInfo.imageExtent = { .width = options.imageExtent.width, .height = options.imageExtent.height };
+    createInfo.imageExtent = {
+        .width = options.imageExtent.width,
+        .height = options.imageExtent.height
+    };
     createInfo.imageArrayLayers = options.imageLayers;
     createInfo.imageUsage = options.imageUsageFlags;
     createInfo.imageSharingMode = options.imageSharingMode;

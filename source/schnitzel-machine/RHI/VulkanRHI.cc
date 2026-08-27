@@ -24,42 +24,65 @@ VkSurfaceKHR SM::VulkanRHI::createSurface(const SM::WindowHandle &window) {
     return m_surface.getHandle();    
 }
 
-VkPhysicalDevice SM::VulkanRHI::selectAdapter() {
-    auto getAdapterScore = [](SM::Adapter adapter) {
-        switch (adapter.properties().deviceType) {
-        case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
-            return 1000; // the best choise for rendering
-        case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
-            return 500;
-        case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
-            return 100;
-        case VK_PHYSICAL_DEVICE_TYPE_CPU:
-            return 10; 
-        case VK_PHYSICAL_DEVICE_TYPE_OTHER:
-        default:
-            return 0;
-        }
+VkPhysicalDevice SM::VulkanRHI::createAdapter() {
+    m_adapter.setHandle(selectSuitableAdapter(m_instance.queryAdapters()));
+    return m_adapter.getHandle();
+}
+
+VkPhysicalDevice SM::VulkanRHI::selectSuitableAdapter(const std::vector<SM::Adapter> &adapters) const {
+    // Sorting adapters by deviceType:
+    const std::vector<VkPhysicalDeviceType> deviceTypeOrders = {
+        VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU,  // best choise for us
+        VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU,
+        VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU,
+        VK_PHYSICAL_DEVICE_TYPE_CPU,
+        VK_PHYSICAL_DEVICE_TYPE_OTHER
+    };
+
+    std::vector<SM::Adapter> sortedAdapters;
+    if(adapters.size() != 0) {        
+        sortedAdapters.reserve(adapters.size());
+        for(auto type : deviceTypeOrders) {
+            for(const auto& adapter : adapters) {
+                if(adapter.properties().deviceType == type) sortedAdapters.emplace_back(adapter);
+            }
+        }          
+    }
+
+    auto isAdapterSuitable = [&](const SM::Adapter &adapter)->bool {
+        const auto queueFamilyProperties = adapter.queryQueueFamilyProperties();
+        for (uint32_t i = 0; i < queueFamilyProperties.size(); ++i) {
+            const auto &family = queueFamilyProperties[i];
+
+            if(!family.supportsFeature(VK_QUEUE_GRAPHICS_BIT)) return false;
+            if(!family.supportsFeature(VK_QUEUE_COMPUTE_BIT)) return false;
+            if(!family.supportsFeature(VK_QUEUE_TRANSFER_BIT)) return false;
+            // Uncomment it when it need
+            //         if(!family.supportsFeature(VK_QUEUE_SPARSE_BINDING_BIT)) return false;
+            //         if(!family.supportsFeature(VK_QUEUE_VIDEO_DECODE_BIT_KHR)) return false;
+            // #if VK_ENABLE_BETA_EXTENSIONS
+            //         if(!family.supportsFeature(VK_QUEUE_VIDEO_ENCODE_BIT_KHR)) return false;
+            // #endif
+            //         if(!family.supportsFeature(VK_QUEUE_OPTICAL_FLOW_BIT_NV)) return false;
+            if(!adapter.supportsPresentation(m_surface.getHandle(), i)) return false;
+        }    
+        return true;
     };
     
-    SM::Adapter best;
-    int adapterBestScore = 0;
-    
-    for (auto adapter : m_instance.queryAdapters()) {                
-        if(getAdapterScore(adapter) >= adapterBestScore) {
-            best = adapter;
-        }                
+    for (const auto &adapter : sortedAdapters) {
+        if (!isAdapterSuitable(adapter)) {
+            continue;
+        }
+        SM_LOG_DEBUG("RHI", "Selected adapter: {}", adapter.properties().deviceName);
+        return adapter.getHandle();
     }
-    m_adapter = best;
-    
-    SM_LOG_DEBUG("RHI", "Selected adapter: {}", m_adapter.properties().deviceName);
-    if (m_adapter.getHandle() == VK_NULL_HANDLE) {
-        SM_LOG_CRITICAL("RHI", "Unable to find a suitable Adapter. Aborting...");
-        return {};
-    }    
-    return m_adapter.getHandle();    
+
+    SM_LOG_CRITICAL("RHI", "Unable to find a suitable Adapter. Aborting...");
+    return VK_NULL_HANDLE; 
 }
 
 VkDevice SM::VulkanRHI::createDevice(const SM::DeviceOptions &options) {
+    // Selecting best adapter from available by our instance     
     const auto queueFamilyProperties = m_adapter.queryQueueFamilyProperties();
 
     SM_LOG_INFO("RHI", "Found {} queue famil{}", queueFamilyProperties.size(), queueFamilyProperties.size() == 1 ? "y" : "ies");
@@ -108,11 +131,6 @@ VkDevice SM::VulkanRHI::createDevice(const SM::DeviceOptions &options) {
         SM_LOG_DEBUG("RHI", "  - {} Version {}", extension.extensionName, extension.specVersion);
     }
 
-    if (!supportsPresentation || !hasGraphicsAndCompute) {
-        SM_LOG_CRITICAL("RHI", "Selected adapter queue family 0 does not meet requirements. Aborting.");
-        return {};
-    }
-
     const bool supportsMultiView = m_adapter.features().multiView;
     SM_LOG_INFO("RHI", "Supports multiview: {}", supportsMultiView);
 
@@ -133,10 +151,11 @@ VkDevice SM::VulkanRHI::createDevice(const SM::DeviceOptions &options) {
     const bool supportsHostToImageCopy = m_adapter.features().hostImageCopy;
     SM_LOG_INFO("RHI", "Supports host to image copy: {}", supportsHostToImageCopy);
 
+    
     // Now we can create a device from the selected adapter that we can then use to interact with the GPU.
     std::vector<QueueRequest> queueRequests;
     m_device.initialize(m_adapter,
-                        DeviceOptions{},
+                        options,
                         queueRequests);
         
     std::vector<QueueDescription>  queueDescriptions = m_device.getQueues(queueRequests, queueFamilyProperties);

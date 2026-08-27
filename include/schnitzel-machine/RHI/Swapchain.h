@@ -21,7 +21,6 @@ namespace SM {
         VkPresentModeKHR presentMode{ VK_PRESENT_MODE_MAILBOX_KHR };
         bool clipped{ true };
     };
-
     
     class Swapchain {
     public:

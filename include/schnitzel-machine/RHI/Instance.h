@@ -6,12 +6,14 @@
 
 #include <vulkan/vulkan_core.h>
 
+#include "VulkanConfig.h"
 #include "RHI/Adapter.h"
 #include "core/Macros.h"
 #include "RHI/ExtensionProperties.h"
 
 namespace SM {
     struct InstanceOptions {
+        uint32_t apiVersion{SM_MIN_REQUIRED_VULKAN_API_VERSION};
         const char* applicationName{ "UndefinedAppName" };
         uint32_t applicationVersion{ SM_MAKE_VERSION(0, 0, 1) };
         const char* engineName{ "UndefinedEngineName" };

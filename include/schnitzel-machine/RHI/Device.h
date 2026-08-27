@@ -16,7 +16,7 @@
 namespace SM {    
     struct DeviceOptions {
         // Version we want the device to use, can be less than the apiVersion requested for the instance
-        uint32_t apiVersion{ SM_MAKE_VERSION(1, 2, 0) };
+        uint32_t apiVersion;
         std::vector<std::string> layers;
         std::vector<std::string> extensions;
         SM::AdapterFeatures requestedFeatures;        

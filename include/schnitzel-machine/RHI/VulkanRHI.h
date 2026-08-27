@@ -18,8 +18,8 @@ namespace SM {
     public:        
         VkInstance createInstance(const SM::InstanceOptions& options);
         // TODO: create obtaining different types of windows
-        VkSurfaceKHR createSurface(const SM::WindowHandle& window);        
-        VkPhysicalDevice selectAdapter();
+        VkSurfaceKHR createSurface(const SM::WindowHandle& window);
+        VkPhysicalDevice createAdapter();
         VkDevice createDevice(const SM::DeviceOptions &options);
         VkSwapchainKHR createSwapchain(const SM::SwapchainOptions& options);
 
@@ -29,6 +29,8 @@ namespace SM {
         
     private:
         std::vector<QueueDescription> getQueues(const std::vector<QueueRequest> &queueRequests, std::vector<SM::QueueFamilyProperties> queueTypes);
+
+        VkPhysicalDevice selectSuitableAdapter(const std::vector<SM::Adapter> &adapter) const;
         
     private:
         SM::Swapchain m_swapchain;

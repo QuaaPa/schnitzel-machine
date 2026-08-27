@@ -98,6 +98,7 @@ namespace SM {
         bool multiviewMeshShader{ false };
         bool primitiveFragmentShadingRateMeshShader{ false };
         bool meshShaderQueries{ false };
+        bool supportsSynchronization2{ false };
         bool hostImageCopy{ false };
         bool samplerYCbCrConversion{ false };
         bool dynamicRendering{ false };
