@@ -1,16 +1,17 @@
 #include "RHI/VulkanRHI.h"
 
 #include <vector>
+
 #include <vulkan/vulkan_core.h>
 #include <GLFW/glfw3.h>
 
-#include "core/Log.h"
+#include "core/TypesDefs.h"
+#include "RHI/Swapchain.h"
+#include "RHI/Instance.h"
 #include "RHI/Adapter.h"
 #include "RHI/Device.h"
-#include "RHI/Instance.h"
 #include "RHI/Queue.h"
-#include "RHI/Swapchain.h"
-#include "core/TypesDefs.h"
+#include "core/Log.h"
 
 VkInstance SM::VulkanRHI::createInstance(const SM::InstanceOptions& options) {
     m_instance.initialize(options);    

@@ -6,10 +6,10 @@
 
 #include <vulkan/vulkan_core.h>
 
+#include "RHI/ExtensionProperties.h"
 #include "VulkanConfig.h"
 #include "RHI/Adapter.h"
 #include "core/Macros.h"
-#include "RHI/ExtensionProperties.h"
 
 namespace SM {
     struct InstanceOptions {

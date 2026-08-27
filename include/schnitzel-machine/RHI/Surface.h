@@ -3,8 +3,8 @@
 
 #include <vulkan/vulkan_core.h>
 
-#include "core/Macros.h"
 #include "core/TypesDefs.h"
+#include "core/Macros.h"
 
 namespace SM {    
     class Surface {        

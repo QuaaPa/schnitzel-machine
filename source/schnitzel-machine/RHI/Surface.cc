@@ -1,12 +1,11 @@
 #include "RHI/Surface.h"
 
-#include <GLFW/glfw3.h>
 #include <vulkan/vulkan_core.h>
+#include <GLFW/glfw3.h>
 
-#include "RHI/Instance.h"
-#include "core/Macros.h"
-#include "core/SMResult.h"
+#include "core/VkResultToString.h"
 #include "core/TypesDefs.h"
+#include "core/Macros.h"
 #include "core/Log.h"
 
 void SM::Surface::initialize(const SM::WindowHandle &window, const VkInstance &instanceHandle) {        

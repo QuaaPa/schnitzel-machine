@@ -2,13 +2,13 @@
 
 #include <vulkan/vulkan_core.h>
 
-#include "RHI/QueueDescription.h"
-#include "RHI/ExtensionProperties.h"
 #include "RHI/QueueFamilyProperties.h"
+#include "RHI/ExtensionProperties.h"
+#include "core/VkResultToString.h"
+#include "RHI/QueueDescription.h"
 #include "RHI/VulkanConfig.h"
-#include "core/SMResult.h"
+#include "RHI/VulkanConfig.h"
 #include "core/Log.h"
-#include "RHI/VulkanConfig.h"
         
 void SM::Device::initialize(const SM::Adapter &adapter, const SM::DeviceOptions &options, std::vector<QueueRequest> &queueRequests) {    
     // Merge requested device extensions and layers with our defaults
@@ -335,7 +335,7 @@ void SM::Device::initialize(const SM::Adapter &adapter, const SM::DeviceOptions 
     createInfo.enabledExtensionCount = 0;
     createInfo.ppEnabledExtensionNames = nullptr;
 
-    // check for Vulkan API support, fall back to extensions if needed
+    // check for Vulkan API support by adapter, fall back to extensions if needed
     auto maxApiVersionSupportedByPhysicalDevice = adapter.properties().apiVersion;
     auto apiVersion = options.apiVersion;
     SM_LOG_INFO("RHI/Device", "Requested Vulkan API Version {}.{}.{}",

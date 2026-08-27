@@ -3,15 +3,15 @@
 
 #include <vector>
 #include <string>
-
 #include <stdint.h>
+
 #include <vulkan/vulkan_core.h>
 
 #include "RHI/QueueFamilyProperties.h"
-#include "core/Macros.h"
 #include "RHI/QueueDescription.h"
-#include "RHI/Adapter.h"
 #include "RHI/QueueRequest.h"
+#include "core/Macros.h"
+#include "RHI/Adapter.h"
 
 namespace SM {    
     struct DeviceOptions {

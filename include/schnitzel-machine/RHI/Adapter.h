@@ -3,14 +3,13 @@
 
 #include <vector>
 
-#include <vulkan/vulkan.h>
 #include <vulkan/vulkan_core.h>
 
-#include "RHI/ExtensionProperties.h"
-#include "RHI/QueueFamilyProperties.h"
 #include "RHI/AdapterSwapchainProperties.h"
-#include "core/Macros.h"
+#include "RHI/QueueFamilyProperties.h"
+#include "RHI/ExtensionProperties.h"
 #include "RHI/AdapterFeatures.h"
+#include "core/Macros.h"
 
 namespace SM {    
     // struct AdapterOptions {

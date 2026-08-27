@@ -1,14 +1,16 @@
 #include "RHI/Instance.h"
 
+#include <cstdint>
+#include <cstdlib>
 #include <cstring>
 
 #include <vulkan/vulkan_core.h>
 
-#include "core/Log.h"
-#include "RHI/Adapter.h"
-#include "RHI/VulkanConfig.h"
-#include "core/SMResult.h"
 #include "RHI/ExtensionProperties.h"
+#include "core/VkResultToString.h"
+#include "RHI/VulkanConfig.h"
+#include "RHI/Adapter.h"
+#include "core/Log.h"
 
 #ifdef SM_BUILD_DEBUG_MODE
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -66,6 +68,32 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 #endif // SM_BUILD_DEBUG_MODE
 
 void SM::Instance::initialize(const SM::InstanceOptions& options) {
+
+    
+    // check for Vulkan API support by system, fall back to extensions if needed
+    uint32_t apiVersion = options.apiVersion;
+    uint32_t maxApiVersionSupportedBySystem;
+    if (vkEnumerateInstanceVersion) // checking if function is exist (1.1+)
+        vkEnumerateInstanceVersion(&maxApiVersionSupportedBySystem);
+
+    if (maxApiVersionSupportedBySystem <= VK_API_VERSION_1_2) {
+        SM_LOG_CRITICAL("RHI/Instance",
+                        "System does not support the minimum required Vulkan API version (1.2+), which is {}.{}.{}, aborting...",
+                        VK_VERSION_MAJOR(maxApiVersionSupportedBySystem),
+                        VK_VERSION_MINOR(maxApiVersionSupportedBySystem),
+                        VK_VERSION_PATCH(maxApiVersionSupportedBySystem));
+        abort();
+    }
+    if(options.apiVersion > maxApiVersionSupportedBySystem) {
+        SM_LOG_CRITICAL("RHI/Instance",
+                        "Downgrading requested Vulkan API Version {}.{}.{} because system only supports {}.{}.{}",
+                        VK_VERSION_MAJOR(apiVersion), VK_VERSION_MINOR(apiVersion), VK_VERSION_PATCH(apiVersion),
+                        VK_VERSION_MAJOR(maxApiVersionSupportedBySystem),
+                        VK_VERSION_MINOR(maxApiVersionSupportedBySystem),
+                        VK_VERSION_PATCH(maxApiVersionSupportedBySystem));
+        apiVersion = maxApiVersionSupportedBySystem;
+    }
+    
     VkApplicationInfo appInfo = {
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
         .pNext = nullptr,
@@ -73,7 +101,7 @@ void SM::Instance::initialize(const SM::InstanceOptions& options) {
         .applicationVersion = options.applicationVersion,
         .pEngineName = options.engineName,
         .engineVersion = options.engineVersion,
-        .apiVersion = options.apiVersion        
+        .apiVersion = apiVersion        
     };
 
     VkInstanceCreateInfo createInfo = {

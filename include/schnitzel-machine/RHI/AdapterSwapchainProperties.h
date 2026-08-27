@@ -21,7 +21,6 @@ namespace SM {
         VkCompositeAlphaFlagsKHR supportedCompositeAlpha;
         VkImageUsageFlags supportedUsageFlags;
     };
-
     
     inline std::string surfaceTransformFlagBitsToString(VkSurfaceTransformFlagBitsKHR transform)
     {
