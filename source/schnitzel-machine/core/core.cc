@@ -6,13 +6,16 @@
 #include <memory>
 #include <vulkan/vulkan_core.h>
 
-#include "RHI/Device.h"
+#include "RHI/Instance.h"
 #include "RHI/Swapchain.h"
+#include "RHI/VkResultToString.h"
 #include "RHI/VulkanRHI.h"
+#include "core/TypesDefs.h"
 #include "core/Window.h"
 #include "core/Macros.h"
-#include "core/Log.h"
 #include "core/Window.h"
+#include "RHI/Device.h"
+#include "core/Log.h"
 
 void SM::Engine::run(int argc, char* argv[]) {
     namespace fs = std::filesystem;
@@ -38,37 +41,40 @@ void SM::Engine::init(std::filesystem::path exeDir) {
 
     // RHI building
     // Render Hardware Interface - (instance, device, surface, swapchain);
-    rhi = std::make_unique<VulkanRHI>();
 
     // TODO: creationg different surface by different WindowType
     win = SM::Window::getInstance();
     win->init(800, 600, "SCHNITZEL");
 
-    rhi->createInstance(SM::InstanceOptions {
-            .apiVersion = VK_API_VERSION_1_2, // explicitly selected default api version
-            .applicationName = "SM_APP_NAME",
-            .applicationVersion = SM_MAKE_VERSION(0, 0, 1),
-            .engineVersion = SM_MAKE_VERSION(0, 0, 1),
-            .extensions = {"VK_KHR_wayland_surface"},           
-        });
-    auto surface = rhi->createSurface(win->getGlfwWindow());    
-    rhi->createAdapter();
-    rhi->createDevice(SM::DeviceOptions {
-            .apiVersion = VK_API_VERSION_1_2
-            // nothing needed
-            // it default create one queue 
-        });
-
-    rhi->createSwapchain(SM::SwapchainOptions {
-            .surface = surface,
-            .format = VK_FORMAT_B8G8R8A8_SRGB,
-            .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-            .imageExtent = VkExtent2D{
-                .width = 800, // replace hardcoded extent 
-                .height = 600 // replace hardcoded extent 
+    rhi = std::make_unique<VulkanRHI>();
+    SM::InstanceOptions instanceOpt {
+        .applicationName = "SM_APP_NAME",
+        .applicationVersion = SM_MAKE_VERSION(0, 0, 1),
+        .engineVersion = SM_MAKE_VERSION(0, 0, 1),
+        .extensions = {"VK_KHR_wayland_surface"}
+    };
+    SM::DeviceOptions deviceOpt {
+        /// nothing needed
+    };
+    SM::SwapchainOptions swapchainOpt {
+        .format = VK_FORMAT_B8G8R8A8_SRGB,
+        .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+        .imageExtent = VkExtent2D{
+            .width = 800, // replace hardcoded extent 
+            .height = 600 // replace hardcoded extent 
+        },
+        .imageUsageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+        .presentMode = VK_PRESENT_MODE_MAILBOX_KHR                          
+    };
+    rhi->initialize(SM::RHIOptions{
+            .apiVersion = VK_API_VERSION_1_2,
+            .window = SM::WindowHandle {
+                SM::WindowType::GLFW,
+                win->getGlfwWindow()
             },
-            .imageUsageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-            .presentMode = VK_PRESENT_MODE_MAILBOX_KHR                        
+            .InstanceOptions = instanceOpt,
+            .DeviceOptions = deviceOpt,
+            .SwapchainOptions = swapchainOpt
         });
 }
 
@@ -80,5 +86,5 @@ void SM::Engine::mainLoop() {
 void SM::Engine::cleanup() {
     SM_LOG_INFO("CORE", "Engine destroying...");
     rhi->destroy();
-    delete win;
+    win->destroy();
 }

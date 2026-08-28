@@ -7,7 +7,6 @@
 
 namespace SM {
     struct SwapchainOptions {
-        VkSurfaceKHR surface;
         VkFormat format{ VK_FORMAT_B8G8R8A8_UNORM };
         VkColorSpaceKHR colorSpace{ VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
         uint32_t minImageCount{ 3 };
@@ -24,7 +23,7 @@ namespace SM {
     
     class Swapchain {
     public:
-        void initialize(const SM::Adapter &adapter,  const VkDevice &deviceHandle, const SM::SwapchainOptions &options);
+        void initialize(const SM::Adapter &adapter,  const VkDevice &deviceHandle, const VkSurfaceKHR &surfaceHandle, const SM::SwapchainOptions &options);
 
         VkSwapchainKHR getHandle() { return m_handle; }
         

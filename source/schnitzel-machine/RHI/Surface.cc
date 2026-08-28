@@ -3,7 +3,7 @@
 #include <vulkan/vulkan_core.h>
 #include <GLFW/glfw3.h>
 
-#include "core/VkResultToString.h"
+#include "RHI/VkResultToString.h"
 #include "core/TypesDefs.h"
 #include "core/Macros.h"
 #include "core/Log.h"

@@ -7,7 +7,7 @@
 #include <vulkan/vulkan_core.h>
 
 #include "RHI/ExtensionProperties.h"
-#include "core/VkResultToString.h"
+#include "RHI/VkResultToString.h"
 #include "RHI/VulkanConfig.h"
 #include "RHI/Adapter.h"
 #include "core/Log.h"
@@ -67,11 +67,8 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 }
 #endif // SM_BUILD_DEBUG_MODE
 
-void SM::Instance::initialize(const SM::InstanceOptions& options) {
-
-    
+void SM::Instance::initialize(uint32_t apiVersion, const SM::InstanceOptions& options) {    
     // check for Vulkan API support by system, fall back to extensions if needed
-    uint32_t apiVersion = options.apiVersion;
     uint32_t maxApiVersionSupportedBySystem;
     if (vkEnumerateInstanceVersion) // checking if function is exist (1.1+)
         vkEnumerateInstanceVersion(&maxApiVersionSupportedBySystem);
@@ -84,7 +81,7 @@ void SM::Instance::initialize(const SM::InstanceOptions& options) {
                         VK_VERSION_PATCH(maxApiVersionSupportedBySystem));
         abort();
     }
-    if(options.apiVersion > maxApiVersionSupportedBySystem) {
+    if(apiVersion > maxApiVersionSupportedBySystem) {
         SM_LOG_CRITICAL("RHI/Instance",
                         "Downgrading requested Vulkan API Version {}.{}.{} because system only supports {}.{}.{}",
                         VK_VERSION_MAJOR(apiVersion), VK_VERSION_MINOR(apiVersion), VK_VERSION_PATCH(apiVersion),

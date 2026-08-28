@@ -7,13 +7,11 @@
 #include <vulkan/vulkan_core.h>
 
 #include "RHI/ExtensionProperties.h"
-#include "VulkanConfig.h"
 #include "RHI/Adapter.h"
 #include "core/Macros.h"
 
 namespace SM {
     struct InstanceOptions {
-        uint32_t apiVersion{SM_MIN_REQUIRED_VULKAN_API_VERSION};
         const char* applicationName{ "UndefinedAppName" };
         uint32_t applicationVersion{ SM_MAKE_VERSION(0, 0, 1) };
         const char* engineName{ "UndefinedEngineName" };
@@ -25,7 +23,7 @@ namespace SM {
     
     class Instance {
     public:
-        void initialize(const SM::InstanceOptions& options);
+        void initialize(uint32_t requiredApiVersion, const SM::InstanceOptions& options);
 
         SM_NODISCARD std::vector<SM::Adapter> queryAdapters() const;            
         SM_NODISCARD std::vector<std::string> queryAvailableLayers() const;        

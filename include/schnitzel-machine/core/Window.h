@@ -4,8 +4,6 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#include "core/TypesDefs.h"
-
 namespace SM {
     class Window {
     private:
@@ -24,7 +22,7 @@ namespace SM {
             return &instance;
         }
 
-        SM::WindowHandle getGlfwWindow() const {return SM::WindowHandle{SM::WindowType::GLFW, m_pwindow};};
+        GLFWwindow* getGlfwWindow() const {return m_pwindow;};
         
         bool shouldClose();
         void pollEvents();

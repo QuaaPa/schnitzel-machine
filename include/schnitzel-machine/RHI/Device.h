@@ -1,6 +1,7 @@
 #ifndef SM_RHI_DEVICE_H_
 #define SM_RHI_DEVICE_H_
 
+#include <cstdint>
 #include <vector>
 #include <string>
 #include <stdint.h>
@@ -16,7 +17,6 @@
 namespace SM {    
     struct DeviceOptions {
         // Version we want the device to use, can be less than the apiVersion requested for the instance
-        uint32_t apiVersion;
         std::vector<std::string> layers;
         std::vector<std::string> extensions;
         SM::AdapterFeatures requestedFeatures;        
@@ -25,7 +25,7 @@ namespace SM {
 
     class Device {
     public:
-        void initialize(const SM::Adapter &adapter, const SM::DeviceOptions &options, std::vector<QueueRequest> &queueRequests);
+        void initialize(uint32_t apiVersion, const SM::Adapter &adapter, const SM::DeviceOptions &options, std::vector<QueueRequest> &queueRequests);
         std::vector<QueueDescription> getQueues(const std::vector<QueueRequest> &queueRequests, const std::vector<SM::QueueFamilyProperties> &queueTypes);
         
         SM_NODISCARD VkDevice getHandle() const noexcept { return m_handle; };

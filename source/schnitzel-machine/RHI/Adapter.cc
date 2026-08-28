@@ -4,7 +4,7 @@
 
 #include "RHI/AdapterSwapchainProperties.h"
 #include "RHI/ExtensionProperties.h"
-#include "core/VkResultToString.h"
+#include "RHI/VkResultToString.h"
 #include "RHI/AdapterFeatures.h"
 #include "core/Log.h"
 

@@ -3,10 +3,11 @@
 
 #include <vulkan/vulkan_core.h>
 
-using SMResult = VkResult;
 
 namespace SM {
-    static inline const char* toString(SMResult value) {
+    using Result = VkResult;
+
+    static inline const char* toString(Result value) {
         switch (value) {
         case VK_SUCCESS:
             return "VK_SUCCESS";

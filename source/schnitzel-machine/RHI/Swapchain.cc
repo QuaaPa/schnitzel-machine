@@ -1,17 +1,17 @@
 #include "RHI/Swapchain.h"
 
-#include "core/VkResultToString.h"
+#include "RHI/VkResultToString.h"
 #include <vulkan/vulkan_core.h>
 #include "RHI/Adapter.h"
 #include "core/Log.h"
 
-void SM::Swapchain::initialize(const SM::Adapter &adapter, const VkDevice &deviceHandle, const SM::SwapchainOptions &options) {   
-
-    SM::AdapterSwapchainProperties properties = adapter.querySwapchainProperties(options.surface);           
+void SM::Swapchain::initialize(const SM::Adapter &adapter, const VkDevice &deviceHandle, const VkSurfaceKHR &surfaceHandle, const SM::SwapchainOptions &options) {
+    
+    SM::AdapterSwapchainProperties properties = adapter.querySwapchainProperties(surfaceHandle);          
 
     VkSwapchainCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = options.surface;
+    createInfo.surface = surfaceHandle;
     createInfo.minImageCount = options.minImageCount;
     createInfo.imageFormat = options.format;
     createInfo.imageColorSpace = options.colorSpace;

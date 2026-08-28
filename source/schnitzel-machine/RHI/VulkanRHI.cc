@@ -1,11 +1,12 @@
 #include "RHI/VulkanRHI.h"
 
+#include <initializer_list>
 #include <vector>
 
 #include <vulkan/vulkan_core.h>
 #include <GLFW/glfw3.h>
 
-#include "core/TypesDefs.h"
+#include "RHI/VkResultToString.h"
 #include "RHI/Swapchain.h"
 #include "RHI/Instance.h"
 #include "RHI/Adapter.h"
@@ -13,79 +14,21 @@
 #include "RHI/Queue.h"
 #include "core/Log.h"
 
-VkInstance SM::VulkanRHI::createInstance(const SM::InstanceOptions& options) {
-    m_instance.initialize(options);    
-    return m_instance.getHandle();
-}
+void SM::VulkanRHI::initialize(const RHIOptions &options) {
 
-VkSurfaceKHR SM::VulkanRHI::createSurface(const SM::WindowHandle &window) {
-    // Release window creation for diffrent window type
+    // Instance initialization
     //
-    m_surface.initialize(window, m_instance.getHandle());
-    return m_surface.getHandle();    
-}
+    m_instance.initialize(options.apiVersion, options.InstanceOptions);
 
-VkPhysicalDevice SM::VulkanRHI::createAdapter() {
+    // Surface initialization
+    //
+    m_surface.initialize(options.window, m_instance.getHandle());
+
+    // Adapter selection
+    //
     m_adapter.setHandle(selectSuitableAdapter(m_instance.queryAdapters()));
-    return m_adapter.getHandle();
-}
 
-VkPhysicalDevice SM::VulkanRHI::selectSuitableAdapter(const std::vector<SM::Adapter> &adapters) const {
-    // Sorting adapters by deviceType:
-    const std::vector<VkPhysicalDeviceType> deviceTypeOrders = {
-        VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU,  // best choise for us
-        VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU,
-        VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU,
-        VK_PHYSICAL_DEVICE_TYPE_CPU,
-        VK_PHYSICAL_DEVICE_TYPE_OTHER
-    };
-
-    std::vector<SM::Adapter> sortedAdapters;
-    if(adapters.size() != 0) {        
-        sortedAdapters.reserve(adapters.size());
-        for(auto type : deviceTypeOrders) {
-            for(const auto& adapter : adapters) {
-                if(adapter.properties().deviceType == type) sortedAdapters.emplace_back(adapter);
-            }
-        }          
-    }
-
-    auto isAdapterSuitable = [&](const SM::Adapter &adapter)->bool {
-        const auto queueFamilyProperties = adapter.queryQueueFamilyProperties();
-        for (uint32_t i = 0; i < queueFamilyProperties.size(); ++i) {
-            const auto &family = queueFamilyProperties[i];
-
-            if(!family.supportsFeature(VK_QUEUE_GRAPHICS_BIT)) return false;
-            if(!family.supportsFeature(VK_QUEUE_COMPUTE_BIT)) return false;
-            if(!family.supportsFeature(VK_QUEUE_TRANSFER_BIT)) return false;
-            // Uncomment it when it need
-            //         if(!family.supportsFeature(VK_QUEUE_SPARSE_BINDING_BIT)) return false;
-            //         if(!family.supportsFeature(VK_QUEUE_VIDEO_DECODE_BIT_KHR)) return false;
-            // #if VK_ENABLE_BETA_EXTENSIONS
-            //         if(!family.supportsFeature(VK_QUEUE_VIDEO_ENCODE_BIT_KHR)) return false;
-            // #endif
-            //         if(!family.supportsFeature(VK_QUEUE_OPTICAL_FLOW_BIT_NV)) return false;
-            if(!adapter.supportsPresentation(m_surface.getHandle(), i)) return false;
-        }    
-        return true;
-    };
-    
-    for (const auto &adapter : sortedAdapters) {
-        if (!isAdapterSuitable(adapter)) {
-            continue;
-        }
-        SM_LOG_DEBUG("RHI", "Selected adapter: {}", adapter.properties().deviceName);
-        return adapter.getHandle();
-    }
-
-    SM_LOG_CRITICAL("RHI", "Unable to find a suitable Adapter. Aborting...");
-    return VK_NULL_HANDLE; 
-}
-
-VkDevice SM::VulkanRHI::createDevice(const SM::DeviceOptions &options) {
-    // Selecting best adapter from available by our instance     
     const auto queueFamilyProperties = m_adapter.queryQueueFamilyProperties();
-
     SM_LOG_INFO("RHI", "Found {} queue famil{}", queueFamilyProperties.size(), queueFamilyProperties.size() == 1 ? "y" : "ies");
 
     const bool supportsPresentation = m_adapter.supportsPresentation(m_surface.getHandle(), 0); 
@@ -152,12 +95,11 @@ VkDevice SM::VulkanRHI::createDevice(const SM::DeviceOptions &options) {
     const bool supportsHostToImageCopy = m_adapter.features().hostImageCopy;
     SM_LOG_INFO("RHI", "Supports host to image copy: {}", supportsHostToImageCopy);
 
-    
-    // Now we can create a device from the selected adapter that we can then use to interact with the GPU.
     std::vector<QueueRequest> queueRequests;
-    m_device.initialize(m_adapter,
-                        options,
-                        queueRequests);
+    
+    // Device initialization
+    //
+    m_device.initialize(options.apiVersion, m_adapter, options.DeviceOptions, queueRequests);
         
     std::vector<QueueDescription>  queueDescriptions = m_device.getQueues(queueRequests, queueFamilyProperties);
 
@@ -166,21 +108,69 @@ VkDevice SM::VulkanRHI::createDevice(const SM::DeviceOptions &options) {
     for (uint32_t i = 0; i < queueCount; ++i) {
         m_queues.emplace_back(SM::Queue(m_device.getHandle(), queueDescriptions[i]));           
     }
-    
-    return m_device.getHandle();
+
+    // Swapchain initialization
+    //
+    m_swapchain.initialize(m_adapter, m_device.getHandle(), m_surface.getHandle(), options.SwapchainOptions);    
 }
 
-VkSwapchainKHR SM::VulkanRHI::createSwapchain(const SM::SwapchainOptions& options) {
-    m_swapchain.initialize(m_adapter, m_device.getHandle(), options);    
-    return m_swapchain.getHandle();
+VkPhysicalDevice SM::VulkanRHI::selectSuitableAdapter(const std::vector<SM::Adapter> &adapters) const {
+    // Sorting adapters by deviceType:
+    const std::vector<VkPhysicalDeviceType> deviceTypeOrders = {
+        VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU,  // best choise for us
+        VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU,
+        VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU,
+        VK_PHYSICAL_DEVICE_TYPE_CPU,
+        VK_PHYSICAL_DEVICE_TYPE_OTHER
+    };
+
+    std::vector<SM::Adapter> sortedAdapters;
+    if(adapters.size() != 0) {        
+        sortedAdapters.reserve(adapters.size());
+        for(auto type : deviceTypeOrders) {
+            for(const auto& adapter : adapters) {
+                if(adapter.properties().deviceType == type) sortedAdapters.emplace_back(adapter);
+            }
+        }          
+    }
+
+    auto isAdapterSuitable = [&](const SM::Adapter &adapter)->bool {
+        const auto queueFamilyProperties = adapter.queryQueueFamilyProperties();
+        for (uint32_t i = 0; i < queueFamilyProperties.size(); ++i) {
+            const auto &family = queueFamilyProperties[i];
+
+            if(!family.supportsFeature(VK_QUEUE_GRAPHICS_BIT)) return false;
+            if(!family.supportsFeature(VK_QUEUE_COMPUTE_BIT)) return false;
+            if(!family.supportsFeature(VK_QUEUE_TRANSFER_BIT)) return false;
+            // Uncomment it when it need
+            //         if(!family.supportsFeature(VK_QUEUE_SPARSE_BINDING_BIT)) return false;
+            //         if(!family.supportsFeature(VK_QUEUE_VIDEO_DECODE_BIT_KHR)) return false;
+            // #if VK_ENABLE_BETA_EXTENSIONS
+            //         if(!family.supportsFeature(VK_QUEUE_VIDEO_ENCODE_BIT_KHR)) return false;
+            // #endif
+            //         if(!family.supportsFeature(VK_QUEUE_OPTICAL_FLOW_BIT_NV)) return false;
+            if(!adapter.supportsPresentation(m_surface.getHandle(), i)) return false;
+        }    
+        return true;
+    };
+    
+    for (const auto &adapter : sortedAdapters) {
+        if (!isAdapterSuitable(adapter)) {
+            continue;
+        }
+        SM_LOG_DEBUG("RHI", "Selected adapter: {}", adapter.properties().deviceName);        
+        return adapter.getHandle();
+    }
+
+    SM_LOG_CRITICAL("RHI", "Unable to find a suitable Adapter. Aborting...");
+    return VK_NULL_HANDLE; 
+}
+SM::Result SM::VulkanRHI::deviceWaitIdle() {
+    SM_LOG_DEBUG("RHI", "Waiting for a device to become idle, before RHI destroying...");    
+    return vkDeviceWaitIdle(m_device.getHandle());
 }
 
 void SM::VulkanRHI::destroy() {
-    SM_LOG_DEBUG("RHI", "Waiting for a device to become idle, before RHI destroying...");
-    vkDeviceWaitIdle(m_device.getHandle());
-
-    // reseting vulkan objects...
-    // in correct order
     m_swapchain.destroy(m_device.getHandle());
     m_device.destroy();
     m_surface.destroy(m_instance.getHandle());

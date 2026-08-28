@@ -6,6 +6,8 @@
 #include <vulkan/vulkan_core.h>
 #include <GLFW/glfw3.h>
 
+#include "RHI/VkResultToString.h"
+#include "core/TypesDefs.h"
 #include "RHI/Swapchain.h"
 #include "RHI/Instance.h"
 #include "RHI/Adapter.h"
@@ -14,18 +16,23 @@
 #include "RHI/Device.h"
 #include "RHI/Queue.h"
 
-namespace SM {    
-    class VulkanRHI {
-    public:        
-        VkInstance createInstance(const SM::InstanceOptions& options);
-        // TODO: create obtaining different types of windows
-        VkSurfaceKHR createSurface(const SM::WindowHandle& window);
-        VkPhysicalDevice createAdapter();
-        VkDevice createDevice(const SM::DeviceOptions &options);
-        VkSwapchainKHR createSwapchain(const SM::SwapchainOptions& options);
+namespace SM {
 
-        std::vector<SM::Queue> queryQueues() { return m_queues; };
+    struct RHIOptions {
+        uint32_t                   apiVersion; // Required Vulkan API version 
+        const SM::WindowHandle     &window;
         
+        const SM::InstanceOptions  &InstanceOptions;
+        const SM::DeviceOptions    &DeviceOptions;
+        const SM::SwapchainOptions &SwapchainOptions;
+    };
+    
+    class VulkanRHI {
+    public:
+        void initialize(const RHIOptions &options);
+        
+        std::vector<SM::Queue> queryQueues() { return m_queues; };
+        SM::Result deviceWaitIdle();        
         void destroy();
         
     private:
