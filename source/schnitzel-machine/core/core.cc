@@ -1,6 +1,7 @@
 #include "core/core.h"
 
 #include <GLFW/glfw3.h>
+#include <chrono>
 #include <filesystem>
 
 #include <memory>
@@ -8,8 +9,8 @@
 
 #include "RHI/Instance.h"
 #include "RHI/Swapchain.h"
-#include "RHI/VkResultToString.h"
 #include "RHI/VulkanRHI.h"
+#include "core/ShaderCompiler.h"
 #include "core/TypesDefs.h"
 #include "core/Window.h"
 #include "core/Macros.h"
@@ -46,7 +47,7 @@ void SM::Engine::init(std::filesystem::path exeDir) {
     win = SM::Window::getInstance();
     win->init(800, 600, "SCHNITZEL");
 
-    rhi = std::make_unique<VulkanRHI>();
+    rhi = std::make_unique<SM::VulkanRHI>();
     SM::InstanceOptions instanceOpt {
         .applicationName = "SM_APP_NAME",
         .applicationVersion = SM_MAKE_VERSION(0, 0, 1),
@@ -66,7 +67,7 @@ void SM::Engine::init(std::filesystem::path exeDir) {
         .imageUsageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
         .presentMode = VK_PRESENT_MODE_MAILBOX_KHR                          
     };
-    rhi->initialize(SM::RHIOptions{
+    rhi->initialize(SM::RHIOptions {
             .apiVersion = VK_API_VERSION_1_2,
             .window = SM::WindowHandle {
                 SM::WindowType::GLFW,
@@ -76,6 +77,14 @@ void SM::Engine::init(std::filesystem::path exeDir) {
             .DeviceOptions = deviceOpt,
             .SwapchainOptions = swapchainOpt
         });
+
+    compiler = std::make_unique<SM::ShaderCompiler>();
+    compiler->SetOptimizationLevel(shaderc_optimization_level_performance);
+#ifdef SM_BUILD_DEBUG_MODE
+    compiler->SetGenerateDebugInfo(true);
+    compiler->SetOptimizationLevel(shaderc_optimization_level_zero); // easier to debug in RenderDoc
+#endif
+    
 }
 
 void SM::Engine::mainLoop() {
@@ -85,6 +94,7 @@ void SM::Engine::mainLoop() {
 
 void SM::Engine::cleanup() {
     SM_LOG_INFO("CORE", "Engine destroying...");
+    rhi->deviceWaitIdle(); // wait device to become idle, before destroying
     rhi->destroy();
     win->destroy();
 }

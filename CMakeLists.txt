@@ -9,14 +9,18 @@ project(${PROJECT_NAME} VERSION 0.0.1 LANGUAGES CXX DESCRIPTION "${PROJECT_NAME}
 file(GLOB_RECURSE SOURCES "source/*.cc")
 file(GLOB_RECURSE HEADERS "include/*.h")
 
+add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+
 find_package(Vulkan REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm REQUIRED)
 find_package(spdlog REQUIRED)
 
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(shaderc REQUIRED IMPORTED_TARGET shaderc)
+
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include/schnitzel-machine)
-target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan glfw glm spdlog::spdlog)
+target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan glfw glm spdlog::spdlog PkgConfig::shaderc)
 set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/)
 
 file(GLOB_RECURSE RESOURCE_FILES CONFIGURE_DEPENDS

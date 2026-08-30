@@ -8,6 +8,7 @@
 
 #include "RHI/VulkanRHI.h"
 #include "core/Window.h"
+#include "core/ShaderCompiler.h"
 
 namespace SM {
     class Engine {
@@ -15,8 +16,9 @@ namespace SM {
         Engine()  = default;
         ~Engine() = default;
 
-        std::unique_ptr<SM::VulkanRHI> rhi;
         Window* win;
+        std::unique_ptr<SM::VulkanRHI> rhi;
+        std::unique_ptr<SM::ShaderCompiler> compiler;
         
     public:
         static Engine* getInstance() {
