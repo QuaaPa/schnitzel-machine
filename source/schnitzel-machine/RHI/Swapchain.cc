@@ -1,18 +1,30 @@
 #include "RHI/Swapchain.h"
 
-#include "RHI/VkResultToString.h"
+#include <cstdint>
+#include <vector>
 #include <vulkan/vulkan_core.h>
+
+#include "RHI/VkResultToString.h"
+#include "RHI/VulkanConfig.h"
 #include "RHI/Adapter.h"
+#include "core/Macros.h"
 #include "core/Log.h"
 
-void SM::Swapchain::initialize(const SM::Adapter &adapter, const VkDevice &deviceHandle, const VkSurfaceKHR &surfaceHandle, const SM::SwapchainOptions &options) {
+void SM::Swapchain::initialize(const SM::Adapter &adapter, const VkDevice &deviceHandle, const std::vector<SM::Queue> &queues, const VkSurfaceKHR &surfaceHandle, const SM::SwapchainOptions &options) {
     
-    SM::AdapterSwapchainProperties properties = adapter.querySwapchainProperties(surfaceHandle);          
+    SM::AdapterSwapchainProperties properties = adapter.querySwapchainProperties(surfaceHandle);  
 
+    // A value of 0 of maxImageCount means that there is no limit on the number of images,
+    // but in this case we have predefined SM_MAX_IMAGE_COUNT
+    uint32_t maxImageCount = properties.capabilities.maxImageCount != 0 ?
+        properties.capabilities.maxImageCount : SM_MAX_IMAGE_COUNT;
+    
     VkSwapchainCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     createInfo.surface = surfaceHandle;
-    createInfo.minImageCount = options.minImageCount;
+    createInfo.minImageCount = SM_CLAMP(options.imageCount,
+                                        properties.capabilities.minImageCount,
+                                        maxImageCount);
     createInfo.imageFormat = options.format;
     createInfo.imageColorSpace = options.colorSpace;
     createInfo.imageExtent = {
@@ -22,9 +34,15 @@ void SM::Swapchain::initialize(const SM::Adapter &adapter, const VkDevice &devic
     createInfo.imageArrayLayers = options.imageLayers;
     createInfo.imageUsage = options.imageUsageFlags;
     createInfo.imageSharingMode = options.imageSharingMode;
-    if (!options.queueTypeIndices.empty()) {
-        createInfo.queueFamilyIndexCount = options.queueTypeIndices.size();
-        createInfo.pQueueFamilyIndices = options.queueTypeIndices.data();
+
+    std::vector<uint32_t> queueFamilyIndices;
+    queueFamilyIndices.reserve(queues.size());
+    for(const auto& queue : queues) {
+        queueFamilyIndices.push_back(queue.queueFamilyIndex());
+    }
+    if (!queueFamilyIndices.empty()) {
+        createInfo.queueFamilyIndexCount = queueFamilyIndices.size();
+        createInfo.pQueueFamilyIndices = queueFamilyIndices.data();
     }
     createInfo.preTransform = options.transform;
     createInfo.compositeAlpha = options.compositeAlpha;

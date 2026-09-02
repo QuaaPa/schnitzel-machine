@@ -1,29 +1,31 @@
 #ifndef SM_RHI_SWAPCHAIN_H_
 #define SM_RHI_SWAPCHAIN_H_
 
+#include <vector>
 #include <vulkan/vulkan_core.h>
 
 #include "RHI/Adapter.h"
+#include "RHI/Device.h"
+#include "RHI/Queue.h"
 
 namespace SM {
     struct SwapchainOptions {
-        VkFormat format{ VK_FORMAT_B8G8R8A8_UNORM };
-        VkColorSpaceKHR colorSpace{ VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
-        uint32_t minImageCount{ 3 };
+        VkFormat format;
+        VkColorSpaceKHR colorSpace;
+        uint32_t imageCount;
         VkExtent2D imageExtent;
-        uint32_t imageLayers{ 1 };
-        VkImageUsageFlags imageUsageFlags{ VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT };
-        VkSharingMode imageSharingMode{ VK_SHARING_MODE_EXCLUSIVE };
-        std::vector<uint32_t> queueTypeIndices;
-        VkSurfaceTransformFlagBitsKHR transform{ VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR };
-        VkCompositeAlphaFlagBitsKHR compositeAlpha{ VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR };
-        VkPresentModeKHR presentMode{ VK_PRESENT_MODE_MAILBOX_KHR };
-        bool clipped{ true };
+        uint32_t imageLayers;
+        VkImageUsageFlags imageUsageFlags;
+        VkSharingMode imageSharingMode;
+        VkSurfaceTransformFlagBitsKHR transform;
+        VkCompositeAlphaFlagBitsKHR compositeAlpha;
+        VkPresentModeKHR presentMode;
+        bool clipped;
     };
     
     class Swapchain {
     public:
-        void initialize(const SM::Adapter &adapter,  const VkDevice &deviceHandle, const VkSurfaceKHR &surfaceHandle, const SM::SwapchainOptions &options);
+        void initialize(const SM::Adapter &adapter, const VkDevice &deviceHandle, const std::vector<SM::Queue> &queues, const VkSurfaceKHR &surfaceHandle, const SM::SwapchainOptions &options);
 
         VkSwapchainKHR getHandle() { return m_handle; }
         

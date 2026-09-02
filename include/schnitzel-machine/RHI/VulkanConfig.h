@@ -8,17 +8,19 @@
 
 namespace SM {
 
+#define SM_MAX_IMAGE_COUNT 16
+
 #define SM_MIN_REQUIRED_VULKAN_API_VERSION VK_API_VERSION_1_2
-    
-    // RELEASE    
+
+// RELEASE
 #if defined(SM_BUILD_RELEASE_MODE) || defined(__arm__)
     const std::vector<const char *> requestedInstanceLayers = {
 #ifdef __APPLE__
         "VK_LAYER_KHRONOS_synchronization2"
 #endif
     };
-    
-    // DEBUG  
+
+// DEBUG
 #else
     const std::vector<const char *> requestedInstanceLayers = {
         "VK_LAYER_KHRONOS_validation",
@@ -27,13 +29,12 @@ namespace SM {
 #endif
     };
 #endif
-
+    
     constexpr std::array<const char *, 1> requestedInstanceExtensions = {
         VK_EXT_DEBUG_UTILS_EXTENSION_NAME
     };
 
-    inline std::vector<const char *> getDefaultRequestedInstanceExtensions()
-    {
+    inline std::vector<const char *> getDefaultRequestedInstanceExtensions() {
         std::vector<const char *> extensions{
             VK_KHR_SURFACE_EXTENSION_NAME,
 #if VK_KHR_xcb_surface
@@ -43,23 +44,23 @@ namespace SM {
             VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME,
 #endif
 #if VK_KHR_win32_surface
-            VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
+          VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #endif
 #if VK_KHR_surface_maintenance1
-            VK_KHR_SURFACE_MAINTENANCE_1_EXTENSION_NAME,
+          VK_KHR_SURFACE_MAINTENANCE_1_EXTENSION_NAME,
 #endif
 #if VK_KHR_get_surface_capabilities2
-            VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME,
+          VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME,
 #endif
 #if defined(KDGPU_PLATFORM_APPLE)
-            VK_EXT_METAL_SURFACE_EXTENSION_NAME,
-            VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
-            VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
+          VK_EXT_METAL_SURFACE_EXTENSION_NAME,
+          VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+          VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
 #elif defined(KDGPU_PLATFORM_ANDROID)
-            VK_KHR_ANDROID_SURFACE_EXTENSION_NAME,
+          VK_KHR_ANDROID_SURFACE_EXTENSION_NAME,
 #endif
         };
-
+        
 #if VK_EXT_debug_utils
 #ifdef SM_BUILD_DEBUG_MODE
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
@@ -67,19 +68,19 @@ namespace SM {
 #endif
         return extensions;
     }
-
-
+    
     // Device config assuming Vulkan 1.2
-    inline std::vector<const char *> getDefaultRequestedDeviceExtensions()
-    {
+    inline std::vector<const char *> getDefaultRequestedDeviceExtensions() {
         std::vector<const char *> extensions{
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 #if VK_KHR_swapchain_maintenance1
             VK_KHR_SWAPCHAIN_MAINTENANCE_1_EXTENSION_NAME,
 #endif
 #if VK_EXT_host_image_copy
-            VK_KHR_COPY_COMMANDS_2_EXTENSION_NAME, // Needed by VK_EXT_HOST_IMAGE_COPY_EXTENSION_NAME
-            VK_KHR_FORMAT_FEATURE_FLAGS_2_EXTENSION_NAME, // Needed by VK_EXT_HOST_IMAGE_COPY_EXTENSION_NAME
+            VK_KHR_COPY_COMMANDS_2_EXTENSION_NAME, // Needed by
+            // VK_EXT_HOST_IMAGE_COPY_EXTENSION_NAME
+            VK_KHR_FORMAT_FEATURE_FLAGS_2_EXTENSION_NAME, // Needed by
+                                                    // VK_EXT_HOST_IMAGE_COPY_EXTENSION_NAME
             VK_EXT_HOST_IMAGE_COPY_EXTENSION_NAME,
 #endif
 #if VK_KHR_external_semaphore_fd
@@ -142,7 +143,7 @@ namespace SM {
 #if VK_KHR_dynamic_rendering_local_read
             VK_KHR_DYNAMIC_RENDERING_LOCAL_READ_EXTENSION_NAME,
 #endif
-
+            
             // Extensions needed for Vulkan 1.1 features that are core in 1.2
 #if VK_EXT_descriptor_indexing
             VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
@@ -160,10 +161,10 @@ namespace SM {
             VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME,
 #endif
         };
-
+        
         return extensions;
     }
-
+    
 } // namespace SM
 
 #endif // SM_RHI_VULKANCONFIG_H_

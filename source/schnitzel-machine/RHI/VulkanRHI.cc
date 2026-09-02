@@ -111,7 +111,7 @@ void SM::VulkanRHI::initialize(const RHIOptions &options) {
 
     // Swapchain initialization
     //
-    m_swapchain.initialize(m_adapter, m_device.getHandle(), m_surface.getHandle(), options.SwapchainOptions);    
+    m_swapchain.initialize(m_adapter, m_device.getHandle(), m_queues, m_surface.getHandle(), options.SwapchainOptions);    
 }
 
 VkPhysicalDevice SM::VulkanRHI::selectSuitableAdapter(const std::vector<SM::Adapter> &adapters) const {
