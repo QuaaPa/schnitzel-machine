@@ -4,7 +4,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-namespace SM {
+namespace SM {    
     class Window {
     private:
         Window() {};
@@ -23,6 +23,8 @@ namespace SM {
         }
 
         GLFWwindow* getGlfwWindow() const {return m_pwindow;};
+
+        void getFramebufferSize(int* pWidth, int* pHeight);
         
         bool shouldClose();
         void pollEvents();

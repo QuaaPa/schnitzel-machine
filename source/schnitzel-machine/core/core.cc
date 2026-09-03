@@ -1,6 +1,7 @@
 #include "core/core.h"
 
 #include <GLFW/glfw3.h>
+#include <cstdint>
 #include <filesystem>
 
 #include <memory>
@@ -56,13 +57,16 @@ void SM::Engine::init(std::filesystem::path exeDir) {
     SM::DeviceOptions deviceOpt {
         /// nothing needed
     };
+
+    int winWidth, winHeight;
+    win->getFramebufferSize(&winHeight, &winHeight);
     SM::SwapchainOptions swapchainOpt {
         .format = VK_FORMAT_B8G8R8A8_UNORM ,
         .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-        .imageCount = 3, 
+        .imageCount = 4, 
         .imageExtent = VkExtent2D {
-            .width = 800, // replace hardcoded extent 
-            .height = 600 // replace hardcoded extent 
+            .width =  static_cast<uint32_t>(winWidth),
+            .height = static_cast<uint32_t>(winHeight)
         },
         .imageLayers = 1,
         .imageUsageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,

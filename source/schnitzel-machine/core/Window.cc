@@ -38,6 +38,10 @@ void SM::Window::pollEvents() {
     glfwPollEvents();
 }
 
+void SM::Window::getFramebufferSize(int* pWidth, int* pHeight) {
+    glfwGetFramebufferSize(m_pwindow, pWidth, pHeight);
+}
+
 void SM::Window::destroy() {
     glfwDestroyWindow(m_pwindow);
     glfwTerminate();
