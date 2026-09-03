@@ -1,5 +1,6 @@
 #include "RHI/VulkanRHI.h"
 
+#include <cstdint>
 #include <initializer_list>
 #include <vector>
 
@@ -111,7 +112,13 @@ void SM::VulkanRHI::initialize(const RHIOptions &options) {
 
     // Swapchain initialization
     //
-    m_swapchain.initialize(m_adapter, m_device.getHandle(), m_queues, m_surface.getHandle(), options.SwapchainOptions);    
+    m_swapchain.initialize(m_adapter, m_device.getHandle(), m_queues, m_surface.getHandle(), options.SwapchainOptions);
+
+    uint32_t swapchainImageCount;
+    vkGetSwapchainImagesKHR(m_device.getHandle(), m_swapchain.getHandle(), &swapchainImageCount, nullptr);
+    m_swapchainImages.resize(swapchainImageCount);   
+    vkGetSwapchainImagesKHR(m_device.getHandle(), m_swapchain.getHandle(), &swapchainImageCount, m_swapchainImages.data());
+    SM_LOG_DEBUG("RHI", "Received {} swapchain images", swapchainImageCount);
 }
 
 VkPhysicalDevice SM::VulkanRHI::selectSuitableAdapter(const std::vector<SM::Adapter> &adapters) const {

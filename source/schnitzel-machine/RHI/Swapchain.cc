@@ -16,8 +16,8 @@ void SM::Swapchain::initialize(const SM::Adapter &adapter, const VkDevice &devic
 
     // A value of 0 of maxImageCount means that there is no limit on the number of images,
     // but in this case we have predefined SM_MAX_IMAGE_COUNT
-    uint32_t maxImageCount = properties.capabilities.maxImageCount != 0 ?
-        properties.capabilities.maxImageCount : SM_MAX_IMAGE_COUNT;
+    uint32_t maxImageCount = properties.capabilities.maxImageCount;
+    if(maxImageCount == 0) maxImageCount = SM_MAX_IMAGE_COUNT;
     
     VkSwapchainCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
