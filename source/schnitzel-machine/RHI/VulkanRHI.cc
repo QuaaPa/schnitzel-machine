@@ -7,6 +7,8 @@
 #include <vulkan/vulkan_core.h>
 #include <GLFW/glfw3.h>
 
+#include "RHI/Image.h"
+#include "RHI/ImageDescription.h"
 #include "RHI/VkResultToString.h"
 #include "RHI/Swapchain.h"
 #include "RHI/Instance.h"
@@ -114,11 +116,38 @@ void SM::VulkanRHI::initialize(const RHIOptions &options) {
     //
     m_swapchain.initialize(m_adapter, m_device.getHandle(), m_queues, m_surface.getHandle(), options.SwapchainOptions);
 
-    uint32_t swapchainImageCount;
-    vkGetSwapchainImagesKHR(m_device.getHandle(), m_swapchain.getHandle(), &swapchainImageCount, nullptr);
-    m_swapchainImages.resize(swapchainImageCount);   
-    vkGetSwapchainImagesKHR(m_device.getHandle(), m_swapchain.getHandle(), &swapchainImageCount, m_swapchainImages.data());
-    SM_LOG_DEBUG("RHI", "Received {} swapchain images", swapchainImageCount);
+    uint32_t vkSwapchainImageCount;
+    vkGetSwapchainImagesKHR(m_device.getHandle(), m_swapchain.getHandle(), &vkSwapchainImageCount, nullptr);
+    SM_LOG_DEBUG("RHI", "Received {} swapchain images", vkSwapchainImageCount);
+    
+    std::vector<VkImage> vkSwapchainImages;
+    vkSwapchainImages.resize(vkSwapchainImageCount);   
+    if(auto result = vkGetSwapchainImagesKHR(m_device.getHandle(), m_swapchain.getHandle(), &vkSwapchainImageCount, vkSwapchainImages.data()); result != VK_SUCCESS) {
+        SM_LOG_CRITICAL("RHI", "{}: Failed to query swapchain image handles", toString(result));
+    }
+
+    m_swapchainImages.reserve(vkSwapchainImageCount);
+    for(auto& image : vkSwapchainImages) {
+        m_swapchainImages.emplace_back(SM::Image(m_device.getHandle(),
+                                                 image,
+                                                 SM::ImageDescription {
+                                                     .viewType = VK_IMAGE_VIEW_TYPE_2D,
+                                                     .format = options.SwapchainOptions.format,
+                                                     .components = VkComponentMapping {
+                                                         .r = VK_COMPONENT_SWIZZLE_IDENTITY,
+                                                         .g = VK_COMPONENT_SWIZZLE_IDENTITY,
+                                                         .b = VK_COMPONENT_SWIZZLE_IDENTITY,
+                                                         .a = VK_COMPONENT_SWIZZLE_IDENTITY,
+                                                     },
+                                                     .subresourceRange = VkImageSubresourceRange {
+                                                         .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                                                         .baseMipLevel = 0,
+                                                         .levelCount = 1,
+                                                         .baseArrayLayer = 0,
+                                                         .layerCount = 1,
+                                                     }
+                                                 }));
+    }
 }
 
 VkPhysicalDevice SM::VulkanRHI::selectSuitableAdapter(const std::vector<SM::Adapter> &adapters) const {
@@ -173,11 +202,14 @@ VkPhysicalDevice SM::VulkanRHI::selectSuitableAdapter(const std::vector<SM::Adap
     return VK_NULL_HANDLE; 
 }
 SM::Result SM::VulkanRHI::deviceWaitIdle() {
-    SM_LOG_DEBUG("RHI", "Waiting for a device to become idle, before RHI destroying...");    
+    SM_LOG_DEBUG("RHI", "Waiting for a device to become idle");    
     return vkDeviceWaitIdle(m_device.getHandle());
 }
 
 void SM::VulkanRHI::destroy() {
+    for (auto image : m_swapchainImages) {
+        image.destroyImageView(m_device.getHandle());
+    }
     m_swapchain.destroy(m_device.getHandle());
     m_device.destroy();
     m_surface.destroy(m_instance.getHandle());

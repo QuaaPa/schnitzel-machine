@@ -15,6 +15,7 @@
 #include "core/Macros.h"
 #include "RHI/Device.h"
 #include "RHI/Queue.h"
+#include "RHI/Image.h"
 
 namespace SM {
 
@@ -41,7 +42,7 @@ namespace SM {
         VkPhysicalDevice selectSuitableAdapter(const std::vector<SM::Adapter> &adapter) const;
         
     private:
-        std::vector<VkImage> m_swapchainImages;
+        std::vector<SM::Image> m_swapchainImages;
         SM::Swapchain m_swapchain;
         SM::Device m_device;     // represents a logical GPU device
         SM::Adapter m_adapter;   // is a representation of a physical hardware device

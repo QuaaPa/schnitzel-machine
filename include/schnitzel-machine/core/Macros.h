@@ -11,3 +11,6 @@
 // reference to hi if hi is less than v,
 // otherwise reference to v. 
 #define SM_CLAMP(v, lo, hi) ((v) < (lo) ? (lo) : ((hi) < (v) ? (hi) : (v)))
+
+#define STRINGIFY_IMPL(...) #__VA_ARGS__
+#define STRINGIFY(...) STRINGIFY_IMPL(__VA_ARGS__)

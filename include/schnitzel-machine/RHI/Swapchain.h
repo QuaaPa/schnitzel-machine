@@ -5,7 +5,6 @@
 #include <vulkan/vulkan_core.h>
 
 #include "RHI/Adapter.h"
-#include "RHI/Device.h"
 #include "RHI/Queue.h"
 
 namespace SM {
