@@ -34,6 +34,9 @@ namespace SM {
         
         std::vector<SM::Queue> queryQueues() { return m_queues; };
         SM::Result deviceWaitIdle();        
+
+        SM::Device getDevice() const noexcept { return m_device; }
+        
         void destroy();
         
     private:

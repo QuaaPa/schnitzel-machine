@@ -1,7 +1,6 @@
 #ifndef SM_CORE_WINDOW_H_
 #define SM_CORE_WINDOW_H_
 
-#include <cstdint>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -32,7 +31,7 @@ namespace SM {
 
         GLFWwindow* getGlfwWindow() const {return m_pwindow;};
 
-        template<typename T>
+        template<typename T = int>
         SM::FramebufferSize<T> getFramebufferSize() {
             int w, h;
             glfwGetFramebufferSize(m_pwindow, &w, &h);

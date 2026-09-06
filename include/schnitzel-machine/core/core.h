@@ -7,6 +7,7 @@
 #include <vulkan/vulkan.h>
 
 #include "RHI/VulkanRHI.h"
+#include "Resources/ResourceManager.h"
 #include "core/Window.h"
 #include "core/ShaderCompiler.h"
 
@@ -19,6 +20,7 @@ namespace SM {
         Window* win;
         std::unique_ptr<SM::VulkanRHI> rhi;
         std::unique_ptr<SM::ShaderCompiler> compiler;
+        std::unique_ptr<SM::ResourceManager> resourceManager;
         
     public:
         static Engine* getInstance() {

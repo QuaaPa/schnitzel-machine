@@ -7,6 +7,8 @@
 #include <memory>
 #include <vulkan/vulkan_core.h>
 
+#include "Resources/Pipeline.h"
+#include "Resources/ResourceManager.h"
 #include "core/ShaderCompiler.h"
 #include "core/TypesDefs.h"
 #include "RHI/Swapchain.h"
@@ -63,8 +65,8 @@ void SM::Engine::init(std::filesystem::path exeDir) {
         .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
         .imageCount = 4, 
         .imageExtent = VkExtent2D {
-            .width =  win->getFramebufferSize<uint32_t>(),
-            .height = static_cast<uint32_t>(winHeight)
+            .width =  win->getFramebufferSize<uint32_t>().width,
+            .height = win->getFramebufferSize<uint32_t>().height
         },
         .imageLayers = 1,
         .imageUsageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
@@ -93,7 +95,11 @@ void SM::Engine::init(std::filesystem::path exeDir) {
     compiler->SetGenerateDebugInfo(true);
     compiler->SetOptimizationLevel(shaderc_optimization_level_zero); // easier to debug in RenderDoc
 #endif
-    
+
+    resourceManager = std::make_unique<SM::ResourceManager>(rhi->getDevice().getHandle());
+    auto pipelineHandle = resourceManager->createGraphicsPipeline(SM::PipelineDescription {
+            // nothing yet
+        });
 }
 
 void SM::Engine::mainLoop() {
