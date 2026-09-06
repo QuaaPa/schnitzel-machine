@@ -1,10 +1,18 @@
 #ifndef SM_CORE_WINDOW_H_
 #define SM_CORE_WINDOW_H_
 
+#include <cstdint>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-namespace SM {    
+
+namespace SM {
+    template<typename T>
+    struct FramebufferSize {
+        const T width;
+        const T height;
+    };
+
     class Window {
     private:
         Window() {};
@@ -24,7 +32,15 @@ namespace SM {
 
         GLFWwindow* getGlfwWindow() const {return m_pwindow;};
 
-        void getFramebufferSize(int* pWidth, int* pHeight);
+        template<typename T>
+        SM::FramebufferSize<T> getFramebufferSize() {
+            int w, h;
+            glfwGetFramebufferSize(m_pwindow, &w, &h);
+            return FramebufferSize<T> {
+                .width = static_cast<T>(w),
+                .height = static_cast<T>(h)
+            };
+        }
         
         bool shouldClose();
         void pollEvents();

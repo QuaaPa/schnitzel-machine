@@ -1,11 +1,13 @@
 #ifndef SM_RHI_SWAPCHAIN_H_
 #define SM_RHI_SWAPCHAIN_H_
 
+#include <cstdint>
 #include <vector>
 #include <vulkan/vulkan_core.h>
 
 #include "RHI/Adapter.h"
 #include "RHI/Queue.h"
+#include "RHI/VkResultToString.h"
 
 namespace SM {
     struct SwapchainOptions {
@@ -25,6 +27,8 @@ namespace SM {
     class Swapchain {
     public:
         void initialize(const SM::Adapter &adapter, const VkDevice &deviceHandle, const std::vector<SM::Queue> &queues, const VkSurfaceKHR &surfaceHandle, const SM::SwapchainOptions &options);
+
+        SM::Result getImages(const VkDevice &m_device, uint32_t *pSwapchainImageCount, VkImage *pSwapchainImages);
 
         VkSwapchainKHR getHandle() { return m_handle; }
         

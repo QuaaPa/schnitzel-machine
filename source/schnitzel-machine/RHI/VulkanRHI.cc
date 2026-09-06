@@ -17,7 +17,7 @@
 #include "RHI/Queue.h"
 #include "core/Log.h"
 
-void SM::VulkanRHI::initialize(const RHIOptions &options) {
+void SM::VulkanRHI::initialize(const RHIOptions& options) {
 
     // Instance initialization
     //
@@ -34,26 +34,26 @@ void SM::VulkanRHI::initialize(const RHIOptions &options) {
     const auto queueFamilyProperties = m_adapter.queryQueueFamilyProperties();
     SM_LOG_INFO("RHI", "Found {} queue famil{}", queueFamilyProperties.size(), queueFamilyProperties.size() == 1 ? "y" : "ies");
 
-    const bool supportsPresentation = m_adapter.supportsPresentation(m_surface.getHandle(), 0); 
+    const bool supportsPresentation = m_adapter.supportsPresentation(m_surface.getHandle(), 0);
     const bool hasGraphicsAndCompute = queueFamilyProperties[0].supportsFeature(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
-    
+
     for (uint32_t i = 0; i < queueFamilyProperties.size(); ++i) {
-        const auto &family = queueFamilyProperties[i];
+        const auto& family = queueFamilyProperties[i];
 
-        const bool graphics       = family.supportsFeature(VK_QUEUE_GRAPHICS_BIT);
-        const bool compute         = family.supportsFeature(VK_QUEUE_COMPUTE_BIT);
-        const bool transfer        = family.supportsFeature(VK_QUEUE_TRANSFER_BIT);
-        const bool sparseBinding   = family.supportsFeature(VK_QUEUE_SPARSE_BINDING_BIT);
-        const bool videoDecode     = family.supportsFeature(VK_QUEUE_VIDEO_DECODE_BIT_KHR);
+        const bool graphics = family.supportsFeature(VK_QUEUE_GRAPHICS_BIT);
+        const bool compute = family.supportsFeature(VK_QUEUE_COMPUTE_BIT);
+        const bool transfer = family.supportsFeature(VK_QUEUE_TRANSFER_BIT);
+        const bool sparseBinding = family.supportsFeature(VK_QUEUE_SPARSE_BINDING_BIT);
+        const bool videoDecode = family.supportsFeature(VK_QUEUE_VIDEO_DECODE_BIT_KHR);
 #if VK_ENABLE_BETA_EXTENSIONS
-        const bool videoEncode     = family.supportsFeature(VK_QUEUE_VIDEO_ENCODE_BIT_KHR);
+        const bool videoEncode = family.supportsFeature(VK_QUEUE_VIDEO_ENCODE_BIT_KHR);
 #endif
-        const bool opticalFlow     = family.supportsFeature(VK_QUEUE_OPTICAL_FLOW_BIT_NV);
+        const bool opticalFlow = family.supportsFeature(VK_QUEUE_OPTICAL_FLOW_BIT_NV);
 
-        const bool presentation    = m_adapter.supportsPresentation(m_surface.getHandle(), i);
+        const bool presentation = m_adapter.supportsPresentation(m_surface.getHandle(), i);
 
         SM_LOG_DEBUG("RHI", "Queue family {}:", i);
-        SM_LOG_DEBUG("RHI", "  - queueCount: {}", family.availableQueues); 
+        SM_LOG_DEBUG("RHI", "  - queueCount: {}", family.availableQueues);
         SM_LOG_DEBUG("RHI", "  - Graphics:        {}", graphics);
         SM_LOG_DEBUG("RHI", "  - Compute:         {}", compute);
         SM_LOG_DEBUG("RHI", "  - Transfer:        {}", transfer);
@@ -68,13 +68,13 @@ void SM::VulkanRHI::initialize(const RHIOptions &options) {
     // We are now able to query the adapter for swapchain properties and presentation support with the window surface
     const auto swapchainProperties = m_adapter.querySwapchainProperties(m_surface.getHandle());
     SM_LOG_INFO("RHI", "Swapchain support {} present mode:", swapchainProperties.presentModes.size());
-    for (const auto &mode : swapchainProperties.presentModes) {
+    for (const auto& mode : swapchainProperties.presentModes) {
         SM_LOG_DEBUG("RHI", "  - {}", SM::presentModeToString(mode));
     }
 
     const auto adapterExtensions = m_adapter.extensions();
     SM_LOG_INFO("RHI", "Adapter has {} available extensions:", adapterExtensions.size());
-    for (const auto &extension : adapterExtensions) {
+    for (const auto& extension : adapterExtensions) {
         SM_LOG_DEBUG("RHI", "  - {} Version {}", extension.extensionName, extension.specVersion);
     }
 
@@ -99,110 +99,127 @@ void SM::VulkanRHI::initialize(const RHIOptions &options) {
     SM_LOG_INFO("RHI", "Supports host to image copy: {}", supportsHostToImageCopy);
 
     std::vector<QueueRequest> queueRequests;
-    
+
     // Device initialization
     //
     m_device.initialize(options.apiVersion, m_adapter, options.DeviceOptions, queueRequests);
-        
-    std::vector<QueueDescription>  queueDescriptions = m_device.getQueues(queueRequests, queueFamilyProperties);
+
+    std::vector<QueueDescription> queueDescriptions = m_device.getQueues(queueRequests, queueFamilyProperties);
 
     const uint32_t queueCount = queueDescriptions.size();
     m_queues.reserve(queueCount);
     for (uint32_t i = 0; i < queueCount; ++i) {
-        m_queues.emplace_back(SM::Queue(m_device.getHandle(), queueDescriptions[i]));           
+        m_queues.emplace_back(SM::Queue(m_device.getHandle(), queueDescriptions[i]));
     }
 
     // Swapchain initialization
     //
+    // TODO verify any user-defined option by swapchainproperties !!!
     m_swapchain.initialize(m_adapter, m_device.getHandle(), m_queues, m_surface.getHandle(), options.SwapchainOptions);
 
+    // Used user-defined image format 
+    querySwapchainImages(options.SwapchainOptions.format);    
+}
+
+void SM::VulkanRHI::querySwapchainImages(const VkFormat& imageFormat) {
     uint32_t vkSwapchainImageCount;
-    vkGetSwapchainImagesKHR(m_device.getHandle(), m_swapchain.getHandle(), &vkSwapchainImageCount, nullptr);
-    SM_LOG_DEBUG("RHI", "Received {} swapchain images", vkSwapchainImageCount);
+    m_swapchain.getImages(m_device.getHandle(), &vkSwapchainImageCount, nullptr);
+    SM_LOG_DEBUG("RHI", "Received {} swapchain image{}", vkSwapchainImageCount, vkSwapchainImageCount == 1 ? "" : "s");
     
     std::vector<VkImage> vkSwapchainImages;
-    vkSwapchainImages.resize(vkSwapchainImageCount);   
-    if(auto result = vkGetSwapchainImagesKHR(m_device.getHandle(), m_swapchain.getHandle(), &vkSwapchainImageCount, vkSwapchainImages.data()); result != VK_SUCCESS) {
-        SM_LOG_CRITICAL("RHI", "{}: Failed to query swapchain image handles", toString(result));
+    vkSwapchainImages.resize(vkSwapchainImageCount);
+    if (vkSwapchainImageCount != 0) {
+        if (auto result = m_swapchain.getImages(m_device.getHandle(), &vkSwapchainImageCount, vkSwapchainImages.data()); result != VK_SUCCESS) {
+            SM_LOG_CRITICAL("RHI", "{}: Failed to query swapchain image handles", toString(result));
+        }
     }
 
     m_swapchainImages.reserve(vkSwapchainImageCount);
-    for(auto& image : vkSwapchainImages) {
-        m_swapchainImages.emplace_back(SM::Image(m_device.getHandle(),
-                                                 image,
-                                                 SM::ImageDescription {
-                                                     .viewType = VK_IMAGE_VIEW_TYPE_2D,
-                                                     .format = options.SwapchainOptions.format,
-                                                     .components = VkComponentMapping {
-                                                         .r = VK_COMPONENT_SWIZZLE_IDENTITY,
-                                                         .g = VK_COMPONENT_SWIZZLE_IDENTITY,
-                                                         .b = VK_COMPONENT_SWIZZLE_IDENTITY,
-                                                         .a = VK_COMPONENT_SWIZZLE_IDENTITY,
-                                                     },
-                                                     .subresourceRange = VkImageSubresourceRange {
-                                                         .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                                                         .baseMipLevel = 0,
-                                                         .levelCount = 1,
-                                                         .baseArrayLayer = 0,
-                                                         .layerCount = 1,
-                                                     }
-                                                 }));
+    for (auto& image : vkSwapchainImages) {
+        m_swapchainImages.emplace_back(SM::Image(
+            m_device.getHandle(), image,
+            SM::ImageDescription{ .viewType = VK_IMAGE_VIEW_TYPE_2D,
+                                  .format = imageFormat,
+                                  .components =
+                                      VkComponentMapping{
+                                          .r = VK_COMPONENT_SWIZZLE_IDENTITY,
+                                          .g = VK_COMPONENT_SWIZZLE_IDENTITY,
+                                          .b = VK_COMPONENT_SWIZZLE_IDENTITY,
+                                          .a = VK_COMPONENT_SWIZZLE_IDENTITY,
+                                      },
+                                  .subresourceRange = VkImageSubresourceRange{
+                                      .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                                      .baseMipLevel = 0,
+                                      .levelCount = 1,
+                                      .baseArrayLayer = 0,
+                                      .layerCount = 1,
+                                  } }));
     }
 }
 
-VkPhysicalDevice SM::VulkanRHI::selectSuitableAdapter(const std::vector<SM::Adapter> &adapters) const {
+VkPhysicalDevice SM::VulkanRHI::selectSuitableAdapter(
+    const std::vector<SM::Adapter>& adapters) const {
     // Sorting adapters by deviceType:
     const std::vector<VkPhysicalDeviceType> deviceTypeOrders = {
-        VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU,  // best choise for us
+        VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, // best choise for us
         VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU,
-        VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU,
-        VK_PHYSICAL_DEVICE_TYPE_CPU,
+        VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU, VK_PHYSICAL_DEVICE_TYPE_CPU,
         VK_PHYSICAL_DEVICE_TYPE_OTHER
     };
 
     std::vector<SM::Adapter> sortedAdapters;
-    if(adapters.size() != 0) {        
+    if (adapters.size() != 0) {
         sortedAdapters.reserve(adapters.size());
-        for(auto type : deviceTypeOrders) {
-            for(const auto& adapter : adapters) {
-                if(adapter.properties().deviceType == type) sortedAdapters.emplace_back(adapter);
+        for (auto type : deviceTypeOrders) {
+            for (const auto& adapter : adapters) {
+                if (adapter.properties().deviceType == type)
+                    sortedAdapters.emplace_back(adapter);
             }
-        }          
+        }
     }
 
-    auto isAdapterSuitable = [&](const SM::Adapter &adapter)->bool {
+    auto isAdapterSuitable = [&](const SM::Adapter& adapter) -> bool {
         const auto queueFamilyProperties = adapter.queryQueueFamilyProperties();
         for (uint32_t i = 0; i < queueFamilyProperties.size(); ++i) {
-            const auto &family = queueFamilyProperties[i];
+            const auto& family = queueFamilyProperties[i];
 
-            if(!family.supportsFeature(VK_QUEUE_GRAPHICS_BIT)) return false;
-            if(!family.supportsFeature(VK_QUEUE_COMPUTE_BIT)) return false;
-            if(!family.supportsFeature(VK_QUEUE_TRANSFER_BIT)) return false;
+            if (!family.supportsFeature(VK_QUEUE_GRAPHICS_BIT))
+                return false;
+            if (!family.supportsFeature(VK_QUEUE_COMPUTE_BIT))
+                return false;
+            if (!family.supportsFeature(VK_QUEUE_TRANSFER_BIT))
+                return false;
             // Uncomment it when it need
-            //         if(!family.supportsFeature(VK_QUEUE_SPARSE_BINDING_BIT)) return false;
-            //         if(!family.supportsFeature(VK_QUEUE_VIDEO_DECODE_BIT_KHR)) return false;
+            //         if(!family.supportsFeature(VK_QUEUE_SPARSE_BINDING_BIT)) return
+            //         false;
+            //         if(!family.supportsFeature(VK_QUEUE_VIDEO_DECODE_BIT_KHR))
+            //         return false;
             // #if VK_ENABLE_BETA_EXTENSIONS
-            //         if(!family.supportsFeature(VK_QUEUE_VIDEO_ENCODE_BIT_KHR)) return false;
+            //         if(!family.supportsFeature(VK_QUEUE_VIDEO_ENCODE_BIT_KHR))
+            //         return false;
             // #endif
-            //         if(!family.supportsFeature(VK_QUEUE_OPTICAL_FLOW_BIT_NV)) return false;
-            if(!adapter.supportsPresentation(m_surface.getHandle(), i)) return false;
-        }    
+            //         if(!family.supportsFeature(VK_QUEUE_OPTICAL_FLOW_BIT_NV))
+            //         return false;
+            if (!adapter.supportsPresentation(m_surface.getHandle(), i))
+                return false;
+        }
         return true;
     };
-    
-    for (const auto &adapter : sortedAdapters) {
+
+    for (const auto& adapter : sortedAdapters) {
         if (!isAdapterSuitable(adapter)) {
             continue;
         }
-        SM_LOG_DEBUG("RHI", "Selected adapter: {}", adapter.properties().deviceName);        
+        SM_LOG_DEBUG("RHI", "Selected adapter: {}",
+                     adapter.properties().deviceName);
         return adapter.getHandle();
     }
 
     SM_LOG_CRITICAL("RHI", "Unable to find a suitable Adapter. Aborting...");
-    return VK_NULL_HANDLE; 
+    return VK_NULL_HANDLE;
 }
 SM::Result SM::VulkanRHI::deviceWaitIdle() {
-    SM_LOG_DEBUG("RHI", "Waiting for a device to become idle");    
+    SM_LOG_DEBUG("RHI", "Waiting for a device to become idle");
     return vkDeviceWaitIdle(m_device.getHandle());
 }
 
@@ -213,5 +230,5 @@ void SM::VulkanRHI::destroy() {
     m_swapchain.destroy(m_device.getHandle());
     m_device.destroy();
     m_surface.destroy(m_instance.getHandle());
-    m_instance.destroy();    
+    m_instance.destroy();
 }

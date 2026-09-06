@@ -58,14 +58,12 @@ void SM::Engine::init(std::filesystem::path exeDir) {
         /// nothing needed
     };
 
-    int winWidth, winHeight;
-    win->getFramebufferSize(&winHeight, &winHeight);
     SM::SwapchainOptions swapchainOpt {
         .format = VK_FORMAT_B8G8R8A8_UNORM ,
         .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
         .imageCount = 4, 
         .imageExtent = VkExtent2D {
-            .width =  static_cast<uint32_t>(winWidth),
+            .width =  win->getFramebufferSize<uint32_t>(),
             .height = static_cast<uint32_t>(winHeight)
         },
         .imageLayers = 1,
@@ -100,7 +98,7 @@ void SM::Engine::init(std::filesystem::path exeDir) {
 
 void SM::Engine::mainLoop() {
     SM_LOG_INFO("CORE", "Engine starting...");
-    // while(true) { };
+    // while(!win->shouldClose()) { };
 }
 
 void SM::Engine::cleanup() {

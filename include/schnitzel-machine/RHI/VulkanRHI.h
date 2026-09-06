@@ -37,9 +37,8 @@ namespace SM {
         void destroy();
         
     private:
-        std::vector<QueueDescription> getQueues(const std::vector<QueueRequest> &queueRequests, std::vector<SM::QueueFamilyProperties> queueTypes);
-
         VkPhysicalDevice selectSuitableAdapter(const std::vector<SM::Adapter> &adapter) const;
+        void querySwapchainImages(const VkFormat& imageFormat);
         
     private:
         std::vector<SM::Image> m_swapchainImages;

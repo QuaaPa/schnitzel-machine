@@ -55,6 +55,10 @@ void SM::Swapchain::initialize(const SM::Adapter &adapter, const VkDevice &devic
     }    
 }
 
+SM::Result SM::Swapchain::getImages(const VkDevice& m_device, uint32_t* pSwapchainImageCount, VkImage* pSwapchainImages) {
+    return vkGetSwapchainImagesKHR(m_device, m_handle, pSwapchainImageCount, pSwapchainImages);
+}
+
 void SM::Swapchain::destroy(const VkDevice &deviceHandle) {
     if(m_handle !=  VK_NULL_HANDLE) {
         vkDestroySwapchainKHR(deviceHandle, m_handle, nullptr);        
