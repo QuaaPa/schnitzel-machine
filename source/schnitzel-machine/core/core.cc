@@ -7,7 +7,6 @@
 #include <memory>
 #include <vulkan/vulkan_core.h>
 
-#include "Resources/Pipeline.h"
 #include "Resources/ResourceManager.h"
 #include "core/ShaderCompiler.h"
 #include "core/TypesDefs.h"
@@ -40,7 +39,7 @@ void SM::Engine::run(int argc, char* argv[]) {
 void SM::Engine::init(std::filesystem::path exeDir) {
     SM_LOG_INFO("CORE", "Engine initialization...");
     
-    //auto resourcePath = exeDir / "resource";
+    auto resourcePath = exeDir / "resource";
 
     // RHI building
     // Render Hardware Interface - (instance, device, surface, swapchain);
@@ -57,7 +56,9 @@ void SM::Engine::init(std::filesystem::path exeDir) {
         .extensions = {"VK_KHR_wayland_surface"}
     };
     SM::DeviceOptions deviceOpt {
-        /// nothing needed
+        .requestedFeatures{
+            .dynamicRendering = true
+        }
     };
 
     SM::SwapchainOptions swapchainOpt {
@@ -96,10 +97,26 @@ void SM::Engine::init(std::filesystem::path exeDir) {
     compiler->SetOptimizationLevel(shaderc_optimization_level_zero); // easier to debug in RenderDoc
 #endif
 
+    auto vertShader = compiler->CompileFromFile(resourcePath / "shaders/shader.vert", SM::ShaderStage::Vertex);
+    if (!vertShader.success) {
+        SM_LOG_ERROR("CORE", "Failed to compile vert shader with following msg:{}", vertShader.errorMessage);
+    } else {
+        SM_LOG_INFO("CORE", "The vertex shader was successfully compiled into SPIRV.");
+    }
+
+    auto fragShader = compiler->CompileFromFile(resourcePath / "shaders/shader.frag", SM::ShaderStage::Fragment);
+    if (!fragShader.success) {
+        SM_LOG_ERROR("CORE", "Failed to compile frag shader with following msg:{}", fragShader.errorMessage);
+    } else {
+        SM_LOG_INFO("CORE", "The fragment shader was successfully compiled into SPIRV.");
+    }
+
     resourceManager = std::make_unique<SM::ResourceManager>(rhi->getDevice().getHandle());
-    auto pipelineHandle = resourceManager->createGraphicsPipeline(SM::PipelineDescription {
-            // nothing yet
-        });
+    // Creating two shader modules and obtaining their handles
+    auto vertShaderModuleH = resourceManager->createShaderModule(vertShader.spirv, VK_SHADER_STAGE_VERTEX_BIT);
+    auto fragShaderModuleH = resourceManager->createShaderModule(fragShader.spirv, VK_SHADER_STAGE_FRAGMENT_BIT);
+    // Passing shader module handles to create pipeline, and obtaining pipeline handle 
+    auto pipelineHandle = resourceManager->createGraphicsPipeline(vertShaderModuleH, fragShaderModuleH);
 }
 
 void SM::Engine::mainLoop() {
