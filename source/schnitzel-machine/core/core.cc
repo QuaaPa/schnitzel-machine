@@ -115,8 +115,13 @@ void SM::Engine::init(std::filesystem::path exeDir) {
     // Creating two shader modules and obtaining their handles
     auto vertShaderModuleH = resourceManager->createShaderModule(vertShader.spirv, VK_SHADER_STAGE_VERTEX_BIT);
     auto fragShaderModuleH = resourceManager->createShaderModule(fragShader.spirv, VK_SHADER_STAGE_FRAGMENT_BIT);
-    // Passing shader module handles to create pipeline, and obtaining pipeline handle 
-    auto pipelineHandle = resourceManager->createGraphicsPipeline(vertShaderModuleH, fragShaderModuleH);
+    // Passing shader module handles to create pipeline, and obtaining pipeline handle
+    auto pipelineLayoutHandle = resourceManager->createPipelineLayout();
+    auto pipelineHandle = resourceManager->createGraphicsPipeline(pipelineLayoutHandle, vertShaderModuleH, fragShaderModuleH);
+    resourceManager->destroy(vertShaderModuleH);
+    resourceManager->destroy(fragShaderModuleH);
+    resourceManager->destroy(pipelineLayoutHandle);
+    resourceManager->destroy(pipelineHandle);
 }
 
 void SM::Engine::mainLoop() {
@@ -126,7 +131,7 @@ void SM::Engine::mainLoop() {
 
 void SM::Engine::cleanup() {
     SM_LOG_INFO("CORE", "Engine destroying...");
-    rhi->deviceWaitIdle(); // wait device to become idle, before destroying
+    rhi->deviceWaitIdle();
     rhi->destroy();
     win->destroy();
 }
