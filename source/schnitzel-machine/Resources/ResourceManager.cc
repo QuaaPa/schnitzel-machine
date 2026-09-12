@@ -24,7 +24,7 @@ SM::Handle<SM::ShaderModule> SM::ResourceManager::createShaderModule(const std::
 }
 
 void SM::ResourceManager::destroy(Handle<ShaderModule> handle) {
-    m_shaderModulesPool.get(handle)->destroy();
+    // m_shaderModulesPool.get(handle)->destroy();
     m_shaderModulesPool.remove(handle);
 }
 
@@ -39,7 +39,6 @@ SM::Handle<SM::PipelineLayout> SM::ResourceManager::createPipelineLayout() {
 }
 
 void SM::ResourceManager::destroy(SM::Handle<SM::PipelineLayout> handle) {
-    m_pipelineLayoutsPool.get(handle)->destroy();
     m_pipelineLayoutsPool.remove(handle);
 }
 
@@ -95,7 +94,6 @@ SM::Handle<SM::Pipeline> SM::ResourceManager::createGraphicsPipeline(SM::Require
 }
 
 void SM::ResourceManager::destroy(SM::Handle<SM::Pipeline> handle) {
-    m_pipelinesPool.get(handle)->destroy();
     m_pipelinesPool.remove(handle);
 }
 
@@ -106,6 +104,5 @@ SM::Handle<SM::CommandPool> SM::ResourceManager::createCommandPool(uint32_t queu
 }
 
 void SM::ResourceManager::destroy(SM::Handle<SM::CommandPool> handle) {
-    m_commandPoolsPool.get(handle)->destroy();
     m_commandPoolsPool.remove(handle);
 }

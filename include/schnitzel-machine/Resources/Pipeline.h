@@ -1,11 +1,11 @@
 #ifndef SM_RESOURCES_PIPELINE_H_
 #define SM_RESOURCES_PIPELINE_H_
 
-#include "RHI/VkResultToString.h"
-
 #include <vector>
 
 #include <vulkan/vulkan_core.h>
+
+#include "RHI/VkResultToString.h"
 
 namespace SM {
     struct GraphicsPipelineDescription {        
@@ -27,6 +27,7 @@ namespace SM {
     class Pipeline {
     public:
         Pipeline() = default;
+        ~Pipeline();
        
         Pipeline(const Pipeline&) = delete;
         Pipeline& operator=(const Pipeline&) = delete;
@@ -36,7 +37,6 @@ namespace SM {
         SM::Result initializePipelineAsGraphics(VkDevice vkDevice, const GraphicsPipelineDescription& desc);
         SM::Result initializePipelineAsCompute(VkDevice vkDevice, const ComputePipelineDescription& desc);
         SM::Result initializePipelineAsRayTracing(VkDevice vkDevice, const RayTracingPipelineDescription& desc);
-        void destroy();
         VkPipeline getPipeline() const noexcept { return m_pipeline; }
         
     private:

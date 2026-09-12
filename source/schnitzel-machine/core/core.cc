@@ -98,19 +98,11 @@ void SM::Engine::init(std::filesystem::path exeDir) {
 #endif
 
     auto vertShader = compiler->CompileFromFile(resourcePath / "shaders/shader.vert", SM::ShaderStage::Vertex);
-    if (!vertShader.success) {
-        SM_LOG_ERROR("CORE", "Failed to compile vert shader with following msg:{}", vertShader.errorMessage);
-    } else {
-        SM_LOG_INFO("CORE", "The vertex shader was successfully compiled into SPIRV.");
-    }
+    SM_LOG_DEBUG("CORE", "Vertex shader compilation status:{}, message:{}", vertShader.success, vertShader.errorMessage.empty() ? "no message" : vertShader.errorMessage);
 
     auto fragShader = compiler->CompileFromFile(resourcePath / "shaders/shader.frag", SM::ShaderStage::Fragment);
-    if (!fragShader.success) {
-        SM_LOG_ERROR("CORE", "Failed to compile frag shader with following msg:{}", fragShader.errorMessage);
-    } else {
-        SM_LOG_INFO("CORE", "The fragment shader was successfully compiled into SPIRV.");
-    }
-
+    SM_LOG_DEBUG("CORE", "Fragment shader compilation status:{}, message:{}", fragShader.success, fragShader.errorMessage.empty() ? "no message" : fragShader.errorMessage);
+        
     resourceManager = std::make_unique<SM::ResourceManager>(rhi->getDevice().getHandle());
     // Creating two shader modules and obtaining their handles
     auto vertShaderModuleH = resourceManager->createShaderModule(vertShader.spirv, VK_SHADER_STAGE_VERTEX_BIT);
@@ -121,6 +113,9 @@ void SM::Engine::init(std::filesystem::path exeDir) {
 
     auto cmdPoolHandle = resourceManager->createCommandPool( /* queueFamilyIndex */0); // Should not be hardcoded 
 
+    // Double deletion due to move assigment operator for every object
+    // Pool: slot.value = T{};
+    //
     resourceManager->destroy(cmdPoolHandle);
     resourceManager->destroy(vertShaderModuleH);
     resourceManager->destroy(fragShaderModuleH);

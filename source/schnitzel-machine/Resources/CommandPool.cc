@@ -4,6 +4,14 @@
 
 #include "RHI/VkResultToString.h"
 
+SM::CommandPool::~CommandPool() {
+    if (m_commandPool != VK_NULL_HANDLE) {
+        vkDestroyCommandPool(m_device, m_commandPool, nullptr);
+        m_commandPool = VK_NULL_HANDLE;
+    }
+    m_device = VK_NULL_HANDLE;
+}
+
 SM::CommandPool::CommandPool(SM::CommandPool&& other) noexcept {
     m_commandPool = other.m_commandPool;
     m_device = other.m_device;
@@ -13,7 +21,10 @@ SM::CommandPool::CommandPool(SM::CommandPool&& other) noexcept {
 
 SM::CommandPool& SM::CommandPool::operator=(SM::CommandPool&& other) noexcept {
     if (this != &other) {
-        destroy();
+        if (m_commandPool != VK_NULL_HANDLE) {
+            vkDestroyCommandPool(m_device, m_commandPool, nullptr);
+            m_commandPool = VK_NULL_HANDLE;
+        }
         m_commandPool = other.m_commandPool;
         m_device = other.m_device;
         other.m_commandPool = VK_NULL_HANDLE;
@@ -32,11 +43,4 @@ SM::Result SM::CommandPool::initializeCommandPool(VkDevice vkDevice, const uint3
     vkCommandPoolInfo.queueFamilyIndex = queueFamilyIndex;
 
     return vkCreateCommandPool(m_device, &vkCommandPoolInfo, nullptr, &m_commandPool);
-}
-
-void SM::CommandPool::destroy() {
-    if(m_commandPool != VK_NULL_HANDLE) {
-        vkDestroyCommandPool(m_device, m_commandPool, nullptr);
-        m_commandPool = VK_NULL_HANDLE;
-    }
 }

@@ -6,15 +6,27 @@
 
 #include "RHI/VkResultToString.h"
 
+SM::PipelineLayout::~PipelineLayout() {
+    if (m_pipelineLayouts != VK_NULL_HANDLE) {
+        vkDestroyPipelineLayout(m_device, m_pipelineLayouts, nullptr);
+        m_pipelineLayouts = VK_NULL_HANDLE;
+    }
+    m_device = VK_NULL_HANDLE;
+}
+
 SM::PipelineLayout::PipelineLayout(PipelineLayout&& other) noexcept {
     m_pipelineLayouts = other.m_pipelineLayouts;
     m_device = other.m_device;
     other.m_pipelineLayouts = VK_NULL_HANDLE;
     other.m_device = VK_NULL_HANDLE;
 }
+
 SM::PipelineLayout& SM::PipelineLayout::operator=(SM::PipelineLayout&& other) noexcept {
     if (this != &other) {
-        destroy();
+        if (m_pipelineLayouts != VK_NULL_HANDLE) {
+            vkDestroyPipelineLayout(m_device, m_pipelineLayouts, nullptr);
+            m_pipelineLayouts = VK_NULL_HANDLE;
+        }
         m_pipelineLayouts = other.m_pipelineLayouts;
         m_device = other.m_device;
         other.m_pipelineLayouts = VK_NULL_HANDLE;
@@ -42,11 +54,4 @@ SM::Result SM::PipelineLayout::initializePipelineLayout(VkDevice vkDevice, const
     }
 
     return vkCreatePipelineLayout(m_device, &pipelineLayoutInfo, nullptr, &m_pipelineLayouts);
-}
-
-void SM::PipelineLayout::destroy() {
-    if(m_pipelineLayouts != VK_NULL_HANDLE) {
-        vkDestroyPipelineLayout(m_device, m_pipelineLayouts, nullptr);
-        m_pipelineLayouts = VK_NULL_HANDLE;
-    }
 }

@@ -6,15 +6,27 @@
 
 #include "RHI/VkResultToString.h"
 
+SM::Pipeline::~Pipeline() {
+    if (m_pipeline != VK_NULL_HANDLE) {
+        vkDestroyPipeline(m_device, m_pipeline, nullptr);
+        m_pipeline = VK_NULL_HANDLE;
+    }
+    m_device = VK_NULL_HANDLE;
+}
+
 SM::Pipeline::Pipeline(SM::Pipeline&& other) noexcept {
     m_pipeline = other.m_pipeline;
     m_device = other.m_device;
     other.m_pipeline = VK_NULL_HANDLE;
     other.m_device = VK_NULL_HANDLE;
 }
+
 SM::Pipeline& SM::Pipeline::operator=(SM::Pipeline&& other) noexcept {
     if (this != &other) {
-        destroy();
+        if (m_pipeline != VK_NULL_HANDLE) {
+            vkDestroyPipeline(m_device, m_pipeline, nullptr);
+            m_pipeline = VK_NULL_HANDLE;
+        }
         m_pipeline = other.m_pipeline;
         m_device = other.m_device;
         other.m_pipeline = VK_NULL_HANDLE;
@@ -125,11 +137,4 @@ SM::Result SM::Pipeline::initializePipelineAsRayTracing(VkDevice vkDevice, const
     // TODO
 
     return VK_SUCCESS;
-}
-
-void SM::Pipeline::destroy() {
-    if (m_pipeline != VK_NULL_HANDLE) {
-        vkDestroyPipeline(m_device, m_pipeline, nullptr);
-        m_pipeline = VK_NULL_HANDLE;
-    }
 }

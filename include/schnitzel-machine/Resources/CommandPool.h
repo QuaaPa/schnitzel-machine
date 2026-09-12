@@ -1,15 +1,17 @@
 #ifndef SM_RESOURCES_COMMANDPOOL_H_
 #define SM_RESOURCES_COMMANDPOOL_H_
 
-#include "RHI/VkResultToString.h"
 #include <cstdint>
 
 #include <vulkan/vulkan_core.h>
+
+#include "RHI/VkResultToString.h"
 
 namespace SM {
     class CommandPool {
     public:
         CommandPool() = default;
+        ~CommandPool();
 
         CommandPool(const CommandPool&) = delete;
         CommandPool& operator=(const CommandPool&) = delete;
@@ -17,7 +19,6 @@ namespace SM {
         CommandPool& operator=(CommandPool&& other) noexcept;
 
         SM::Result initializeCommandPool(VkDevice device, const uint32_t queueFamilyIndex);
-        void destroy();
         VkCommandPool getCommandPool() const noexcept { return m_commandPool; }
 
     private:
