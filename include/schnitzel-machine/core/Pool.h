@@ -50,13 +50,13 @@ namespace SM {
             return &m_slots[handle.index()].value;
         }
 
-        T& getRequired(RequiredHandle<T> handle) noexcept
+        T* getRequired(RequiredHandle<T> handle) noexcept
         {
-            if(isValidSlot(handle)) {
+            if(!isValidSlot(handle)) {
                 SM_LOG_ERROR("Pool", "getRequired: handle (id: {}, gen: {}) points to a dead/stale slot", handle.index(), handle.generation());
                 return {};
             } 
-            return m_slots[handle.index()].value;
+            return &m_slots[handle.index()].value;
         }
 
         bool remove(OptionalHandle<T> handle) noexcept

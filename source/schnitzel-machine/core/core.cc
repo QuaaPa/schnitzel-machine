@@ -118,6 +118,10 @@ void SM::Engine::init(std::filesystem::path exeDir) {
     // Passing shader module handles to create pipeline, and obtaining pipeline handle
     auto pipelineLayoutHandle = resourceManager->createPipelineLayout();
     auto pipelineHandle = resourceManager->createGraphicsPipeline(pipelineLayoutHandle, vertShaderModuleH, fragShaderModuleH);
+
+    auto cmdPoolHandle = resourceManager->createCommandPool( /* queueFamilyIndex */0); // Should not be hardcoded 
+
+    resourceManager->destroy(cmdPoolHandle);
     resourceManager->destroy(vertShaderModuleH);
     resourceManager->destroy(fragShaderModuleH);
     resourceManager->destroy(pipelineLayoutHandle);

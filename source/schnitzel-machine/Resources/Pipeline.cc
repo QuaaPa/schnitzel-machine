@@ -1,21 +1,32 @@
 #include "Resources/Pipeline.h"
 
+#include <array>
+
 #include <vulkan/vulkan_core.h>
 
 #include "RHI/VkResultToString.h"
-#include "core/Log.h"
 
-SM::Pipeline::~Pipeline() {
-    if(m_pipeline != VK_NULL_HANDLE) {
-        vkDestroyPipeline(m_device, m_pipeline, nullptr);        
+SM::Pipeline::Pipeline(SM::Pipeline&& other) noexcept {
+    m_pipeline = other.m_pipeline;
+    m_device = other.m_device;
+    other.m_pipeline = VK_NULL_HANDLE;
+    other.m_device = VK_NULL_HANDLE;
+}
+SM::Pipeline& SM::Pipeline::operator=(SM::Pipeline&& other) noexcept {
+    if (this != &other) {
+        destroy();
+        m_pipeline = other.m_pipeline;
+        m_device = other.m_device;
+        other.m_pipeline = VK_NULL_HANDLE;
+        other.m_device = VK_NULL_HANDLE;
     }
+    return *this;
 }
 
+SM::Result SM::Pipeline::initializePipelineAsGraphics(VkDevice vkDevice, const GraphicsPipelineDescription& desc) {
 
-SM::Pipeline::Pipeline(VkDevice vkDevice, const GraphicsPipelineDescription& desc)
-    : m_device(vkDevice)
-{
-
+    m_device = vkDevice;
+    
     VkPipelineRenderingCreateInfo vkPipelineRenderingInfo{};
     vkPipelineRenderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
     vkPipelineRenderingInfo.colorAttachmentCount = static_cast<uint32_t>(desc.colorAttachmentFormats.size());
@@ -97,38 +108,28 @@ SM::Pipeline::Pipeline(VkDevice vkDevice, const GraphicsPipelineDescription& des
     pipelineInfo.pDynamicState = &vkPipelineDynamicStateInfo;
     pipelineInfo.subpass = 0;
 
-    if (auto result = vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline); result != VK_SUCCESS) {
-        SM_LOG_CRITICAL("Res/Pipeline", "{}: Failed to create pipeline", SM::toString(result));
-    }
+    return vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline);
 }
 
-SM::Pipeline::Pipeline(SM::Pipeline&& other) noexcept {
-    m_pipeline = other.m_pipeline;
-    m_device = other.m_device;
-    other.m_pipeline = VK_NULL_HANDLE;
-    other.m_device = VK_NULL_HANDLE;
-}
-SM::Pipeline& SM::Pipeline::operator=(SM::Pipeline&& other) noexcept {
-    if(this != &other) {
-        if(m_pipeline != VK_NULL_HANDLE) {
-            vkDestroyPipeline(m_device, m_pipeline, nullptr);            
-        }
-        m_pipeline = other.m_pipeline;
-        m_device = other.m_device;
-        other.m_pipeline = VK_NULL_HANDLE;
-        other.m_device = VK_NULL_HANDLE;
-    }
-    return *this;
-}
+SM::Result SM::Pipeline::initializePipelineAsCompute(VkDevice vkDevice, const ComputePipelineDescription& desc) {
+    m_device = vkDevice;
 
-SM::Pipeline::Pipeline(VkDevice vkDevice, const ComputePipelineDescription& desc)
-    : m_device(vkDevice)
-{
     // TODO
+
+    return VK_SUCCESS;
 }
 
-SM::Pipeline::Pipeline(VkDevice vkDevice, const RayTracingPipelineDescription& desc)
-    : m_device(vkDevice)
-{
+SM::Result SM::Pipeline::initializePipelineAsRayTracing(VkDevice vkDevice, const RayTracingPipelineDescription& desc) {
+    m_device = vkDevice;
+
     // TODO
+
+    return VK_SUCCESS;
+}
+
+void SM::Pipeline::destroy() {
+    if (m_pipeline != VK_NULL_HANDLE) {
+        vkDestroyPipeline(m_device, m_pipeline, nullptr);
+        m_pipeline = VK_NULL_HANDLE;
+    }
 }

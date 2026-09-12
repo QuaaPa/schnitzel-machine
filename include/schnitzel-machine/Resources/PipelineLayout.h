@@ -1,6 +1,8 @@
 #ifndef SM_RESOURCES_PIPELINELAYOUT_H_
 #define SM_RESOURCES_PIPELINELAYOUT_H_
 
+#include "RHI/VkResultToString.h"
+#include "core/ShaderCompiler.h"
 #include <vulkan/vulkan_core.h>
 
 #include <vector>
@@ -14,14 +16,14 @@ namespace SM {
     class PipelineLayout {
     public:
         PipelineLayout() = default;
-        ~PipelineLayout();
-        PipelineLayout(VkDevice vkDevice, const PipelineLayoutDescription& desc);
-
+        
         PipelineLayout(const PipelineLayout& other) = delete;
         PipelineLayout& operator=(const PipelineLayout& other) = delete;
         PipelineLayout(PipelineLayout&& other) noexcept;
         PipelineLayout& operator=(PipelineLayout&& other) noexcept;
 
+        SM::Result initializePipelineLayout(VkDevice vkDevice, const PipelineLayoutDescription& desc);
+        void destroy();
         VkPipelineLayout getPipelineLayout() const noexcept { return m_pipelineLayouts; }
         
     private :

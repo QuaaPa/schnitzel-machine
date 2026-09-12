@@ -1,11 +1,14 @@
 #ifndef SM_RESOURCES_RESOURCESMANAGER_H_
 #define SM_RESOURCES_RESOURCESMANAGER_H_
 
+#include <cstdint>
 #include <vulkan/vulkan_core.h>
 
+#include "Resources/CommandPool.h"
 #include "Resources/Pipeline.h"
 #include "Resources/PipelineLayout.h"
 #include "Resources/ShaderModule.h"
+#include "core/Handle.h"
 #include "core/Pool.h"
 
 namespace SM {
@@ -18,24 +21,29 @@ namespace SM {
         ResourceManager(ResourceManager&& other) = delete;
         ResourceManager& operator=(ResourceManager&& other) = delete;
 
+        SM::Handle<ShaderModule> createShaderModule(const std::vector<uint32_t>& spirv, VkShaderStageFlagBits stage);
+        void destroy(Handle<ShaderModule> handle);
+        ShaderModule* get(Handle<ShaderModule> handle) { return m_shaderModulesPool.get(handle); }
+
         SM::Handle<PipelineLayout> createPipelineLayout();
-        void destroy(Handle<PipelineLayout> handle){ m_pipelineLayoutsPool.remove(handle); };
+        void destroy(Handle<PipelineLayout> handle);
         PipelineLayout* get(Handle<PipelineLayout> handle){ return m_pipelineLayoutsPool.get(handle); }
 
-        Handle<Pipeline> createGraphicsPipeline(SM::Handle<SM::PipelineLayout> pipelineLayoutHandle, SM::Handle<SM::ShaderModule> vertShaderModule, SM::Handle<SM::ShaderModule> fragShaderModule);
-        void destroy(Handle<Pipeline> handle){ m_pipelinesPool.remove(handle); };;
+        Handle<Pipeline> createGraphicsPipeline(SM::RequiredHandle<SM::PipelineLayout> pipelineLayoutHandle, SM::RequiredHandle<SM::ShaderModule> vertShaderModule, SM::RequiredHandle<SM::ShaderModule> fragShaderModule);
+        void destroy(Handle<Pipeline> handle);
         Pipeline* get(Handle<Pipeline> handle){ return m_pipelinesPool.get(handle); }
  
-        SM::Handle<ShaderModule> createShaderModule(const std::vector<uint32_t> &spirv, VkShaderStageFlagBits stage);
-        void destroy(Handle<ShaderModule> handle){ m_shaderModulesPool.remove(handle); };;
-        ShaderModule* get(Handle<ShaderModule> handle){ return m_shaderModulesPool.get(handle); }
-                
+        SM::Handle<CommandPool> createCommandPool(uint32_t queueFamilyIndex);
+        void destroy(Handle<CommandPool> handle);
+        CommandPool* get(Handle<CommandPool> handle) { return m_commandPoolsPool.get(handle); }
+
     private:
         VkDevice m_device;
 
         SM::Pool<PipelineLayout> m_pipelineLayoutsPool{ 1 };
         SM::Pool<Pipeline> m_pipelinesPool{ 1 };
         SM::Pool<ShaderModule> m_shaderModulesPool{ 2 };
+        SM::Pool<CommandPool> m_commandPoolsPool{ 1 };
     };
 }; // namespace SM
 
