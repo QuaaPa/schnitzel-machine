@@ -3,6 +3,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <stack>
 
 #include <vulkan/vulkan.h>
 
@@ -21,6 +22,7 @@ namespace SM {
         std::unique_ptr<SM::VulkanRHI> rhi;
         std::unique_ptr<SM::ShaderCompiler> compiler;
         std::unique_ptr<SM::ResourceManager> resourceManager;
+        std::stack<void*> deletionStack;
         
     public:
         static Engine* getInstance() {

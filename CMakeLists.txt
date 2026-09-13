@@ -4,6 +4,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(PROJECT_NAME Schnitzel-Machine)
+set(PROJECT_TARGET ${PROJECT_NAME})
 project(${PROJECT_NAME} VERSION 0.0.1 LANGUAGES CXX DESCRIPTION "${PROJECT_NAME} - custom Vulkan RHI/rendering engine in C++23")
 
 file(GLOB_RECURSE SOURCES "source/*.cc")
@@ -19,23 +20,18 @@ find_package(spdlog REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(shaderc REQUIRED IMPORTED_TARGET shaderc)
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include/schnitzel-machine)
-target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan glfw glm spdlog::spdlog PkgConfig::shaderc)
-set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/)
+target_include_directories(${PROJECT_TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/include/schnitzel-machine)
+target_link_libraries(${PROJECT_TARGET} Vulkan::Vulkan glfw glm spdlog::spdlog PkgConfig::shaderc)
+set(SM_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set_target_properties(${PROJECT_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${SM_RUNTIME_OUTPUT_DIRECTORY}/)
+target_compile_definitions(${PROJECT_NAME} PRIVATE SM_BUILD_DEBUG_MODE)
 
-file(GLOB_RECURSE RESOURCE_FILES CONFIGURE_DEPENDS
-     ${CMAKE_SOURCE_DIR}/resource/*
-)
-
-add_custom_command(TARGET Schnitzel-Machine POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${CMAKE_SOURCE_DIR}/resource
-            $<TARGET_FILE_DIR:Schnitzel-Machine>/resource
-    COMMENT "Copying resources next to executable"
-)
+message(STATUS "Copying resources from ${CMAKE_SOURCE_DIR}/resources to ${SM_RUNTIME_OUTPUT_DIRECTORY}/")
+file(COPY ${CMAKE_SOURCE_DIR}/resources
+  DESTINATION ${SM_RUNTIME_OUTPUT_DIRECTORY})
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND NOT MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -std=c++23")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -std=c++23")
 endif()
 
 message(STATUS "${PROJECT_NAME}: Host system: ${CMAKE_HOST_SYSTEM_NAME}")

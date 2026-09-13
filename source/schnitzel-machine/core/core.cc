@@ -7,6 +7,7 @@
 #include <memory>
 #include <vulkan/vulkan_core.h>
 
+#include "RHI/DeletionStack.h"
 #include "Resources/ResourceManager.h"
 #include "core/ShaderCompiler.h"
 #include "core/TypesDefs.h"
@@ -39,7 +40,7 @@ void SM::Engine::run(int argc, char* argv[]) {
 void SM::Engine::init(std::filesystem::path exeDir) {
     SM_LOG_INFO("CORE", "Engine initialization...");
     
-    auto resourcePath = exeDir / "resource";
+    auto resourcePath = exeDir / "resources";
 
     // RHI building
     // Render Hardware Interface - (instance, device, surface, swapchain);
