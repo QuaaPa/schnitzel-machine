@@ -23,7 +23,7 @@ SM::Handle<SM::ShaderModule> SM::ResourceManager::createShaderModule(const std::
     return m_shaderModulesPool.insert(std::move(shaderModule)); // move constructor !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 }
 
-void SM::ResourceManager::destroy(Handle<ShaderModule> handle) {
+void SM::ResourceManager::destroy(RequiredHandle<ShaderModule> handle) {
     // m_shaderModulesPool.get(handle)->destroy();
     m_shaderModulesPool.remove(handle);
 }
@@ -38,7 +38,7 @@ SM::Handle<SM::PipelineLayout> SM::ResourceManager::createPipelineLayout() {
     return m_pipelineLayoutsPool.insert(std::move(pipelineLayout)); // move constructor !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 }
 
-void SM::ResourceManager::destroy(SM::Handle<SM::PipelineLayout> handle) {
+void SM::ResourceManager::destroy(SM::RequiredHandle<SM::PipelineLayout> handle) {
     m_pipelineLayoutsPool.remove(handle);
 }
 
@@ -70,7 +70,7 @@ SM::Handle<SM::Pipeline> SM::ResourceManager::createGraphicsPipeline(SM::Require
 
     // TODO
     //
-    std::vector<VkFormat> vkColorAttachmentFormats;
+    std::vector<VkFormat> vkColorAttachmentFormats = {VK_FORMAT_B8G8R8A8_UNORM};
 
     // TODO
     //
@@ -93,7 +93,7 @@ SM::Handle<SM::Pipeline> SM::ResourceManager::createGraphicsPipeline(SM::Require
     return m_pipelinesPool.insert(std::move(pipeline));
 }
 
-void SM::ResourceManager::destroy(SM::Handle<SM::Pipeline> handle) {
+void SM::ResourceManager::destroy(SM::RequiredHandle<SM::Pipeline> handle) {
     m_pipelinesPool.remove(handle);
 }
 
@@ -103,6 +103,6 @@ SM::Handle<SM::CommandPool> SM::ResourceManager::createCommandPool(uint32_t queu
     return m_commandPoolsPool.insert(std::move(commandPool));
 }
 
-void SM::ResourceManager::destroy(SM::Handle<SM::CommandPool> handle) {
+void SM::ResourceManager::destroy(SM::RequiredHandle<SM::CommandPool> handle) {
     m_commandPoolsPool.remove(handle);
 }

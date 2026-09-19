@@ -6,8 +6,8 @@
 #include <vulkan/vulkan_core.h>
 
 #include "RHI/Adapter.h"
+#include "RHI/Image.h"
 #include "RHI/Queue.h"
-#include "RHI/VkResultToString.h"
 
 namespace SM {
     struct SwapchainOptions {
@@ -28,14 +28,18 @@ namespace SM {
     public:
         void initialize(const SM::Adapter &adapter, const VkDevice &deviceHandle, const std::vector<SM::Queue> &queues, const VkSurfaceKHR &surfaceHandle, const SM::SwapchainOptions &options);
 
-        SM::Result getImages(const VkDevice &m_device, uint32_t *pSwapchainImageCount, VkImage *pSwapchainImages);
-
+        void querySwapchainImages(VkDevice vkDevice, VkFormat imageFormat);
+        
         VkSwapchainKHR getHandle() { return m_handle; }
+        std::vector<SM::Image> getImages() const noexcept { return m_images; }
+        VkExtent2D getExtent() const noexcept { return m_extent; }
         
         void destroy(const VkDevice &deviceHandle);
         
     private:        
         VkSwapchainKHR m_handle{ VK_NULL_HANDLE };
+        std::vector<SM::Image> m_images;
+        VkExtent2D m_extent;
     };
 };
 

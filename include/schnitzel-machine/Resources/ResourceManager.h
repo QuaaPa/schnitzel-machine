@@ -22,19 +22,19 @@ namespace SM {
         ResourceManager& operator=(ResourceManager&& other) = delete;
 
         SM::Handle<ShaderModule> createShaderModule(const std::vector<uint32_t>& spirv, VkShaderStageFlagBits stage);
-        void destroy(Handle<ShaderModule> handle);
+        void destroy(RequiredHandle<ShaderModule> handle);
         ShaderModule* get(Handle<ShaderModule> handle) { return m_shaderModulesPool.get(handle); }
 
         SM::Handle<PipelineLayout> createPipelineLayout();
-        void destroy(Handle<PipelineLayout> handle);
+        void destroy(RequiredHandle<PipelineLayout> handle);
         PipelineLayout* get(Handle<PipelineLayout> handle){ return m_pipelineLayoutsPool.get(handle); }
 
         Handle<Pipeline> createGraphicsPipeline(SM::RequiredHandle<SM::PipelineLayout> pipelineLayoutHandle, SM::RequiredHandle<SM::ShaderModule> vertShaderModule, SM::RequiredHandle<SM::ShaderModule> fragShaderModule);
-        void destroy(Handle<Pipeline> handle);
+        void destroy(RequiredHandle<Pipeline> handle);
         Pipeline* get(Handle<Pipeline> handle){ return m_pipelinesPool.get(handle); }
  
         SM::Handle<CommandPool> createCommandPool(uint32_t queueFamilyIndex);
-        void destroy(Handle<CommandPool> handle);
+        void destroy(RequiredHandle<CommandPool> handle);
         CommandPool* get(Handle<CommandPool> handle) { return m_commandPoolsPool.get(handle); }
 
     private:

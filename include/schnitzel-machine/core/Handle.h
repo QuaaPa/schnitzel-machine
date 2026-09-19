@@ -63,7 +63,7 @@ template<typename T>
 class RequiredHandle : public Handle<T>
 {
 public:
-#ifdef SM_DEBUG
+#ifdef SM_BUILD_DEBUG_MODE
     RequiredHandle() = delete;
 #endif
     using Handle<T>::Handle;
@@ -71,7 +71,7 @@ public:
     RequiredHandle(const Handle<T> &handle)
         : Handle<T>(handle.index(), handle.generation())
     {
-#ifdef SM_DEBUG
+#ifdef SM_BUILD_DEBUG_MODE
         assert(this->isValid());
 #endif
     }
@@ -80,7 +80,7 @@ public:
     RequiredHandle(const U &obj)
         : Handle<T>(Handle<T>(obj))
     {
-#ifdef SM_DEBUG
+#ifdef SM_BUILD_DEBUG_MODE
         assert(this->isValid());
 #endif
     }

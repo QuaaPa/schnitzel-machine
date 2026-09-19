@@ -11,6 +11,7 @@ namespace SM {
         Queue(const VkDevice &device, const SM::QueueDescription &queueDescription);
         ~Queue();
 
+        VkQueue getQueue() const noexcept { return m_queue; }
         VkQueueFlags flags() const noexcept { return m_flags; }
         uint32_t timestampValidBits() const noexcept { return m_timestampValidBits; }
         VkExtent3D minImageTransferGranularity() const noexcept { return m_minImageTransferGranularity; }

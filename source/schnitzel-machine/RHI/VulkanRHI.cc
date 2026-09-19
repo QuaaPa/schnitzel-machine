@@ -118,44 +118,9 @@ void SM::VulkanRHI::initialize(const RHIOptions& options) {
     m_swapchain.initialize(m_adapter, m_device.getHandle(), m_queues, m_surface.getHandle(), options.SwapchainOptions);
 
     // Used user-defined image format 
-    querySwapchainImages(options.SwapchainOptions.format);    
+    m_swapchain.querySwapchainImages(m_device.getHandle(), options.SwapchainOptions.format);
 }
 
-void SM::VulkanRHI::querySwapchainImages(const VkFormat& imageFormat) {
-    uint32_t vkSwapchainImageCount;
-    m_swapchain.getImages(m_device.getHandle(), &vkSwapchainImageCount, nullptr);
-    SM_LOG_DEBUG("RHI", "Received {} swapchain image{}", vkSwapchainImageCount, vkSwapchainImageCount == 1 ? "" : "s");
-    
-    std::vector<VkImage> vkSwapchainImages;
-    vkSwapchainImages.resize(vkSwapchainImageCount);
-    if (vkSwapchainImageCount != 0) {
-        if (auto result = m_swapchain.getImages(m_device.getHandle(), &vkSwapchainImageCount, vkSwapchainImages.data()); result != VK_SUCCESS) {
-            SM_LOG_CRITICAL("RHI", "{}: Failed to query swapchain image handles", toString(result));
-        }
-    }
-
-    m_swapchainImages.reserve(vkSwapchainImageCount);
-    for (auto& image : vkSwapchainImages) {
-        m_swapchainImages.emplace_back(SM::Image(
-            m_device.getHandle(), image,
-            SM::ImageDescription{ .viewType = VK_IMAGE_VIEW_TYPE_2D,
-                                  .format = imageFormat,
-                                  .components =
-                                      VkComponentMapping{
-                                          .r = VK_COMPONENT_SWIZZLE_IDENTITY,
-                                          .g = VK_COMPONENT_SWIZZLE_IDENTITY,
-                                          .b = VK_COMPONENT_SWIZZLE_IDENTITY,
-                                          .a = VK_COMPONENT_SWIZZLE_IDENTITY,
-                                      },
-                                  .subresourceRange = VkImageSubresourceRange{
-                                      .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                                      .baseMipLevel = 0,
-                                      .levelCount = 1,
-                                      .baseArrayLayer = 0,
-                                      .layerCount = 1,
-                                  } }));
-    }
-}
 
 VkPhysicalDevice SM::VulkanRHI::selectSuitableAdapter(
     const std::vector<SM::Adapter>& adapters) const {
@@ -219,12 +184,11 @@ VkPhysicalDevice SM::VulkanRHI::selectSuitableAdapter(
     return VK_NULL_HANDLE;
 }
 SM::Result SM::VulkanRHI::deviceWaitIdle() {
-    SM_LOG_DEBUG("RHI", "Waiting for a device to become idle");
     return vkDeviceWaitIdle(m_device.getHandle());
 }
 
 void SM::VulkanRHI::destroy() {
-    for (auto image : m_swapchainImages) {
+    for (auto image : m_swapchain.getImages()) {
         image.destroyImageView(m_device.getHandle());
     }
     m_swapchain.destroy(m_device.getHandle());

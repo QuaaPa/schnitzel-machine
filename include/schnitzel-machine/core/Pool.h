@@ -7,7 +7,6 @@
 #include <utility>
 
 #include "Handle.h"
-#include "core/Log.h"
 
 namespace SM {
 
@@ -52,10 +51,7 @@ namespace SM {
 
         T* getRequired(RequiredHandle<T> handle) noexcept
         {
-            if(!isValidSlot(handle)) {
-                SM_LOG_ERROR("Pool", "getRequired: handle (id: {}, gen: {}) points to a dead/stale slot", handle.index(), handle.generation());
-                return {};
-            } 
+            assert(isValidSlot(handle));
             return &m_slots[handle.index()].value;
         }
 

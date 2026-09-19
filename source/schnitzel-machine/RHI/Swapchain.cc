@@ -4,6 +4,7 @@
 #include <vector>
 #include <vulkan/vulkan_core.h>
 
+#include "RHI/Image.h"
 #include "RHI/VkResultToString.h"
 #include "RHI/VulkanConfig.h"
 #include "RHI/Adapter.h"
@@ -11,7 +12,8 @@
 #include "core/Log.h"
 
 void SM::Swapchain::initialize(const SM::Adapter &adapter, const VkDevice &deviceHandle, const std::vector<SM::Queue> &queues, const VkSurfaceKHR &surfaceHandle, const SM::SwapchainOptions &options) {
-    
+
+    m_extent = options.imageExtent;
     SM::AdapterSwapchainProperties properties = adapter.querySwapchainProperties(surfaceHandle);  
 
     // A value of 0 of maxImageCount means that there is no limit on the number of images,
@@ -55,8 +57,40 @@ void SM::Swapchain::initialize(const SM::Adapter &adapter, const VkDevice &devic
     }    
 }
 
-SM::Result SM::Swapchain::getImages(const VkDevice& m_device, uint32_t* pSwapchainImageCount, VkImage* pSwapchainImages) {
-    return vkGetSwapchainImagesKHR(m_device, m_handle, pSwapchainImageCount, pSwapchainImages);
+void SM::Swapchain::querySwapchainImages(VkDevice vkDevice, VkFormat imageFormat) {
+    uint32_t vkSwapchainImageCount;
+    SM::getImages(vkDevice, m_handle, &vkSwapchainImageCount, nullptr);
+    SM_LOG_DEBUG("RHI", "Received {} swapchain image{}", vkSwapchainImageCount, vkSwapchainImageCount == 1 ? "" : "s");
+
+    std::vector<VkImage> vkSwapchainImages;
+    vkSwapchainImages.resize(vkSwapchainImageCount);
+    if (vkSwapchainImageCount != 0) {
+        if (auto result = SM::getImages(vkDevice, m_handle, &vkSwapchainImageCount, vkSwapchainImages.data()); result != VK_SUCCESS) {
+            SM_LOG_CRITICAL("RHI", "{}: Failed to query swapchain image handles", toString(result));
+        }
+    }
+
+    m_images.reserve(vkSwapchainImageCount);
+    for (auto& image : vkSwapchainImages) {
+        m_images.emplace_back(SM::Image(
+            vkDevice, image,
+            SM::ImageDescription{ .viewType = VK_IMAGE_VIEW_TYPE_2D,
+                                  .format = imageFormat,
+                                  .components =
+                                      VkComponentMapping{
+                                          .r = VK_COMPONENT_SWIZZLE_IDENTITY,
+                                          .g = VK_COMPONENT_SWIZZLE_IDENTITY,
+                                          .b = VK_COMPONENT_SWIZZLE_IDENTITY,
+                                          .a = VK_COMPONENT_SWIZZLE_IDENTITY,
+                                      },
+                                  .subresourceRange = VkImageSubresourceRange{
+                                      .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                                      .baseMipLevel = 0,
+                                      .levelCount = 1,
+                                      .baseArrayLayer = 0,
+                                      .layerCount = 1,
+                                  } }));
+    }
 }
 
 void SM::Swapchain::destroy(const VkDevice &deviceHandle) {

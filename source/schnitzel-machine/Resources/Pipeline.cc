@@ -39,13 +39,6 @@ SM::Result SM::Pipeline::initializePipelineAsGraphics(VkDevice vkDevice, const G
 
     m_device = vkDevice;
     
-    VkPipelineRenderingCreateInfo vkPipelineRenderingInfo{};
-    vkPipelineRenderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
-    vkPipelineRenderingInfo.colorAttachmentCount = static_cast<uint32_t>(desc.colorAttachmentFormats.size());
-    vkPipelineRenderingInfo.pColorAttachmentFormats = desc.colorAttachmentFormats.data();
-    vkPipelineRenderingInfo.depthAttachmentFormat = desc.depthAttachmentFormat;
-    vkPipelineRenderingInfo.stencilAttachmentFormat = desc.stencilAttachmentFormat;
-
     std::array<VkDynamicState, 2> vkDynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
     VkPipelineDynamicStateCreateInfo vkPipelineDynamicStateInfo{};
     vkPipelineDynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
@@ -99,10 +92,16 @@ SM::Result SM::Pipeline::initializePipelineAsGraphics(VkDevice vkDevice, const G
     vkPipelineColorBlendStateInfo.blendConstants[2] = 0.0f;
     vkPipelineColorBlendStateInfo.blendConstants[3] = 0.0f;
 
+    VkPipelineRenderingCreateInfo vkPipelineRenderingInfo{};
+    vkPipelineRenderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+    vkPipelineRenderingInfo.colorAttachmentCount = static_cast<uint32_t>(desc.colorAttachmentFormats.size());
+    vkPipelineRenderingInfo.pColorAttachmentFormats = desc.colorAttachmentFormats.data();
+    vkPipelineRenderingInfo.depthAttachmentFormat = desc.depthAttachmentFormat;
+    vkPipelineRenderingInfo.stencilAttachmentFormat = desc.stencilAttachmentFormat;
+
     // TODO
     //
     VkPipelineDepthStencilStateCreateInfo vkPipelineDepthStencilStateInfo = {};
-
     VkGraphicsPipelineCreateInfo pipelineInfo{};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     pipelineInfo.pNext = &vkPipelineRenderingInfo;
