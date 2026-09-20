@@ -61,7 +61,8 @@ SM::Result SM::Pipeline::initializePipelineAsGraphics(VkDevice vkDevice, const G
     vkPipelineRasterizationStateInfo.rasterizerDiscardEnable = VK_FALSE;
     vkPipelineRasterizationStateInfo.polygonMode = VK_POLYGON_MODE_FILL;
     vkPipelineRasterizationStateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
-    vkPipelineRasterizationStateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    // vkPipelineRasterizationStateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    vkPipelineRasterizationStateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
     vkPipelineRasterizationStateInfo.depthBiasEnable = VK_FALSE;
     vkPipelineRasterizationStateInfo.depthBiasConstantFactor = 0.0f;
     vkPipelineRasterizationStateInfo.depthBiasClamp = 0.0f;

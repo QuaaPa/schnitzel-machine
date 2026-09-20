@@ -63,11 +63,10 @@ SM::Handle<SM::Pipeline> SM::ResourceManager::createGraphicsPipeline(SM::Require
 
     VkPipelineVertexInputStateCreateInfo vkPipelineVertexInputStateInfo{};
     vkPipelineVertexInputStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vkPipelineVertexInputStateInfo.vertexBindingDescriptionCount = 1;
-    vkPipelineVertexInputStateInfo.pVertexBindingDescriptions = &bindingDescription;
-    vkPipelineVertexInputStateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-    vkPipelineVertexInputStateInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
-
+    vkPipelineVertexInputStateInfo.vertexBindingDescriptionCount = 0;
+    vkPipelineVertexInputStateInfo.pVertexBindingDescriptions = nullptr;
+    vkPipelineVertexInputStateInfo.vertexAttributeDescriptionCount = 0;
+    vkPipelineVertexInputStateInfo.pVertexAttributeDescriptions = nullptr;
     // TODO
     //
     std::vector<VkFormat> vkColorAttachmentFormats = {VK_FORMAT_B8G8R8A8_UNORM};

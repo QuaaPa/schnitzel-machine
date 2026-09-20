@@ -8,6 +8,7 @@
 #include <memory>
 #include <vulkan/vulkan_core.h>
 
+#include "RHI/VkResultToString.h"
 #include "Resources/ResourceManager.h"
 #include "core/ShaderCompiler.h"
 #include "core/TypesDefs.h"
@@ -143,7 +144,7 @@ void SM::Engine::init(std::filesystem::path exeDir) {
 void SM::Engine::mainLoop() {
     SM_LOG_INFO("CORE", "Engine starting...");
     VkDevice vkDevice = rhi->getDevice().getHandle();
-    while(!win->shouldClose()){
+    while (!win->shouldClose()) {
         win->pollEvents();
 
         vkWaitForFences(vkDevice, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
@@ -154,7 +155,7 @@ void SM::Engine::mainLoop() {
                               UINT64_MAX, imageAvailableSemaphores[currentFrame],
                               VK_NULL_HANDLE, &imageIndex);
 
-        if(imagesInFlight[imageIndex] != VK_NULL_HANDLE)
+        if (imagesInFlight[imageIndex] != VK_NULL_HANDLE)
             vkWaitForFences(vkDevice, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
         imagesInFlight[imageIndex] = inFlightFences[currentFrame];
         vkResetFences(vkDevice, 1, &inFlightFences[currentFrame]);
@@ -186,7 +187,7 @@ void SM::Engine::mainLoop() {
         colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachment.clearValue.color = { { 0.01f, 0.01f, 0.02f, 1.0f } };
+        colorAttachment.clearValue.color = { { 0.1f, 0.1f, 0.0f, 1.0f } };
 
         VkRenderingInfo renderingInfo{ VK_STRUCTURE_TYPE_RENDERING_INFO };
         renderingInfo.renderArea = { { 0, 0 }, rhi->getSwapchain().getExtent() };
