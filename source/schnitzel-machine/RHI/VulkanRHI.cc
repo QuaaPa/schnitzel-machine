@@ -7,10 +7,7 @@
 #include <vulkan/vulkan_core.h>
 #include <GLFW/glfw3.h>
 
-#include "RHI/Image.h"
-#include "RHI/ImageDescription.h"
 #include "RHI/VkResultToString.h"
-#include "RHI/Swapchain.h"
 #include "RHI/Instance.h"
 #include "RHI/Adapter.h"
 #include "RHI/Device.h"
@@ -111,14 +108,6 @@ void SM::VulkanRHI::initialize(const RHIOptions& options) {
     for (uint32_t i = 0; i < queueCount; ++i) {
         m_queues.emplace_back(SM::Queue(m_device.getHandle(), queueDescriptions[i]));
     }
-
-    // Swapchain initialization
-    //
-    // TODO verify any user-defined option by swapchainproperties !!!
-    m_swapchain.initialize(m_adapter, m_device.getHandle(), m_queues, m_surface.getHandle(), options.SwapchainOptions);
-
-    // Used user-defined image format 
-    m_swapchain.querySwapchainImages(m_device.getHandle(), options.SwapchainOptions.format);
 }
 
 
@@ -183,15 +172,12 @@ VkPhysicalDevice SM::VulkanRHI::selectSuitableAdapter(
     SM_LOG_CRITICAL("RHI", "Unable to find a suitable Adapter. Aborting...");
     return VK_NULL_HANDLE;
 }
+
 SM::Result SM::VulkanRHI::deviceWaitIdle() {
     return vkDeviceWaitIdle(m_device.getHandle());
 }
 
 void SM::VulkanRHI::destroy() {
-    for (auto image : m_swapchain.getImages()) {
-        image.destroyImageView(m_device.getHandle());
-    }
-    m_swapchain.destroy(m_device.getHandle());
     m_device.destroy();
     m_surface.destroy(m_instance.getHandle());
     m_instance.destroy();

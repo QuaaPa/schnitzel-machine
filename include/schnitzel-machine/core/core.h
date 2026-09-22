@@ -27,6 +27,7 @@ namespace SM {
         std::unique_ptr<SM::ShaderCompiler> compiler;
         std::unique_ptr<SM::ResourceManager> resourceManager;
 
+        SM::Handle<Swapchain> swapchainHadle;
         SM::Handle<ShaderModule> vertShaderModuleH;
         SM::Handle<ShaderModule> fragShaderModuleH;
         SM::Handle<PipelineLayout> pipelineLayoutHandle;

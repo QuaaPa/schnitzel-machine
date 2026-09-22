@@ -334,6 +334,7 @@ std::vector<SM::QueueFamilyProperties> SM::Adapter::queryQueueFamilyProperties()
     for (uint32_t i = 0; i < vkQueueFamilyCount; ++i) {
         const auto &prop = vkQueueFamilyProperties[i];
         queueFamilies.emplace_back(SM::QueueFamilyProperties{
+                .index = i,
                 .flags = prop.queueFlags,
                 .availableQueues = prop.queueCount,
                 .timestampValidBits = prop.timestampValidBits,

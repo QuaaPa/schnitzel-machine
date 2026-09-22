@@ -9,7 +9,6 @@
 #include "RHI/VkResultToString.h"
 #include "core/Log.h"
 #include "core/TypesDefs.h"
-#include "RHI/Swapchain.h"
 #include "RHI/Instance.h"
 #include "RHI/Adapter.h"
 #include "RHI/Surface.h"
@@ -52,7 +51,6 @@ namespace SM {
 
         const SM::InstanceOptions& InstanceOptions;
         const SM::DeviceOptions& DeviceOptions;
-        const SM::SwapchainOptions& SwapchainOptions;
     };
 
     class VulkanRHI {
@@ -62,8 +60,9 @@ namespace SM {
         std::vector<SM::Queue> queryQueues() { return m_queues; };
         SM::Result deviceWaitIdle();
 
+        SM::Adapter getAdapter() const noexcept { return m_adapter; }
         SM::Device getDevice() const noexcept { return m_device; }
-        SM::Swapchain getSwapchain() const noexcept { return m_swapchain; }
+        SM::Surface getSurface() const noexcept { return m_surface; }
 
         void destroy();
         
@@ -71,7 +70,6 @@ namespace SM {
         VkPhysicalDevice selectSuitableAdapter(const std::vector<SM::Adapter> &adapter) const;
         
     private:
-        SM::Swapchain m_swapchain;
         SM::Device m_device;     // represents a logical GPU device
         SM::Adapter m_adapter;   // is a representation of a physical hardware device
         std::vector<SM::Queue> m_queues;

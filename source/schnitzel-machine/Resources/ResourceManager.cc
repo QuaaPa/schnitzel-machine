@@ -1,13 +1,17 @@
 #include "Resources/ResourceManager.h"
 
+#include <cstdint>
 #include <vector>
 
 #include <vulkan/vulkan_core.h>
 
+#include "RHI/Adapter.h"
+#include "Resources/Swapchain.h"
 #include "Resources/CommandPool.h"
 #include "Resources/Pipeline.h"
 #include "Resources/PipelineLayout.h"
 #include "Resources/ShaderModule.h"
+#include "Resources/Swapchain.h"
 #include "Resources/Vertex.h"
 #include "core/Handle.h"
 
@@ -104,4 +108,40 @@ SM::Handle<SM::CommandPool> SM::ResourceManager::createCommandPool(uint32_t queu
 
 void SM::ResourceManager::destroy(SM::RequiredHandle<SM::CommandPool> handle) {
     m_commandPoolsPool.remove(handle);
+}
+
+SM::Handle<SM::Swapchain> SM::ResourceManager::createSwapchain(VkSurfaceKHR vkSurface, const SM::Adapter& adapter, VkExtent2D imageExtent) {    
+    std::vector<uint32_t> queueFamilyIndices;
+    queueFamilyIndices.reserve(adapter.queryQueueFamilyProperties().size());
+    for(auto queueFamily : adapter.queryQueueFamilyProperties()) {
+        queueFamilyIndices.emplace_back(queueFamily.index);
+    }
+    
+    SM::SwapchainDescription desc{};
+    desc.queueFamilyIndices = queueFamilyIndices;
+    desc.imageExtent = imageExtent;   
+
+    SM::Swapchain swapchain;
+    auto supportedSwapchainProperties = adapter.querySwapchainProperties(vkSurface);
+    swapchain.initializeSwapchain(m_device, vkSurface, supportedSwapchainProperties, desc);
+    return m_swapchainPool.insert(std::move(swapchain));
+    // SwapchainDescription desc{};
+    // desc.format = VK_FORMAT_B8G8R8A8_UNORM;
+    // desc.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+    // desc.imageCount = 4;
+    // desc.imageExtent = VkExtent2D{
+    //     .width = win->getFramebufferSize<uint32_t>().width,
+    //     .height = win->getFramebufferSize<uint32_t>().height
+    // };
+    // desc.imageLayers = 1;
+    // desc.imageUsageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    // desc.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    // desc.transform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+    // desc.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    // desc.presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+    // desc.clipped = true;    
+}
+
+void SM::ResourceManager::destroy(SM::RequiredHandle<SM::Swapchain> handle) {
+    m_swapchainPool.remove(handle);
 }

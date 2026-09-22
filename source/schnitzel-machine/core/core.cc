@@ -2,7 +2,6 @@
 
 #include <GLFW/glfw3.h>
 #include <cstdint>
-#include <exception>
 #include <filesystem>
 
 #include <memory>
@@ -12,7 +11,6 @@
 #include "Resources/ResourceManager.h"
 #include "core/ShaderCompiler.h"
 #include "core/TypesDefs.h"
-#include "RHI/Swapchain.h"
 #include "RHI/VulkanRHI.h"
 #include "RHI/Instance.h"
 #include "core/Window.h"
@@ -46,6 +44,8 @@ void SM::Engine::init(std::filesystem::path exeDir) {
     // RHI building
     // Render Hardware Interface - (instance, device, surface, swapchain);
 
+    // Window/Platform init   
+    
     // TODO: Different surface by different WindowType
     // TODO: Framebuffer resizing 
     win = SM::Window::getInstance();
@@ -66,22 +66,22 @@ void SM::Engine::init(std::filesystem::path exeDir) {
         }
     };
 
-    SM::SwapchainOptions swapchainOpt {
-        .format = VK_FORMAT_B8G8R8A8_UNORM ,
-        .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-        .imageCount = 4, 
-        .imageExtent = VkExtent2D {
-            .width =  win->getFramebufferSize<uint32_t>().width,
-            .height = win->getFramebufferSize<uint32_t>().height
-        },
-        .imageLayers = 1,
-        .imageUsageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-        .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        .transform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
-        .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,        
-        .presentMode = VK_PRESENT_MODE_MAILBOX_KHR,
-        .clipped = true
-    };
+    // SM::SwapchainOptions swapchainOpt {
+    //     .format = VK_FORMAT_B8G8R8A8_UNORM ,
+    //     .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+    //     .imageCount = 4, 
+    //     .imageExtent = VkExtent2D {
+    //         .width =  win->getFramebufferSize<uint32_t>().width,
+    //         .height = win->getFramebufferSize<uint32_t>().height
+    //     },
+    //     .imageLayers = 1,
+    //     .imageUsageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+    //     .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+    //     .transform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
+    //     .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,        
+    //     .presentMode = VK_PRESENT_MODE_MAILBOX_KHR,
+    //     .clipped = true
+    // };
 
     rhi->initialize(SM::RHIOptions {
             .apiVersion = VK_API_VERSION_1_3,
@@ -91,7 +91,7 @@ void SM::Engine::init(std::filesystem::path exeDir) {
             },
             .InstanceOptions = instanceOpt,
             .DeviceOptions = deviceOpt,
-            .SwapchainOptions = swapchainOpt
+            // .SwapchainOptions = swapchainOpt
         });
     
     // Any hot-reload objects will create in resource/
@@ -103,13 +103,21 @@ void SM::Engine::init(std::filesystem::path exeDir) {
     compiler->SetOptimizationLevel(shaderc_optimization_level_zero); // easier to debug in RenderDoc
 #endif
 
+    resourceManager = std::make_unique<SM::ResourceManager>(rhi->getDevice().getHandle());
+
+    auto swapchainImageExtent = VkExtent2D{
+        .width = win->getFramebufferSize<uint32_t>().width,
+        .height = win->getFramebufferSize<uint32_t>().height
+    };
+
+    swapchainHadle = resourceManager->createSwapchain(rhi->getSurface().getHandle(), rhi->getAdapter(), swapchainImageExtent);
+    
     auto vertShader = compiler->CompileFromFile(resourcePath / "shaders/shader.vert", SM::ShaderStage::Vertex);
     SM_LOG_DEBUG("CORE", "Vertex shader compilation status:{}{}", vertShader.success, vertShader.errorMessage.empty() ? "" : ", message: " + vertShader.errorMessage);
 
     auto fragShader = compiler->CompileFromFile(resourcePath / "shaders/shader.frag", SM::ShaderStage::Fragment);
-    SM_LOG_DEBUG("CORE", "Fragment shader compilation status:{}{}", fragShader.success, fragShader.errorMessage.empty() ? "" : ", message: " + fragShader.errorMessage);
-        
-    resourceManager = std::make_unique<SM::ResourceManager>(rhi->getDevice().getHandle());
+    SM_LOG_DEBUG("CORE", "Fragment shader compilation status:{}{}", fragShader.success, fragShader.errorMessage.empty() ? "" : ", message: " + fragShader.errorMessage);        
+    
     vertShaderModuleH = resourceManager->createShaderModule(vertShader.spirv, VK_SHADER_STAGE_VERTEX_BIT);
     fragShaderModuleH = resourceManager->createShaderModule(fragShader.spirv, VK_SHADER_STAGE_FRAGMENT_BIT);
     // Passing shader module handles to create pipeline, and obtaining pipeline handle
@@ -127,7 +135,7 @@ void SM::Engine::init(std::filesystem::path exeDir) {
     for(auto& buff : cmdBuffers)
         vkAllocateCommandBuffers(rhi->getDevice().getHandle(), &allocInfo, &buff);
 
-    size_t imageCount = rhi->getSwapchain().getImages().size();
+    size_t imageCount = resourceManager->get(swapchainHadle)->getImages().size();
 
     imageAvailableSemaphores.resize(2);
     inFlightFences.resize(2);
@@ -151,7 +159,7 @@ void SM::Engine::mainLoop() {
         // vkResetFences(vkDevice, 1, &inFlightFences[currentFrame]);
 
         uint32_t imageIndex;
-        vkAcquireNextImageKHR(vkDevice, rhi->getSwapchain().getHandle(),
+        vkAcquireNextImageKHR(vkDevice, resourceManager->get(swapchainHadle)->getSwapchain(),
                               UINT64_MAX, imageAvailableSemaphores[currentFrame],
                               VK_NULL_HANDLE, &imageIndex);
 
@@ -167,8 +175,8 @@ void SM::Engine::mainLoop() {
         VkCommandBufferBeginInfo beginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
         vkBeginCommandBuffer(cmdBuffers[currentFrame], &beginInfo);
 
-        VkImage image = rhi->getSwapchain().getImages()[imageIndex].getImage();
-        VkImageView imageView = rhi->getSwapchain().getImages()[imageIndex].getImageView();
+        VkImage image = resourceManager->get(swapchainHadle)->getImages().at(imageIndex);
+        VkImageView imageView = resourceManager->get(swapchainHadle)->getImageViews()[imageIndex];
 
         // UNDEFINED -> COLOR_ATTACHMENT_OPTIMAL
         VkImageMemoryBarrier toColor{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
@@ -190,7 +198,7 @@ void SM::Engine::mainLoop() {
         colorAttachment.clearValue.color = { { 0.1f, 0.1f, 0.0f, 1.0f } };
 
         VkRenderingInfo renderingInfo{ VK_STRUCTURE_TYPE_RENDERING_INFO };
-        renderingInfo.renderArea = { { 0, 0 }, rhi->getSwapchain().getExtent() };
+        renderingInfo.renderArea = { { 0, 0 }, resourceManager->get(swapchainHadle)->getImageExtent() };
         renderingInfo.layerCount = 1;
         renderingInfo.colorAttachmentCount = 1;
         renderingInfo.pColorAttachments = &colorAttachment;
@@ -199,7 +207,7 @@ void SM::Engine::mainLoop() {
 
         vkCmdBindPipeline(cmdBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, resourceManager->get(pipelineHandle)->getPipeline());
 
-        VkExtent2D extent = rhi->getSwapchain().getExtent();
+        VkExtent2D extent = resourceManager->get(swapchainHadle)->getImageExtent();
         VkViewport viewport{ 0.0f, 0.0f, (float)extent.width, (float)extent.height, 0.0f, 1.0f };
         VkRect2D scissor{ { 0, 0 }, extent };
         vkCmdSetViewport(cmdBuffers[currentFrame], 0, 1, &viewport);
@@ -243,7 +251,7 @@ void SM::Engine::mainLoop() {
         vkQueueSubmit(rhi->queryQueues()[0].getQueue(), 1, &submitInfo, inFlightFences[currentFrame]);
 
         // 5. Present
-        VkSwapchainKHR swapchain = rhi->getSwapchain().getHandle();
+        VkSwapchainKHR swapchain = resourceManager->get(swapchainHadle)->getSwapchain();
         VkPresentInfoKHR presentInfo{ VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
         presentInfo.waitSemaphoreCount = 1;
         presentInfo.pWaitSemaphores = &renderFinishedSemaphores[imageIndex];
@@ -281,7 +289,8 @@ void SM::Engine::cleanup() {
     resourceManager->destroy(fragShaderModuleH);
     resourceManager->destroy(pipelineLayoutHandle);
     resourceManager->destroy(pipelineHandle);
-
+    resourceManager->destroy(swapchainHadle);
+    
     rhi->destroy();
     win->destroy();
 }

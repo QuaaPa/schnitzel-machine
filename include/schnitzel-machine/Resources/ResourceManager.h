@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <vulkan/vulkan_core.h>
 
+#include "RHI/Adapter.h"
+#include "Resources/Swapchain.h"
 #include "Resources/CommandPool.h"
 #include "Resources/Pipeline.h"
 #include "Resources/PipelineLayout.h"
@@ -37,6 +39,10 @@ namespace SM {
         void destroy(RequiredHandle<CommandPool> handle);
         CommandPool* get(Handle<CommandPool> handle) { return m_commandPoolsPool.get(handle); }
 
+        SM::Handle<Swapchain> createSwapchain(VkSurfaceKHR vkSurface, const SM::Adapter& adapter, VkExtent2D imageExtent);
+        void destroy(RequiredHandle<Swapchain> handle);
+        Swapchain* get(Handle<Swapchain> handle) { return m_swapchainPool.get(handle); }
+
     private:
         VkDevice m_device;
 
@@ -44,6 +50,7 @@ namespace SM {
         SM::Pool<Pipeline> m_pipelinesPool{ 1 };
         SM::Pool<ShaderModule> m_shaderModulesPool{ 2 };
         SM::Pool<CommandPool> m_commandPoolsPool{ 1 };
+        SM::Pool<Swapchain> m_swapchainPool{ 1 };
     };
 }; // namespace SM
 
