@@ -106,7 +106,7 @@ void SM::VulkanRHI::initialize(const RHIOptions& options) {
     const uint32_t queueCount = queueDescriptions.size();
     m_queues.reserve(queueCount);
     for (uint32_t i = 0; i < queueCount; ++i) {
-        m_queues.emplace_back(SM::Queue(m_device.getHandle(), queueDescriptions[i]));
+        m_queues.emplace_back(SM::Queue(queueDescriptions[i]));
     }
 }
 

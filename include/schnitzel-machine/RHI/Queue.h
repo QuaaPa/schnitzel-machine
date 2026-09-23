@@ -8,7 +8,7 @@
 namespace SM {    
     struct Queue {
     public:
-        Queue(const VkDevice &device, const SM::QueueDescription &queueDescription);
+        Queue(const SM::QueueDescription &queueDescription);
         ~Queue();
 
         VkQueue getQueue() const noexcept { return m_queue; }
@@ -18,7 +18,6 @@ namespace SM {
         uint32_t queueFamilyIndex() const noexcept { return m_queueFamilyIndex; }
 
     private:
-        const VkDevice* m_device{ nullptr };
         VkQueue m_queue{ VK_NULL_HANDLE };
         VkQueueFlags m_flags;
         uint32_t m_timestampValidBits;
