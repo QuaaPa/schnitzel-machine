@@ -54,8 +54,8 @@ SM::Renderer::Renderer(std::shared_ptr<VulkanRHI> const& rhi, const ShaderCompil
 
     size_t imageCount = m_resourceManager->get(swapchainHadle)->getImages().size();
 
-    imageAvailableSemaphores.resize(2);
-    inFlightFences.resize(2);
+    imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+    inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
     renderFinishedSemaphores.resize(imageCount);
 
     imagesInFlight.assign(imageCount, VK_NULL_HANDLE);
@@ -67,27 +67,24 @@ SM::Renderer::Renderer(std::shared_ptr<VulkanRHI> const& rhi, const ShaderCompil
 }
 
 void SM::Renderer::beginFrame() {
-    // VkCommandBufferBeginInfo beginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-    // vkBeginCommandBuffer(, &beginInfo);
+
 }
 
 void SM::Renderer::drawExample() {
     VkDevice vkDevice = m_rhi->device()->getHandle();
     auto currentCommandBuffer = m_resourceManager->get(commandBufferHandles[currentFrame])->getCommandBuffer();
-    vkWaitForFences(vkDevice, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-    // vkResetFences(vkDevice, 1, &inFlightFences[currentFrame]);
+
+    m_rhi->device()->waitForFences(1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
     uint32_t imageIndex;
-    vkAcquireNextImageKHR(vkDevice, m_resourceManager->get(swapchainHadle)->getSwapchain(),
-                          UINT64_MAX, imageAvailableSemaphores[currentFrame],
-                          VK_NULL_HANDLE, &imageIndex);
+    m_resourceManager->get(swapchainHadle)->acquireNextImage(UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
     if (imagesInFlight[imageIndex] != VK_NULL_HANDLE)
-        vkWaitForFences(vkDevice, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+        m_rhi->device()->waitForFences(1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
     imagesInFlight[imageIndex] = inFlightFences[currentFrame];
-    vkResetFences(vkDevice, 1, &inFlightFences[currentFrame]);
+    m_rhi->device()->resetFences(1, &inFlightFences[currentFrame]);
 
-    vkResetCommandBuffer(currentCommandBuffer, 0);
+    m_resourceManager->get(commandBufferHandles[currentFrame])->resetCommandBuffer(/* flags */ 0);
     //
     // Command buffer recording start here:
     //
@@ -105,9 +102,7 @@ void SM::Renderer::drawExample() {
     toColor.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
     toColor.image = image;
     toColor.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
-    vkCmdPipelineBarrier(currentCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                         0, 0, nullptr, 0, nullptr, 1, &toColor);
+    m_resourceManager->get(commandBufferHandles[currentFrame])->cmdPipelineBarrier(VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 0, nullptr, 0, nullptr, 1, &toColor);
 
     VkRenderingAttachmentInfo colorAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO };
     colorAttachment.imageView = imageView;
@@ -122,19 +117,19 @@ void SM::Renderer::drawExample() {
     renderingInfo.colorAttachmentCount = 1;
     renderingInfo.pColorAttachments = &colorAttachment;
 
-    vkCmdBeginRendering(currentCommandBuffer, &renderingInfo);
+    m_resourceManager->get(commandBufferHandles[currentFrame])->cmdBeginRendering(&renderingInfo);
 
-    vkCmdBindPipeline(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_resourceManager->get(pipelineHandle)->getPipeline());
+    m_resourceManager->get(commandBufferHandles[currentFrame])->cmdBindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, m_resourceManager->get(pipelineHandle)->getPipeline());
 
     VkExtent2D extent = m_resourceManager->get(swapchainHadle)->getImageExtent();
     VkViewport viewport{ 0.0f, 0.0f, (float)extent.width, (float)extent.height, 0.0f, 1.0f };
     VkRect2D scissor{ { 0, 0 }, extent };
-    vkCmdSetViewport(currentCommandBuffer, 0, 1, &viewport);
-    vkCmdSetScissor(currentCommandBuffer, 0, 1, &scissor);
+    m_resourceManager->get(commandBufferHandles[currentFrame])->cmdSetViewport(0, 1, &viewport);
+    m_resourceManager->get(commandBufferHandles[currentFrame])->cmdSetScissor(0, 1, &scissor);
 
-    vkCmdDraw(currentCommandBuffer, 3, 1, 0, 0);
+    m_resourceManager->get(commandBufferHandles[currentFrame])->cmdDraw(3, 1, 0, 0);
 
-    vkCmdEndRendering(currentCommandBuffer);
+    m_resourceManager->get(commandBufferHandles[currentFrame])->cmdEndRendering();
 
     // COLOR_ATTACHMENT_OPTIMAL -> PRESENT_SRC_KHR
     VkImageMemoryBarrier toPresent{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
@@ -144,11 +139,9 @@ void SM::Renderer::drawExample() {
     toPresent.dstAccessMask = 0;
     toPresent.image = image;
     toPresent.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
-    vkCmdPipelineBarrier(currentCommandBuffer, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                         VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                         0, 0, nullptr, 0, nullptr, 1, &toPresent);
+    m_resourceManager->get(commandBufferHandles[currentFrame])->cmdPipelineBarrier(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, nullptr, 0, nullptr, 1, &toPresent);
 
-    vkEndCommandBuffer(currentCommandBuffer);
+    m_resourceManager->get(commandBufferHandles[currentFrame])->endCommandBuffer();
     //
     // Command buffer recording ends here;
     //
@@ -187,23 +180,12 @@ void SM::Renderer::drawExample() {
 }
 
 void SM::Renderer::endFrame() {
-    // VkImageMemoryBarrier toPresent{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
-    // toPresent.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    // toPresent.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-    // toPresent.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-    // toPresent.dstAccessMask = 0;
-    // toPresent.image = image;
-    // toPresent.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
-    // vkCmdPipelineBarrier(cmdBuffers[currentFrame], VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-    //                      VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-    //                      0, 0, nullptr, 0, nullptr, 1, &toPresent);
 
-    // vkEndCommandBuffer(cmdBuffers[currentFrame]);
 }
 
 void SM::Renderer::destroy() {
 
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
         vkDestroySemaphore(m_rhi->device()->getHandle(), imageAvailableSemaphores[i], nullptr);
         vkDestroyFence(m_rhi->device()->getHandle(), inFlightFences[i], nullptr);
     }

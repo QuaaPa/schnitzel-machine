@@ -121,3 +121,23 @@ SM::Result SM::Swapchain::initializeSwapchain(VkDevice vkDevice, VkSurfaceKHR vk
 
     return VK_SUCCESS;
 }
+
+void SM::Swapchain::acquireNextImage(uint64_t timeout, VkSemaphore vkSemaphore, VkFence vkFence, uint32_t* pImageIndex) {
+    auto result = vkAcquireNextImageKHR(m_device, m_swapchain, timeout, vkSemaphore, vkFence, pImageIndex);
+
+    switch (result) {
+    case VK_SUCCESS:
+        break; // nothing to do
+    case VK_NOT_READY:        
+        break; // nothing to do
+    case VK_SUBOPTIMAL_KHR:
+        SM_LOG_WARN("Swapchain/AcquireNextImage", "{}: A swapchain no longer matches the surface properties exactly, but can still be used to present to the surface successfully", SM::toString(result));
+        break;
+    case VK_TIMEOUT:
+        SM_LOG_WARN("Swapchain/AcquireNextImage", "{}: A wait operation has not completed in the specified time", SM::toString(result));
+        break;
+    default:
+        SM_LOG_ERROR("Swapchain/AcquireNextImage", "{}: Failed to acquire next image", SM::toString(result));
+        break;
+    }
+}

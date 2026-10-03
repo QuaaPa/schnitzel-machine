@@ -1,19 +1,14 @@
 #include "core/core.h"
 
-#include <cstdint>
 #include <filesystem>
-#include <iterator>
 #include <memory>
 
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan_core.h>
 
 #include "RHI/Device.h"
-#include "RHI/Instance.h"
-#include "RHI/VkResultToString.h"
 #include "RHI/VulkanRHI.h"
 #include "Renderer/Renderer.h"
-#include "Resources/ResourceManager.h"
 #include "core/Log.h"
 #include "core/Macros.h"
 #include "core/ShaderCompiler.h"
@@ -39,12 +34,12 @@ void SM::Engine::run(int argc, char* argv[]) {
 
 void SM::Engine::init(std::filesystem::path exeDir) {
     SM_LOG_INFO("CORE", "Engine initialization...");
-    
+
     auto resourcePath = exeDir / "resources";
 
-    // Window/Platform init       
+    // Window/Platform init
     // TODO: Different surface by different WindowType
-    // TODO: Framebuffer resizing 
+    // TODO: Framebuffer resizing
     win = SM::Window::getInstance();
     win->init(800, 600, "SCHNITZEL");
 
@@ -53,8 +48,7 @@ void SM::Engine::init(std::filesystem::path exeDir) {
     rhi = std::make_shared<SM::VulkanRHI>(VK_API_VERSION_1_3,
                                           SM::WindowHandle{
                                               SM::WindowType::GLFW,
-                                              win->getGlfwWindow()
-                                          });
+                                              win->getGlfwWindow() });
 
     compiler = std::make_unique<SM::ShaderCompiler>();
     compiler->SetOptimizationLevel(shaderc_optimization_level_performance);
@@ -69,9 +63,6 @@ void SM::Engine::init(std::filesystem::path exeDir) {
     auto fragShader = compiler->CompileFromFile(resourcePath / "shaders/shader.frag", SM::ShaderStage::Fragment);
     SM_LOG_DEBUG("CORE", "Fragment shader compiled successfully:{}{}", fragShader.success, fragShader.errorMessage.empty() ? "" : ", message: " + fragShader.errorMessage);
 
-    // Any hot-reload objects will create in resource/
-    // resourceManager = std::make_unique<SM::ResourceManager>(rhi->getDevice()->getHandle());
-    
     renderer = std::make_unique<SM::Renderer>(rhi, vertShader, fragShader);
 }
 
@@ -81,9 +72,9 @@ void SM::Engine::mainLoop() {
         win->pollEvents();
 
         renderer->beginFrame();
-
+        
         renderer->drawExample();
-
+        
         renderer->endFrame();
     };
 }

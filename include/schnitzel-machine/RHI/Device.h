@@ -29,6 +29,8 @@ namespace SM {
 
         std::vector<Queue> getQueues() const noexcept { return m_queues; }
         void waitIdle();
+        void waitForFences(uint32_t fenceCount, const VkFence* pFences, VkBool32 waitALL, uint64_t timeout);
+        void resetFences(uint32_t fenceCount, const VkFence* pVkFences);
 
         SM_NODISCARD VkDevice getHandle() const noexcept { return m_handle; };
         void destroy();

@@ -1,6 +1,7 @@
 #ifndef SM_RESOURCES_SWAPCHAIN_H_
 #define SM_RESOURCES_SWAPCHAIN_H_
 
+#include <cstdint>
 #include <vector>
 
 #include <vulkan/vulkan_core.h>
@@ -41,6 +42,7 @@ namespace SM {
         std::vector<VkImageView> getImageViews() const noexcept { return m_imageViews; }
         VkFormat getImageFormat() const noexcept { return m_imageFormat; }
         VkExtent2D getImageExtent() const noexcept { return m_imageExtent; }
+        void acquireNextImage(uint64_t timeout, VkSemaphore vkSemaphore, VkFence vkFence, uint32_t* pImageIndex);
 
     private:
         VkDevice m_device{ VK_NULL_HANDLE };

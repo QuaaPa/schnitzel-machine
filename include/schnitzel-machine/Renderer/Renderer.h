@@ -13,6 +13,8 @@
 #include "core/Handle.h"
 #include "core/ShaderCompiler.h"
 
+const int MAX_FRAMES_IN_FLIGHT = 2;
+
 namespace SM {
     class Renderer {
     public:

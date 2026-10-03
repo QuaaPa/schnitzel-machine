@@ -398,6 +398,27 @@ void SM::Device::waitIdle() {
     }
 }
 
+void SM::Device::waitForFences(uint32_t fenceCount, const VkFence* pVkFences, VkBool32 waitALL, uint64_t timeout) {
+    auto result = vkWaitForFences(m_handle, fenceCount, pVkFences, waitALL, timeout);
+
+    switch (result) {
+    case VK_SUCCESS:
+        break; // nothing
+    case VK_TIMEOUT:
+        SM_LOG_WARN("Swapchain/AcquireNextImage", "{}: A wait operation has not completed in the specified time", SM::toString(result));
+        break;
+    default:
+        SM_LOG_WARN("RHI/Device", "{}: Failed to wait for fences", SM::toString(result));
+        break;
+    }
+}
+
+void SM::Device::resetFences(uint32_t fenceCount, const VkFence* pVkFences) {
+    if (auto result = vkResetFences(m_handle, fenceCount, pVkFences); result != VK_SUCCESS) {
+        SM_LOG_ERROR("RHI/Device", "{}: Failed to reset fences", SM::toString(result));
+    }
+}
+
 void SM::Device::destroy() {
     if (m_handle != VK_NULL_HANDLE) {
         vkDestroyDevice(m_handle, nullptr);
