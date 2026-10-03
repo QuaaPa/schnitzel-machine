@@ -1,27 +1,29 @@
 #include "RHI/Device.h"
 
 #include <cstdint>
+#include <vector>
+
 #include <vulkan/vulkan_core.h>
 
-#include "RHI/QueueFamilyProperties.h"
 #include "RHI/ExtensionProperties.h"
+#include "RHI/Queue.h"
+#include "RHI/QueueFamilyProperties.h"
 #include "RHI/VkResultToString.h"
-#include "RHI/QueueDescription.h"
 #include "RHI/VulkanConfig.h"
 #include "core/Log.h"
-        
-void SM::Device::initialize(uint32_t apiVersion, const SM::Adapter &adapter, const SM::DeviceOptions &options, std::vector<QueueRequest> &queueRequests) {    
+
+SM::Device::Device(uint32_t apiVersion, const SM::Adapter* pAdapter, const SM::DeviceOptions& options) {
     // Merge requested device extensions and layers with our defaults
-    const auto availableDeviceExtensions = adapter.extensions();
-    std::vector<const char *> requestedDeviceExtensions;
+    const auto availableDeviceExtensions = pAdapter->extensions();
+    std::vector<const char*> requestedDeviceExtensions;
     auto defaultRequestedDeviceExtensions = getDefaultRequestedDeviceExtensions();
 
     // Add requested device extensions set by user in the optionsxp
-    for (const std::string &userRequestedExtension : options.extensions) {
-        defaultRequestedDeviceExtensions.push_back(userRequestedExtension.c_str());        
+    for (const std::string& userRequestedExtension : options.extensions) {
+        defaultRequestedDeviceExtensions.push_back(userRequestedExtension.c_str());
     }
 
-    for (const char *requestedDeviceExtension : defaultRequestedDeviceExtensions) {
+    for (const char* requestedDeviceExtension : defaultRequestedDeviceExtensions) {
         if (SM::hasExtension(availableDeviceExtensions, requestedDeviceExtension)) {
             requestedDeviceExtensions.push_back(requestedDeviceExtension);
         } else {
@@ -31,35 +33,30 @@ void SM::Device::initialize(uint32_t apiVersion, const SM::Adapter &adapter, con
 
     // This makes it easier to chain pNext pointers in the device createInfo struct especially when we
     // have a lot of them and some of them are optional.
-    VkBaseOutStructure *chainCurrent{ nullptr };
-    auto addToChain = [&chainCurrent](auto *next) {
-        auto *n = reinterpret_cast<VkBaseOutStructure *>(next);
+    VkBaseOutStructure* chainCurrent{ nullptr };
+    auto addToChain = [&chainCurrent](auto* next) {
+        auto* n = reinterpret_cast<VkBaseOutStructure*>(next);
         chainCurrent->pNext = n;
         chainCurrent = n;
     };
 
-    queueRequests = options.queues;
-    if (queueRequests.empty()) {
-        QueueRequest queueRequest = {
-            .familyIndex = 0,
-            .count = 1,
-            .priorities = { 1.0f }
-        };
-        queueRequests.emplace_back(queueRequest);
-    }
+    constexpr uint32_t kQueuesPerFamily = 1; 
 
-    uint32_t queueRequestCount = queueRequests.size();
+    std::vector<SM::QueueFamilyProperties> requestedQueueFamilies;
+    requestedQueueFamilies.reserve(1);
+    requestedQueueFamilies.emplace_back(pAdapter->queryQueueFamilyProperties()[0]);
+
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    queueCreateInfos.reserve(queueRequestCount);
-    // Creating device queue info for each queue family   
-    for (const auto &queueRequest : queueRequests) {
-        VkDeviceQueueCreateInfo queueCreateInfo = {};
-        queueCreateInfo.sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queueCreateInfo.queueFamilyIndex = queueRequest.familyIndex;
-        queueCreateInfo.queueCount       = queueRequest.count;
-        queueCreateInfo.pQueuePriorities = queueRequest.priorities.data();
+    queueCreateInfos.reserve(requestedQueueFamilies.size());
 
-        queueCreateInfos.push_back(queueCreateInfo);
+    std::vector<float> queuePriorities(kQueuesPerFamily, 1.0f);
+    for (const auto& family : requestedQueueFamilies) {
+        VkDeviceQueueCreateInfo queueCreateInfo{};
+        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfo.queueFamilyIndex = family.index;
+        queueCreateInfo.queueCount = kQueuesPerFamily; // temporarily  
+        queueCreateInfo.pQueuePriorities = queuePriorities.data();
+        queueCreateInfos.emplace_back(queueCreateInfo);
     }
 
     // Request the physical device features requested by options
@@ -128,7 +125,7 @@ void SM::Device::initialize(uint32_t apiVersion, const SM::Adapter &adapter, con
     physicalDeviceFeatures2.features = deviceFeatures;
 
     // Start the chain
-    chainCurrent = reinterpret_cast<VkBaseOutStructure *>(&physicalDeviceFeatures2);
+    chainCurrent = reinterpret_cast<VkBaseOutStructure*>(&physicalDeviceFeatures2);
 
     // Allows to use std430 for uniform buffers which gives much nicer packing of data
     VkPhysicalDeviceUniformBufferStandardLayoutFeatures stdLayoutFeatures = {};
@@ -285,7 +282,7 @@ void SM::Device::initialize(uint32_t apiVersion, const SM::Adapter &adapter, con
     // Enable the VK_KHR_Synchronization2 extension features by chaining this into the createInfo chain.
     VkPhysicalDeviceSynchronization2FeaturesKHR sync2Features = {};
     sync2Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES_KHR;
-    sync2Features.synchronization2 = adapter.features().supportsSynchronization2;
+    sync2Features.synchronization2 = pAdapter->features().supportsSynchronization2;
     addToChain(&sync2Features);
 #endif
 
@@ -336,15 +333,15 @@ void SM::Device::initialize(uint32_t apiVersion, const SM::Adapter &adapter, con
     createInfo.ppEnabledExtensionNames = nullptr;
 
     // check for Vulkan API support by adapter, fall back to extensions if needed
-    auto maxApiVersionSupportedByPhysicalDevice = adapter.properties().apiVersion;
+    auto maxApiVersionSupportedByPhysicalDevice = pAdapter->properties().apiVersion;
     SM_LOG_INFO("RHI/Device", "Requested Vulkan API Version {}.{}.{}",
                 VK_VERSION_MAJOR(apiVersion), VK_VERSION_MINOR(apiVersion), VK_VERSION_PATCH(apiVersion));
-    
+
     SM_LOG_INFO("RHI/Device", "Physical Device supports Vulkan API Version {}.{}.{}",
                 VK_VERSION_MAJOR(maxApiVersionSupportedByPhysicalDevice),
                 VK_VERSION_MINOR(maxApiVersionSupportedByPhysicalDevice),
                 VK_VERSION_PATCH(maxApiVersionSupportedByPhysicalDevice));
-    
+
     if (maxApiVersionSupportedByPhysicalDevice < apiVersion) {
         SM_LOG_WARN("RHI/Device", "Downgrading requested Vulkan API Version {}.{}.{} because physical device only supports {}.{}.{}",
                     VK_VERSION_MAJOR(apiVersion), VK_VERSION_MINOR(apiVersion), VK_VERSION_PATCH(apiVersion),
@@ -366,44 +363,44 @@ void SM::Device::initialize(uint32_t apiVersion, const SM::Adapter &adapter, con
         createInfo.ppEnabledExtensionNames = requestedDeviceExtensions.data();
     }
 
-    if(auto result = vkCreateDevice(adapter.getHandle(), &createInfo, nullptr, &m_handle); result != VK_SUCCESS) {
+    if (auto result = vkCreateDevice(pAdapter->getHandle(), &createInfo, nullptr, &m_handle); result != VK_SUCCESS) {
         SM_LOG_CRITICAL("RHI/Device", "{}: Failed to create device", SM::toString(result));
-    }   
-}
-
-std::vector<SM::QueueDescription> SM::Device::getQueues(const std::vector<QueueRequest> &queueRequests, const std::vector<SM::QueueFamilyProperties> &queueProperties)
-{ 
-    uint32_t queueCount = 0;
-    for (const auto &queueRequest : queueRequests)
-        queueCount += queueRequest.count;
-    
-    m_queueDescriptions.clear();
-    m_queueDescriptions.reserve(queueCount);
-
-    for (const auto &queueRequest : queueRequests) {
-        const uint32_t queueCountForFamily = queueRequest.count;
-        for (uint32_t j = 0; j < queueCountForFamily; ++j) {
-            VkQueue vkQueue{ VK_NULL_HANDLE };
-            vkGetDeviceQueue(m_handle, queueRequest.familyIndex, j, &vkQueue);
-            // m_queues.emplace_back(vkQueue);
-
-            QueueDescription queueDescription{
-                .queue = vkQueue,
-                .flags = queueProperties[queueRequest.familyIndex].flags,
-                .timestampValidBits = queueProperties[queueRequest.familyIndex].timestampValidBits,
-                .minImageTransferGranularity = queueProperties[queueRequest.familyIndex].minImageTransferGranularity,
-                .familyIndex = queueRequest.familyIndex
-            };
-            m_queueDescriptions.push_back(queueDescription);
-        }
     }
 
-    return m_queueDescriptions;
+    m_queues.clear();
+    for (size_t i = 0; i < requestedQueueFamilies.size(); ++i) {
+        const auto& queueFamily = requestedQueueFamilies[i];
+        const uint32_t requestedCount = queueCreateInfos[i].queueCount;
+
+        for (uint32_t j = 0; j < requestedCount; ++j) {
+            VkQueue vkQueue{ VK_NULL_HANDLE };
+            vkGetDeviceQueue(m_handle, queueFamily.index, j, &vkQueue);
+            
+            SM::Queue info{};
+            info.queue = vkQueue;
+            info.familyIndex = queueFamily.index;
+            info.flags = queueFamily.flags;
+            info.timestampValidBits = queueFamily.timestampValidBits;
+            info.minImageTransferGranularity = queueFamily.minImageTransferGranularity;
+            
+            m_queues.emplace_back(info);
+        }
+    }
+}
+
+SM::Device::~Device() {
+    destroy();
+}
+
+void SM::Device::waitIdle() {
+    if (auto result = vkDeviceWaitIdle(m_handle); result != VK_SUCCESS) {
+        SM_LOG_ERROR("RHI/Device", "{}: Failed to wait for a device to become idle", SM::toString(result));
+    }
 }
 
 void SM::Device::destroy() {
     if (m_handle != VK_NULL_HANDLE) {
         vkDestroyDevice(m_handle, nullptr);
+        m_handle = VK_NULL_HANDLE;
     }
 }
-        

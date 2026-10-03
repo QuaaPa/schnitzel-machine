@@ -3,27 +3,14 @@
 
 #include <vulkan/vulkan_core.h>
 
-#include "RHI/QueueDescription.h"
-
-namespace SM {    
+namespace SM {
     struct Queue {
-    public:
-        Queue(const SM::QueueDescription &queueDescription);
-        ~Queue();
-
-        VkQueue getQueue() const noexcept { return m_queue; }
-        VkQueueFlags flags() const noexcept { return m_flags; }
-        uint32_t timestampValidBits() const noexcept { return m_timestampValidBits; }
-        VkExtent3D minImageTransferGranularity() const noexcept { return m_minImageTransferGranularity; }
-        uint32_t queueFamilyIndex() const noexcept { return m_queueFamilyIndex; }
-
-    private:
-        VkQueue m_queue{ VK_NULL_HANDLE };
-        VkQueueFlags m_flags;
-        uint32_t m_timestampValidBits;
-        VkExtent3D m_minImageTransferGranularity;
-        uint32_t m_queueFamilyIndex;
+        VkQueue      queue{ VK_NULL_HANDLE };
+        VkQueueFlags flags{ 0 };
+        uint32_t     timestampValidBits;
+        VkExtent3D   minImageTransferGranularity;
+        uint32_t     familyIndex;        
     };
-};
+}; // namespace SM
 
 #endif // SM_RHI_QUEUE_H_

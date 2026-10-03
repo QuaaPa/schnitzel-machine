@@ -1,6 +1,7 @@
 #ifndef SM_CORE_WINDOW_H_
 #define SM_CORE_WINDOW_H_
 
+#include <memory>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -12,11 +13,15 @@ namespace SM {
         const T height;
     };
 
+    struct GLFWwindowDeleter {
+        void operator()(GLFWwindow* w) const noexcept;
+    };
+
     class Window {
     private:
-        Window() {};
+        Window();
 
-        GLFWwindow *m_pwindow;
+        std::unique_ptr<GLFWwindow, GLFWwindowDeleter> m_window;
 
         int m_width;
         int m_height;
@@ -29,21 +34,20 @@ namespace SM {
             return &instance;
         }
 
-        GLFWwindow* getGlfwWindow() const {return m_pwindow;};
+        GLFWwindow* getGlfwWindow() const noexcept { return m_window.get(); }
 
         template<typename T = int>
         SM::FramebufferSize<T> getFramebufferSize() {
             int w, h;
-            glfwGetFramebufferSize(m_pwindow, &w, &h);
+            glfwGetFramebufferSize(m_window.get(), &w, &h);
             return FramebufferSize<T> {
                 .width = static_cast<T>(w),
                 .height = static_cast<T>(h)
             };
         }
-        
+
         bool shouldClose();
         void pollEvents();
-        void drawFrame();
         void destroy();
     };
 } // namespace SM

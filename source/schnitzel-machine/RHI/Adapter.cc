@@ -8,6 +8,36 @@
 #include "RHI/AdapterFeatures.h"
 #include "core/Log.h"
 
+SM::Adapter::Adapter(VkPhysicalDevice vkPhysicalDevice)
+    : m_handle(vkPhysicalDevice)
+{
+    
+}
+
+SM::Adapter::Adapter(const SM::Adapter& other) {
+    m_handle = other.m_handle;
+}
+
+SM::Adapter& SM::Adapter::operator=(const SM::Adapter& other) {
+    if (this != &other) {
+        m_handle = other.m_handle;
+    }
+    return *this;
+}
+
+SM::Adapter::Adapter(SM::Adapter&& other) noexcept {
+    m_handle = other.m_handle;
+    other.m_handle = VK_NULL_HANDLE;
+}
+
+SM::Adapter& SM::Adapter::operator=(Adapter&& other) noexcept {
+    if (this != &other) {
+        m_handle = other.m_handle;
+        other.m_handle = VK_NULL_HANDLE;
+    }
+    return *this;
+}
+
 std::vector<SM::ExtensionProperties> SM::Adapter::extensions() const {
     if(m_handle == VK_NULL_HANDLE) {
         SM_LOG_ERROR("RHI/Adapter", "Failed to query adapter's extensions, invalid adapter");
@@ -336,7 +366,7 @@ std::vector<SM::QueueFamilyProperties> SM::Adapter::queryQueueFamilyProperties()
         queueFamilies.emplace_back(SM::QueueFamilyProperties{
                 .index = i,
                 .flags = prop.queueFlags,
-                .availableQueues = prop.queueCount,
+                .availableQueueCount = prop.queueCount,
                 .timestampValidBits = prop.timestampValidBits,
                 .minImageTransferGranularity = {
                     .width = prop.minImageTransferGranularity.width,
@@ -350,32 +380,15 @@ std::vector<SM::QueueFamilyProperties> SM::Adapter::queryQueueFamilyProperties()
     return queueFamilies;
 }
 
-bool SM::Adapter::supportsPresentation(const VkSurfaceKHR &surfaceHandle, uint32_t queueFamilyIndex) const {
-    if(surfaceHandle == VK_NULL_HANDLE) {
-        SM_LOG_ERROR("RHI/Adapter", "Failed to check presentation support for queue {}, invalid surface m_handle", queueFamilyIndex);
-        return {};
-    }
-    if(m_handle == VK_NULL_HANDLE) {
-        SM_LOG_ERROR("RHI/Adapter", "Failed to check presentation support for queue {}, invalid adapter", queueFamilyIndex);
-        return {};
-    }
-    
-    VkBool32 canPresent{ false };
-    if(auto result = vkGetPhysicalDeviceSurfaceSupportKHR(m_handle, queueFamilyIndex, surfaceHandle, &canPresent); result != VK_SUCCESS) {
-        SM_LOG_ERROR("RHI/Adapter", "{}: Failed to check presentation support for queue family index {}", SM::toString(result), queueFamilyIndex);
-    }
-    return canPresent;
-}
-
-SM::AdapterSwapchainProperties SM::Adapter::querySwapchainProperties(const VkSurfaceKHR &surfaceHandle) const
+SM::AdapterSwapchainProperties SM::Adapter::querySwapchainProperties(VkSurfaceKHR vkSurface) const
 {
-    if(surfaceHandle == VK_NULL_HANDLE) {
+    if(vkSurface == VK_NULL_HANDLE) {
         SM_LOG_CRITICAL("RHI/Adapter", "Failed to query swapchain properties, invalid surface handle, aborting...");
         return {};
     }
     
     VkSurfaceCapabilitiesKHR vkSurfaceCapabilities;
-    if(auto result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_handle, surfaceHandle, &vkSurfaceCapabilities); result != VK_SUCCESS) {
+    if(auto result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_handle, vkSurface, &vkSurfaceCapabilities); result != VK_SUCCESS) {
         SM_LOG_ERROR("RHI/Adapter", "{}: Failed to query surface capabilities", toString(result));
     }
 
@@ -402,10 +415,10 @@ SM::AdapterSwapchainProperties SM::Adapter::querySwapchainProperties(const VkSur
     uint32_t vkFormatCount{ 0 };
     std::vector<VkSurfaceFormatKHR> vkFormats;
 
-    vkGetPhysicalDeviceSurfaceFormatsKHR(m_handle, surfaceHandle, &vkFormatCount, nullptr);
+    vkGetPhysicalDeviceSurfaceFormatsKHR(m_handle, vkSurface, &vkFormatCount, nullptr);
     if (vkFormatCount != 0) {
         vkFormats.resize(vkFormatCount);
-        if(auto result = vkGetPhysicalDeviceSurfaceFormatsKHR(m_handle, surfaceHandle, &vkFormatCount, vkFormats.data()); result != VK_SUCCESS) {
+        if(auto result = vkGetPhysicalDeviceSurfaceFormatsKHR(m_handle, vkSurface, &vkFormatCount, vkFormats.data()); result != VK_SUCCESS) {
             SM_LOG_ERROR("RHI/Adapter", "{}: Failed to query surface formats", SM::toString(result));
         }
     }
@@ -422,10 +435,10 @@ SM::AdapterSwapchainProperties SM::Adapter::querySwapchainProperties(const VkSur
     
     uint32_t vkPresentModeCount{ 0 };
     std::vector<VkPresentModeKHR> vkPresentModes;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(m_handle, surfaceHandle, &vkPresentModeCount, nullptr);
+    vkGetPhysicalDeviceSurfacePresentModesKHR(m_handle, vkSurface, &vkPresentModeCount, nullptr);
     if (vkPresentModeCount != 0) {
         vkPresentModes.resize(vkPresentModeCount);
-        if(auto result = vkGetPhysicalDeviceSurfacePresentModesKHR(m_handle, surfaceHandle, &vkPresentModeCount, vkPresentModes.data()); result != VK_SUCCESS) {
+        if(auto result = vkGetPhysicalDeviceSurfacePresentModesKHR(m_handle, vkSurface, &vkPresentModeCount, vkPresentModes.data()); result != VK_SUCCESS) {
             SM_LOG_ERROR("RHI/Adapter", "{}: Failed to query surface present modes", SM::toString(result));
         }
     }

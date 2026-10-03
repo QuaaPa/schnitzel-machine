@@ -1,11 +1,14 @@
 #include "Resources/ResourceManager.h"
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 #include <vulkan/vulkan_core.h>
 
 #include "RHI/Adapter.h"
+#include "RHI/AdapterSwapchainProperties.h"
+#include "Resources/CommandBuffer.h"
 #include "Resources/Swapchain.h"
 #include "Resources/CommandPool.h"
 #include "Resources/Pipeline.h"
@@ -110,19 +113,12 @@ void SM::ResourceManager::destroy(SM::RequiredHandle<SM::CommandPool> handle) {
     m_commandPoolsPool.remove(handle);
 }
 
-SM::Handle<SM::Swapchain> SM::ResourceManager::createSwapchain(VkSurfaceKHR vkSurface, const SM::Adapter& adapter, VkExtent2D imageExtent) {    
-    std::vector<uint32_t> queueFamilyIndices;
-    queueFamilyIndices.reserve(adapter.queryQueueFamilyProperties().size());
-    for(auto queueFamily : adapter.queryQueueFamilyProperties()) {
-        queueFamilyIndices.emplace_back(queueFamily.index);
-    }
-    
+SM::Handle<SM::Swapchain> SM::ResourceManager::createSwapchain(VkSurfaceKHR vkSurface, const SM::AdapterSwapchainProperties& supportedSwapchainProperties, std::vector<uint32_t> queueFamilyIndices, VkExtent2D imageExtent) {        
     SM::SwapchainDescription desc{};
     desc.queueFamilyIndices = queueFamilyIndices;
     desc.imageExtent = imageExtent;   
 
     SM::Swapchain swapchain;
-    auto supportedSwapchainProperties = adapter.querySwapchainProperties(vkSurface);
     swapchain.initializeSwapchain(m_device, vkSurface, supportedSwapchainProperties, desc);
     return m_swapchainPool.insert(std::move(swapchain));
     // SwapchainDescription desc{};
@@ -144,4 +140,15 @@ SM::Handle<SM::Swapchain> SM::ResourceManager::createSwapchain(VkSurfaceKHR vkSu
 
 void SM::ResourceManager::destroy(SM::RequiredHandle<SM::Swapchain> handle) {
     m_swapchainPool.remove(handle);
+}
+
+SM::Handle<SM::CommandBuffer> SM::ResourceManager::createCommandBuffer(SM::RequiredHandle<SM::CommandPool> commandPoolHandle) {
+    SM::CommandBuffer cmdBuff;
+    VkCommandPool cmdPool = m_commandPoolsPool.getRequired(commandPoolHandle)->getCommandPool();
+    cmdBuff.initializeCommandBuffer(m_device, cmdPool);
+    return m_commandBufferPool.insert(std::move(cmdBuff));
+}
+
+void SM::ResourceManager::destroy(RequiredHandle<SM::CommandBuffer> handle) {
+    m_commandBufferPool.remove(handle);
 }

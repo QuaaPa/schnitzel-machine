@@ -13,9 +13,21 @@ ReferenceAlignment: Left
 BreakBeforeBraces: Attach
 Cpp11BracedListStyle: false
 MaxEmptyLinesToKeep: 1
-SortIncludes: Never
 
 AllowShortFunctionsOnASingleLine: InlineOnly
 AllowShortIfStatementsOnASingleLine: WithoutElse
 AllowShortLoopsOnASingleLine: true
 AllowShortBlocksOnASingleLine: Empty
+
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeIsMainRegex: '(Test)?$'
+IncludeCategories:
+  - Regex:           '^<[a-z_]+\.h>'          # C system headers, e.g. <stdio.h>
+    Priority:        1
+  - Regex:           '^<[a-z_]+>'              # C++ standard headers, e.g. <vector>
+    Priority:        2
+  - Regex:           '^<.*>'                   # Third-party libraries in angle brackets
+    Priority:        3
+  - Regex:           '^".*"'                   # Project headers
+    Priority:        4

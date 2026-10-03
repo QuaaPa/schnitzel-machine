@@ -38,7 +38,7 @@ private:
     SMLogger() = default;
 };
 
-#define SM_LOG_INIT(name)               SMLogger::Get().Initialize(name)
+#define SM_LOG_INITIALIZE(name)               SMLogger::Get().Initialize(name)
 
 #define SM_LOG_TRACE(cat, ...)          SMLogger::Get().Log(LogLevel::Trace,    cat, __VA_ARGS__)
 #define SM_LOG_DEBUG(cat, ...)          SMLogger::Get().Log(LogLevel::Debug,    cat, __VA_ARGS__)

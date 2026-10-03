@@ -1,40 +1,41 @@
 #ifndef SM_RHI_DEVICE_H_
 #define SM_RHI_DEVICE_H_
 
-#include <cstdint>
-#include <vector>
-#include <string>
 #include <stdint.h>
+
+#include <cstdint>
+#include <string>
+#include <vector>
 
 #include <vulkan/vulkan_core.h>
 
-#include "RHI/QueueFamilyProperties.h"
-#include "RHI/QueueDescription.h"
+#include "RHI/Adapter.h"
+#include "RHI/Queue.h"
 #include "RHI/QueueRequest.h"
 #include "core/Macros.h"
-#include "RHI/Adapter.h"
 
-namespace SM {    
+namespace SM {
     struct DeviceOptions {
-        // Version we want the device to use, can be less than the apiVersion requested for the instance
         std::vector<std::string> layers;
         std::vector<std::string> extensions;
-        SM::AdapterFeatures requestedFeatures;        
+        SM::AdapterFeatures requestedFeatures;
         std::vector<QueueRequest> queues;
     };
 
     class Device {
     public:
-        void initialize(uint32_t apiVersion, const SM::Adapter &adapter, const SM::DeviceOptions &options, std::vector<QueueRequest> &queueRequests);
-        std::vector<QueueDescription> getQueues(const std::vector<QueueRequest> &queueRequests, const std::vector<SM::QueueFamilyProperties> &queueTypes);
-        
-        SM_NODISCARD VkDevice getHandle() const noexcept { return m_handle; };
+        Device(uint32_t apiVersion, const SM::Adapter* pAdapter, const SM::DeviceOptions& options);
+        ~Device();
 
+        std::vector<Queue> getQueues() const noexcept { return m_queues; }
+        void waitIdle();
+
+        SM_NODISCARD VkDevice getHandle() const noexcept { return m_handle; };
         void destroy();
-        
-    private:        
-        VkDevice m_handle { VK_NULL_HANDLE };
-        std::vector<QueueDescription> m_queueDescriptions;
+
+    private:
+        VkDevice m_handle{ VK_NULL_HANDLE };
+        std::vector<Queue> m_queues;
     };
 }; // namespace SM
 

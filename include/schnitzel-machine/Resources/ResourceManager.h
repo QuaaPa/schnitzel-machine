@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <vulkan/vulkan_core.h>
 
+#include "Resources/CommandBuffer.h"
 #include "RHI/Adapter.h"
 #include "Resources/Swapchain.h"
 #include "Resources/CommandPool.h"
@@ -39,18 +40,23 @@ namespace SM {
         void destroy(RequiredHandle<CommandPool> handle);
         CommandPool* get(Handle<CommandPool> handle) { return m_commandPoolsPool.get(handle); }
 
-        SM::Handle<Swapchain> createSwapchain(VkSurfaceKHR vkSurface, const SM::Adapter& adapter, VkExtent2D imageExtent);
+        SM::Handle<Swapchain> createSwapchain(VkSurfaceKHR vkSurface, const SM::AdapterSwapchainProperties& supportedSwapchainProperties, std::vector<uint32_t> queueFamilyIndices, VkExtent2D imageExtent);
         void destroy(RequiredHandle<Swapchain> handle);
         Swapchain* get(Handle<Swapchain> handle) { return m_swapchainPool.get(handle); }
 
+        SM::Handle<CommandBuffer> createCommandBuffer(SM::RequiredHandle<CommandPool> commandPoolHandle);
+        void destroy(RequiredHandle<CommandBuffer> handle);
+        CommandBuffer* get(Handle<CommandBuffer> handle) { return m_commandBufferPool.get(handle); }
+
     private:
         VkDevice m_device;
-
+        
         SM::Pool<PipelineLayout> m_pipelineLayoutsPool{ 1 };
         SM::Pool<Pipeline> m_pipelinesPool{ 1 };
         SM::Pool<ShaderModule> m_shaderModulesPool{ 2 };
         SM::Pool<CommandPool> m_commandPoolsPool{ 1 };
         SM::Pool<Swapchain> m_swapchainPool{ 1 };
+        SM::Pool<CommandBuffer> m_commandBufferPool{ 1 };
     };
 }; // namespace SM
 

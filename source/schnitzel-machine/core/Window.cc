@@ -1,37 +1,40 @@
 #include "core/Window.h"
-
-#include <GLFW/glfw3.h>
-
 #include "core/Log.h"
-// #include "core/Vulkan/VulkanManager.h"
 
-// static void framebufferResizeCallback(GLFWwindow* window, int width, int height) { 
-//     auto app = reinterpret_cast<sm::VulkanManager*>(glfwGetWindowUserPointer(window));
-//     app->framebufferResized = true;
-// }
+void SM::GLFWwindowDeleter::operator()(GLFWwindow* w) const noexcept {
+    glfwDestroyWindow(w);
+}
 
-void SM::Window::init(int width, int height, const char *title) {
+SM::Window::Window() : m_width(0), m_height(0) {}
+
+void SM::Window::init(int width, int height, const char* title) {
     m_width = width;
     m_height = height;
 
     glfwSetErrorCallback([](int error, const char* description) {
         SM_LOG_ERROR("core/Win", "GLFW error {}: {}", error, description);
     });
-    
-    glfwInit();
+
+    if (!glfwInit()) {
+        SM_LOG_ERROR("core/Win", "glfwInit failed");
+        return;
+    }
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
 
-    m_pwindow = glfwCreateWindow(m_width, m_height, title, nullptr, nullptr);
-    
-    // glfwSetWindowUserPointer(m_pwindow, this);
-    // glfwSetFramebufferSizeCallback(m_pwindow, framebufferResizeCallback);
+    GLFWwindow* raw = glfwCreateWindow(m_width, m_height, title, nullptr, nullptr);
+    if (!raw) {
+        SM_LOG_ERROR("core/Win", "glfwCreateWindow failed");
+        return;
+    }
+
+    m_window.reset(raw);
 }
 
 bool SM::Window::shouldClose() {
-    return glfwWindowShouldClose(m_pwindow);
+    return glfwWindowShouldClose(m_window.get());
 }
 
 void SM::Window::pollEvents() {
@@ -39,6 +42,6 @@ void SM::Window::pollEvents() {
 }
 
 void SM::Window::destroy() {
-    glfwDestroyWindow(m_pwindow);
+    m_window.reset();
     glfwTerminate();
 }

@@ -1,24 +1,22 @@
 #include "RHI/Instance.h"
 
 #include <cstdint>
-#include <cstdlib>
 #include <cstring>
 
 #include <vulkan/vulkan_core.h>
 
+#include "RHI/Adapter.h"
 #include "RHI/ExtensionProperties.h"
 #include "RHI/VkResultToString.h"
 #include "RHI/VulkanConfig.h"
-#include "RHI/Adapter.h"
 #include "core/Log.h"
 
 #ifdef SM_BUILD_DEBUG_MODE
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-                                             VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                                             VkDebugUtilsMessageTypeFlagsEXT messageType,
-                                             const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
-                                             void *pUserData)
-{
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    void* pUserData) {
 
     std::string_view cat;
     switch (messageType) {
@@ -40,12 +38,11 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
         break;
     }
 
-    
     switch (messageSeverity) {
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
         // Diagnostic message
         SM_LOG_DEBUG(cat, "validation layer: {}", pCallbackData->pMessage);
-        break; 
+        break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
         // Informational message like the creation of a resource
         SM_LOG_INFO(cat, "validation layer: {}", pCallbackData->pMessage);
@@ -67,7 +64,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 }
 #endif // SM_BUILD_DEBUG_MODE
 
-void SM::Instance::initialize(uint32_t apiVersion, const SM::InstanceOptions& options) {    
+SM::Instance::Instance(uint32_t apiVersion, const SM::InstanceOptions& options) {
     // check for Vulkan API support by system, fall back to extensions if needed
     uint32_t maxApiVersionSupportedBySystem;
     if (vkEnumerateInstanceVersion) // checking if function is exist (1.1+)
@@ -81,7 +78,7 @@ void SM::Instance::initialize(uint32_t apiVersion, const SM::InstanceOptions& op
                         VK_VERSION_PATCH(maxApiVersionSupportedBySystem));
         abort();
     }
-    if(apiVersion > maxApiVersionSupportedBySystem) {
+    if (apiVersion > maxApiVersionSupportedBySystem) {
         SM_LOG_CRITICAL("RHI/Instance",
                         "Downgrading requested Vulkan API Version {}.{}.{} because system only supports {}.{}.{}",
                         VK_VERSION_MAJOR(apiVersion), VK_VERSION_MINOR(apiVersion), VK_VERSION_PATCH(apiVersion),
@@ -90,7 +87,7 @@ void SM::Instance::initialize(uint32_t apiVersion, const SM::InstanceOptions& op
                         VK_VERSION_PATCH(maxApiVersionSupportedBySystem));
         apiVersion = maxApiVersionSupportedBySystem;
     }
-    
+
     VkApplicationInfo appInfo = {
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
         .pNext = nullptr,
@@ -98,16 +95,16 @@ void SM::Instance::initialize(uint32_t apiVersion, const SM::InstanceOptions& op
         .applicationVersion = options.applicationVersion,
         .pEngineName = options.engineName,
         .engineVersion = options.engineVersion,
-        .apiVersion = apiVersion        
+        .apiVersion = apiVersion
     };
 
     VkInstanceCreateInfo createInfo = {
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0,
-        .pApplicationInfo = &appInfo        
+        .pApplicationInfo = &appInfo
     };
-    
+
     // On macOS we need to enable the VK_KHR_PORTABILITY_subset instance extension so that
     // the MoltenVK driver is allowed to be used even though it is technically non-conformant
     // at present. Also see vulkan_config.h. For more detail see the
@@ -118,16 +115,16 @@ void SM::Instance::initialize(uint32_t apiVersion, const SM::InstanceOptions& op
 #endif
 
     // Marging requested and user layers
-    std::vector<const char *> requestedLayers = requestedInstanceLayers;
-    for (const std::string &userLayer : options.layers) {
+    std::vector<const char*> requestedLayers = requestedInstanceLayers;
+    for (const std::string& userLayer : options.layers) {
         requestedLayers.push_back(userLayer.c_str());
     }
 
     // Query the available instance layers
     const auto availableLayers = queryAvailableLayers();
 
-    std::vector<const char *> layers;
-    for (const char *requestedLayer : requestedLayers) {
+    std::vector<const char*> layers;
+    for (const char* requestedLayer : requestedLayers) {
         if (std::find(availableLayers.begin(), availableLayers.end(), requestedLayer) != availableLayers.end()) {
             layers.push_back(requestedLayer);
         } else {
@@ -135,17 +132,17 @@ void SM::Instance::initialize(uint32_t apiVersion, const SM::InstanceOptions& op
         }
     }
     if (!layers.empty()) {
-        createInfo.enabledLayerCount   = static_cast<uint32_t>(layers.size());        
+        createInfo.enabledLayerCount = static_cast<uint32_t>(layers.size());
         createInfo.ppEnabledLayerNames = layers.data();
-    }    
-    
-    std::vector<const char *> requestedInstanceExtensions;
+    }
+
+    std::vector<const char*> requestedInstanceExtensions;
 
     // Query the available instance extensions
     const auto availableExtensions = queryExtensions();
 
     const auto defaultRequestedExtensions = SM::getDefaultRequestedInstanceExtensions();
-    for (const char *requestedExtension : defaultRequestedExtensions) {
+    for (const char* requestedExtension : defaultRequestedExtensions) {
         // Checking if availableExtensions contain requestedExtension
         if (SM::hasExtension(availableExtensions, requestedExtension)) {
             requestedInstanceExtensions.emplace_back(requestedExtension);
@@ -154,7 +151,7 @@ void SM::Instance::initialize(uint32_t apiVersion, const SM::InstanceOptions& op
         }
     }
 
-    for (const std::string &userExtension : options.extensions) {
+    for (const std::string& userExtension : options.extensions) {
         if (SM::hasExtension(availableExtensions, userExtension)) {
             requestedInstanceExtensions.push_back(userExtension.c_str());
         } else {
@@ -163,14 +160,14 @@ void SM::Instance::initialize(uint32_t apiVersion, const SM::InstanceOptions& op
     }
 
     if (!requestedInstanceExtensions.empty()) {
-        createInfo.enabledExtensionCount   = static_cast<uint32_t>(requestedInstanceExtensions.size());
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(requestedInstanceExtensions.size());
         createInfo.ppEnabledExtensionNames = requestedInstanceExtensions.data();
     }
 
 #ifdef SM_BUILD_DEBUG_MODE
     const bool hasExtDebugUtilsExt = std::find_if(requestedInstanceExtensions.begin(),
                                                   requestedInstanceExtensions.end(),
-                                                  [](const char *name) { return strcmp(name, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0; }) != requestedInstanceExtensions.end();
+                                                  [](const char* name) { return strcmp(name, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0; }) != requestedInstanceExtensions.end();
     VkDebugUtilsMessengerCreateInfoEXT debugUtilsCreateInfo{};
     if (hasExtDebugUtilsExt) {
         SM_LOG_DEBUG("RHI", "Registering Validation Debug Callback");
@@ -181,12 +178,12 @@ void SM::Instance::initialize(uint32_t apiVersion, const SM::InstanceOptions& op
         debugUtilsCreateInfo.pfnUserCallback = debugCallback;
         debugUtilsCreateInfo.pUserData = nullptr; // Optional
 
-        createInfo.pNext = &debugUtilsCreateInfo;        
+        createInfo.pNext = &debugUtilsCreateInfo;
     }
 #endif // SM_BUILD_DEBUG_MODE
-    
-    // Try to create the instance    
-    if(auto result = vkCreateInstance(&createInfo, nullptr, &m_handle); result != VK_SUCCESS) {
+
+    // Try to create the instance
+    if (auto result = vkCreateInstance(&createInfo, nullptr, &m_handle); result != VK_SUCCESS) {
         SM_LOG_CRITICAL("RHI", "{}: Failed to create Instance, aborting...", SM::toString(result));
     }
 
@@ -202,6 +199,10 @@ void SM::Instance::initialize(uint32_t apiVersion, const SM::InstanceOptions& op
 #endif // SM_BUILD_DEBUG_MODE
 }
 
+SM::Instance::~Instance() {
+    destroy();
+}
+
 void SM::Instance::destroy() {
     if (m_handle != VK_NULL_HANDLE) {
         if (m_debugMessenger != VK_NULL_HANDLE) {
@@ -211,31 +212,32 @@ void SM::Instance::destroy() {
         vkDestroyInstance(m_handle, nullptr);
 
         m_handle = VK_NULL_HANDLE;
-        m_debugMessenger = VK_NULL_HANDLE;        
-    }    
+        m_debugMessenger = VK_NULL_HANDLE;
+    }
 }
 
 std::vector<SM::Adapter> SM::Instance::queryAdapters() const {
-    if(m_handle == VK_NULL_HANDLE) {
+    if (m_handle == VK_NULL_HANDLE) {
         SM_LOG_ERROR("RHI/Instance", "Failed to query adapters, instance is invalid");
         return {};
     }
-    
+
     uint32_t vkPhysicalDeviceCount{ 0 };
     vkEnumeratePhysicalDevices(m_handle, &vkPhysicalDeviceCount, nullptr);
-    
+
     std::vector<VkPhysicalDevice> vkPhysicalDevices;
     vkPhysicalDevices.resize(vkPhysicalDeviceCount);
     if (vkPhysicalDeviceCount != 0) {
-        if (auto result = vkEnumeratePhysicalDevices(m_handle, &vkPhysicalDeviceCount, vkPhysicalDevices.data()); result != VK_SUCCESS) {        
+        if (auto result = vkEnumeratePhysicalDevices(m_handle, &vkPhysicalDeviceCount, vkPhysicalDevices.data()); result != VK_SUCCESS) {
             SM_LOG_ERROR("RHI/Instance", "{}: Failed to query adapters", SM::toString(result));
         }
     }
 
     std::vector<SM::Adapter> adapters;
-    adapters.resize(vkPhysicalDeviceCount);
+    adapters.reserve(vkPhysicalDeviceCount);
     for (uint32_t i = 0; i < vkPhysicalDeviceCount; ++i) {
-        adapters[i].setHandle(vkPhysicalDevices[i]);
+        SM::Adapter adapter(vkPhysicalDevices[i]);
+        adapters.emplace_back(adapter);
     }
     return adapters;
 }
@@ -246,7 +248,7 @@ std::vector<std::string> SM::Instance::queryAvailableLayers() const {
 
     std::vector<VkLayerProperties> vkLayersProperties;
     vkLayersProperties.resize(vkLayerPropertyCount);
-    if(vkLayerPropertyCount != 0) {        
+    if (vkLayerPropertyCount != 0) {
         if (auto result = vkEnumerateInstanceLayerProperties(&vkLayerPropertyCount, vkLayersProperties.data()); result != VK_SUCCESS) {
             SM_LOG_ERROR("RHI", "{}: Failed to query instance layers", SM::toString(result));
         }
@@ -254,20 +256,20 @@ std::vector<std::string> SM::Instance::queryAvailableLayers() const {
 
     std::vector<std::string> layers;
     layers.reserve(vkLayerPropertyCount);
-    for (const auto &properties : vkLayersProperties) {
+    for (const auto& properties : vkLayersProperties) {
         layers.push_back(properties.layerName);
     }
 
     return layers;
 }
 
-std::vector<SM::ExtensionProperties> SM::Instance::queryExtensions() const {    
+std::vector<SM::ExtensionProperties> SM::Instance::queryExtensions() const {
     uint32_t vkExtensionPropertyCount{ 0 };
     vkEnumerateInstanceExtensionProperties(nullptr, &vkExtensionPropertyCount, nullptr);
-    
+
     std::vector<VkExtensionProperties> vkExtensionProperties;
     vkExtensionProperties.resize(vkExtensionPropertyCount);
-    if(vkExtensionPropertyCount != 0) {        
+    if (vkExtensionPropertyCount != 0) {
         if (vkEnumerateInstanceExtensionProperties(nullptr, &vkExtensionPropertyCount, vkExtensionProperties.data()) != VK_SUCCESS) {
             SM_LOG_ERROR("RHI/Instance", "Failed to query instance extensions");
             return {};
@@ -277,12 +279,12 @@ std::vector<SM::ExtensionProperties> SM::Instance::queryExtensions() const {
     std::vector<SM::ExtensionProperties> extensionProperties;
     extensionProperties.reserve(vkExtensionPropertyCount);
     for (uint32_t i = 0; i < vkExtensionPropertyCount; ++i) {
-        const auto &prop = vkExtensionProperties[i];
-        SM::ExtensionProperties extProp{ };
-        std::strncpy(extProp.extensionName, vkExtensionProperties[i].extensionName, VK_MAX_EXTENSION_NAME_SIZE); // copying extension name 
+        const auto& prop = vkExtensionProperties[i];
+        SM::ExtensionProperties extProp{};
+        std::strncpy(extProp.extensionName, vkExtensionProperties[i].extensionName, VK_MAX_EXTENSION_NAME_SIZE); // copying extension name
         extProp.specVersion = vkExtensionProperties[i].specVersion;
         extensionProperties.emplace_back(extProp);
     }
-   
+
     return extensionProperties;
 }

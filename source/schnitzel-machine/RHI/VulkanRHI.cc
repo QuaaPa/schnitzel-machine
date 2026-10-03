@@ -2,38 +2,22 @@
 
 #include <cstdint>
 #include <initializer_list>
+#include <memory>
 #include <vector>
 
 #include <vulkan/vulkan_core.h>
 #include <GLFW/glfw3.h>
 
-#include "RHI/VkResultToString.h"
+#include "RHI/AdapterFeatures.h"
+#include "RHI/Surface.h"
 #include "RHI/Instance.h"
 #include "RHI/Adapter.h"
 #include "RHI/Device.h"
-#include "RHI/Queue.h"
 #include "core/Log.h"
 
-void SM::VulkanRHI::initialize(const RHIOptions& options) {
-
-    // Instance initialization
-    //
-    m_instance.initialize(options.apiVersion, options.InstanceOptions);
-
-    // Surface initialization
-    //
-    m_surface.initialize(options.window, m_instance.getHandle());
-
-    // Adapter selection
-    //
-    m_adapter.setHandle(selectSuitableAdapter(m_instance.queryAdapters()));
-
-    const auto queueFamilyProperties = m_adapter.queryQueueFamilyProperties();
+static void logAdapterSupportability(const SM::Adapter *pAdapter, const SM::Surface *pSurface) {
+    const auto queueFamilyProperties = pAdapter->queryQueueFamilyProperties();
     SM_LOG_INFO("RHI", "Found {} queue famil{}", queueFamilyProperties.size(), queueFamilyProperties.size() == 1 ? "y" : "ies");
-
-    const bool supportsPresentation = m_adapter.supportsPresentation(m_surface.getHandle(), 0);
-    const bool hasGraphicsAndCompute = queueFamilyProperties[0].supportsFeature(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
-
     for (uint32_t i = 0; i < queueFamilyProperties.size(); ++i) {
         const auto& family = queueFamilyProperties[i];
 
@@ -47,10 +31,10 @@ void SM::VulkanRHI::initialize(const RHIOptions& options) {
 #endif
         const bool opticalFlow = family.supportsFeature(VK_QUEUE_OPTICAL_FLOW_BIT_NV);
 
-        const bool presentation = m_adapter.supportsPresentation(m_surface.getHandle(), i);
+        const bool presentation = family.supportsPresentation(pAdapter->getHandle(), pSurface->getHandle());
 
-        SM_LOG_DEBUG("RHI", "Queue family {}:", i);
-        SM_LOG_DEBUG("RHI", "  - queueCount: {}", family.availableQueues);
+        SM_LOG_DEBUG("RHI", "Queue family {}:"       , i);
+        SM_LOG_DEBUG("RHI", "  - queueCount: {}"     , family.availableQueueCount);
         SM_LOG_DEBUG("RHI", "  - Graphics:        {}", graphics);
         SM_LOG_DEBUG("RHI", "  - Compute:         {}", compute);
         SM_LOG_DEBUG("RHI", "  - Transfer:        {}", transfer);
@@ -62,57 +46,84 @@ void SM::VulkanRHI::initialize(const RHIOptions& options) {
         SM_LOG_DEBUG("RHI", "  - Optical flow:    {}", opticalFlow);
         SM_LOG_DEBUG("RHI", "  - Presentation:    {}", presentation);
     }
-    // We are now able to query the adapter for swapchain properties and presentation support with the window surface
-    const auto swapchainProperties = m_adapter.querySwapchainProperties(m_surface.getHandle());
+
+    const auto swapchainProperties = pAdapter->querySwapchainProperties(pSurface->getHandle());
     SM_LOG_INFO("RHI", "Swapchain support {} present mode:", swapchainProperties.presentModes.size());
     for (const auto& mode : swapchainProperties.presentModes) {
         SM_LOG_DEBUG("RHI", "  - {}", SM::presentModeToString(mode));
     }
 
-    const auto adapterExtensions = m_adapter.extensions();
+    const auto adapterExtensions = pAdapter->extensions();
     SM_LOG_INFO("RHI", "Adapter has {} available extensions:", adapterExtensions.size());
     for (const auto& extension : adapterExtensions) {
         SM_LOG_DEBUG("RHI", "  - {} Version {}", extension.extensionName, extension.specVersion);
     }
 
-    const bool supportsMultiView = m_adapter.features().multiView;
+    const bool supportsMultiView = pAdapter->features().multiView;
     SM_LOG_INFO("RHI", "Supports multiview: {}", supportsMultiView);
 
-    const bool supportsUBOIndexing = m_adapter.features().shaderUniformBufferArrayNonUniformIndexing && m_adapter.features().bindGroupBindingUniformBufferUpdateAfterBind;
+    const bool supportsUBOIndexing = pAdapter->features().shaderUniformBufferArrayNonUniformIndexing && pAdapter->features().bindGroupBindingUniformBufferUpdateAfterBind;
     SM_LOG_INFO("RHI", "Supports Uniform Bind Group Dynamic Indexing: {}", supportsUBOIndexing);
 
-    const bool supportsAccelerationStructures = m_adapter.features().accelerationStructures;
+    const bool supportsAccelerationStructures = pAdapter->features().accelerationStructures;
     SM_LOG_INFO("RHI", "Supports acceleration structures: {}", supportsAccelerationStructures);
 
-    const bool supportsRayTracing = m_adapter.features().rayTracingPipeline;
+    const bool supportsRayTracing = pAdapter->features().rayTracingPipeline;
     SM_LOG_INFO("RHI", "Supports raytracing: {}", supportsRayTracing);
 
-    const bool supportsMeshShader = m_adapter.features().meshShader;
-    const bool supportsTaskShader = m_adapter.features().taskShader;
+    const bool supportsMeshShader = pAdapter->features().meshShader;
+    const bool supportsTaskShader = pAdapter->features().taskShader;
     SM_LOG_INFO("RHI", "Supports meshShader: {}", supportsMeshShader);
     SM_LOG_INFO("RHI", "Supports taskShader: {}", supportsTaskShader);
 
-    const bool supportsHostToImageCopy = m_adapter.features().hostImageCopy;
+    const bool supportsHostToImageCopy = pAdapter->features().hostImageCopy;
     SM_LOG_INFO("RHI", "Supports host to image copy: {}", supportsHostToImageCopy);
+}
 
+SM::VulkanRHI::VulkanRHI(uint32_t apiVersion, SM::WindowHandle windowHandle) {
+    SM::InstanceOptions instanceOpt{};
+    instanceOpt.applicationName = "SM_APPLICATION";
+    instanceOpt.applicationVersion = SM_MAKE_VERSION(0, 0, 1);
+    instanceOpt.engineVersion = SM_MAKE_VERSION(0, 0, 1);
+    instanceOpt.extensions = { "VK_KHR_wayland_surface" };
+
+    m_instance = std::make_unique<SM::Instance>(apiVersion, instanceOpt);
+
+    m_surface = std::make_unique<SM::Surface>(windowHandle, m_instance->getHandle());
+
+    auto suitableAdapter = selectSuitableAdapter(m_instance->queryAdapters(), m_surface.get());
+    m_adapter = std::make_unique<SM::Adapter>(suitableAdapter);
+    logAdapterSupportability(m_adapter.get(), m_surface.get());
+
+    SM::DeviceOptions deviceOpt{};
+    deviceOpt.requestedFeatures = { .dynamicRendering = true };
+    
     std::vector<QueueRequest> queueRequests;
 
     // Device initialization
     //
-    m_device.initialize(options.apiVersion, m_adapter, options.DeviceOptions, queueRequests);
+    m_device = std::make_unique<SM::Device>(apiVersion, m_adapter.get(), deviceOpt);    
 
-    std::vector<QueueDescription> queueDescriptions = m_device.getQueues(queueRequests, queueFamilyProperties);
+    // std::vector<QueueDescription> queueDescriptions = m_device.getQueues(queueRequests, queueFamilyProperties);
 
-    const uint32_t queueCount = queueDescriptions.size();
-    m_queues.reserve(queueCount);
-    for (uint32_t i = 0; i < queueCount; ++i) {
-        m_queues.emplace_back(SM::Queue(queueDescriptions[i]));
-    }
+    // const uint32_t queueCount = queueDescriptions.size();
+    // m_queues.reserve(queueCount);
+    // for (uint32_t i = 0; i < queueCount; ++i) {
+    //     m_queues.emplace_back(SM::Queue(queueDescriptions[i]));
+    // }
 }
 
+SM::VulkanRHI::~VulkanRHI() {
+    destroy();
+}
 
-VkPhysicalDevice SM::VulkanRHI::selectSuitableAdapter(
-    const std::vector<SM::Adapter>& adapters) const {
+void SM::VulkanRHI::destroy() {
+    m_device->destroy();
+    m_surface->destroy();
+    m_instance->destroy();
+}
+
+SM::Adapter SM::VulkanRHI::selectSuitableAdapter(std::vector<SM::Adapter> adapters, const SM::Surface* pSurface) const {
     // Sorting adapters by deviceType:
     const std::vector<VkPhysicalDeviceType> deviceTypeOrders = {
         VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, // best choise for us
@@ -131,6 +142,7 @@ VkPhysicalDevice SM::VulkanRHI::selectSuitableAdapter(
             }
         }
     }
+    
 
     auto isAdapterSuitable = [&](const SM::Adapter& adapter) -> bool {
         const auto queueFamilyProperties = adapter.queryQueueFamilyProperties();
@@ -154,7 +166,7 @@ VkPhysicalDevice SM::VulkanRHI::selectSuitableAdapter(
             // #endif
             //         if(!family.supportsFeature(VK_QUEUE_OPTICAL_FLOW_BIT_NV))
             //         return false;
-            if (!adapter.supportsPresentation(m_surface.getHandle(), i))
+            if (!family.supportsPresentation(adapter.getHandle(), pSurface->getHandle()))
                 return false;
         }
         return true;
@@ -164,21 +176,10 @@ VkPhysicalDevice SM::VulkanRHI::selectSuitableAdapter(
         if (!isAdapterSuitable(adapter)) {
             continue;
         }
-        SM_LOG_DEBUG("RHI", "Selected adapter: {}",
-                     adapter.properties().deviceName);
-        return adapter.getHandle();
+        SM_LOG_DEBUG("RHI", "Selected adapter: {}", adapter.properties().deviceName);
+        return adapter;
     }
 
-    SM_LOG_CRITICAL("RHI", "Unable to find a suitable Adapter. Aborting...");
-    return VK_NULL_HANDLE;
-}
-
-SM::Result SM::VulkanRHI::deviceWaitIdle() {
-    return vkDeviceWaitIdle(m_device.getHandle());
-}
-
-void SM::VulkanRHI::destroy() {
-    m_device.destroy();
-    m_surface.destroy(m_instance.getHandle());
-    m_instance.destroy();
+    SM_LOG_CRITICAL("RHI", "Unable to find a suitable Adapter...");
+    return {VK_NULL_HANDLE};
 }
