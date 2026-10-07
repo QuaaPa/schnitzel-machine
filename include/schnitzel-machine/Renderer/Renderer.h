@@ -44,6 +44,7 @@ namespace SM {
         std::vector<VkSemaphore> renderFinishedSemaphores; // sized to swapchain image count
         std::vector<VkFence> inFlightFences;               // sized to MAX_FRAMES_IN_FLIGHT
         std::vector<VkFence> imagesInFlight;               // sized to swapchain image count
+        uint32_t m_imageIndex = 0;
         size_t currentFrame = 0;
     };
 }; // namespace SM

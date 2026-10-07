@@ -31,12 +31,13 @@ namespace SM {
                                 const VkImageMemoryBarrier* pImageMemoryBarriers);
         void cmdBeginRendering(const VkRenderingInfo* pRenderingInfo);
         void cmdBindPipeline(VkPipelineBindPoint pipelineBindPoint, VkPipeline vkPipeline);
-        void resetCommandBuffer(VkCommandBufferResetFlags flags);
+        void resetCommandBuffer(VkCommandBufferResetFlags flags = 0);
         void cmdSetViewport(uint32_t firstViewport, uint32_t viewportCount, const VkViewport* pVkViewport);
         void cmdSetScissor(uint32_t firstScissor, uint32_t scissorCount, const VkRect2D* pVkScissors);
         void cmdDraw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance);
         void cmdEndRendering();
         void endCommandBuffer();
+        void beginCommandBuffer(const VkCommandBufferBeginInfo* pVkBeginInfo);
 
     private:
         VkDevice m_device{ VK_NULL_HANDLE };

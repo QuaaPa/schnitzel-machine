@@ -89,3 +89,7 @@ void SM::CommandBuffer::cmdEndRendering() {
 void SM::CommandBuffer::endCommandBuffer() {
     vkEndCommandBuffer(m_commandBuffer);
 }
+
+void SM::CommandBuffer::beginCommandBuffer(const VkCommandBufferBeginInfo* pVkBeginInfo) {
+    vkBeginCommandBuffer(m_commandBuffer, pVkBeginInfo);
+}

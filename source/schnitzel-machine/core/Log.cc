@@ -10,12 +10,13 @@
 
 static std::shared_ptr<spdlog::logger> s_logger;
 
-void SMLogger::Initialize(const char* loggerName) {    
+void SMLogger::Initialize(const char* loggerName) {
+    
     // LOGGING DIRECTLY TO CONSOLE 
     auto console = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     console->set_color_mode(spdlog::color_mode::always);
     // pattern: LoggerName -> [Level] [Category] Message
-    console->set_pattern("%n-> %^%l %v%$");
+    console->set_pattern("%n-> %^%l %v%$");    
     console->set_color(spdlog::level::trace,    LogColor::TraceStyle);
     console->set_color(spdlog::level::debug,    LogColor::DebugStyle);
     console->set_color(spdlog::level::info,     LogColor::InfoStyle);
