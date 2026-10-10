@@ -25,7 +25,6 @@ target_include_directories(${PROJECT_TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/include
 target_link_libraries(${PROJECT_TARGET} Vulkan::Vulkan glfw glm spdlog::spdlog PkgConfig::shaderc)
 set(SM_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set_target_properties(${PROJECT_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${SM_RUNTIME_OUTPUT_DIRECTORY}/)
-target_compile_definitions(${PROJECT_NAME} PRIVATE SM_BUILD_DEBUG_MODE)
 
 message(STATUS "Copying resources from ${CMAKE_SOURCE_DIR}/resources to ${SM_RUNTIME_OUTPUT_DIRECTORY}/")
 file(COPY ${CMAKE_SOURCE_DIR}/resources
@@ -71,9 +70,9 @@ message(STATUS "${PROJECT_NAME}: Cmake version is ${CMAKE_VERSION}")
 set(SM_CMAKE_ROOT_BUILD_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 message(STATUS "${PROJECT_NAME}: Root build directory is ${SM_CMAKE_ROOT_BUILD_DIRECTORY}")
 
-set(SM_CMAKE_ROOT_SOURCE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
-message(STATUS "${PROJECT_NAME}: Root source directory is ${SM_CMAKE_ROOT_SOURCE_DIRECTORY}")
-target_compile_definitions(${PROJECT_NAME} PRIVATE SM_PROJECT_ROOT="${SM_CMAKE_ROOT_SOURCE_DIRECTORY}")
+set(SM_SOURCE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+message(STATUS "${PROJECT_NAME}: Source directory is ${SM_SOURCE_DIRECTORY}")
+target_compile_definitions(${PROJECT_NAME} PRIVATE SM_SOURCE_DIRECTORY="${SM_SOURCE_DIRECTORY}")
 
-set(SM_CMAKE_RESOURCES_DIRECTORY "${SM_CMAKE_ROOT_SOURCE_DIRECTORY}/resources")
-message(STATUS "${PROJECT_NAME}: Resources directory is ${SM_CMAKE_RESOURCES_DIRECTORY}")
+set(SM_RESOURCES_DIRECTORY "${SM_SOURCE_DIRECTORY}/resources")
+message(STATUS "${PROJECT_NAME}: Resources directory is ${SM_RESOURCES_DIRECTORY}")

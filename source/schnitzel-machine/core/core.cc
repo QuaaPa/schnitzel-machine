@@ -13,14 +13,16 @@
 #include "core/Macros.h"
 #include "core/ShaderCompiler.h"
 #include "core/TypesDefs.h"
+#include "core/VFS.h"
 #include "core/Window.h"
+#include "core/PlatformCore.h"
 
 void SM::Engine::run(int argc, char* argv[]) {
     namespace fs = std::filesystem;
     SM_LOG_INITIALIZE("SM_LOGGER");
     SM_LOG_INFO("CORE", "Engine running...");
 
-    auto exeDir = fs::absolute(argv[0]).lexically_normal().parent_path();
+    auto exeDir = SM::getExecutablePath().parent_path();
     if (!fs::is_directory(exeDir) || fs::is_empty(exeDir)) {
         SM_LOG_WARN("CORE", "Wrong/Empty executable directory path: {}", exeDir.string());
     }
@@ -35,8 +37,6 @@ void SM::Engine::run(int argc, char* argv[]) {
 void SM::Engine::init(std::filesystem::path exeDir) {
     SM_LOG_INFO("CORE", "Engine initialization...");
 
-    auto resourcePath = exeDir / "resources";
-
     // Window/Platform init
     // TODO: Different surface by different WindowType
     // TODO: Framebuffer resizing
@@ -50,6 +50,15 @@ void SM::Engine::init(std::filesystem::path exeDir) {
                                               SM::WindowType::GLFW,
                                               win->getGlfwWindow() });
 
+#ifdef SM_BUILD_DEBUG_MODE
+    auto resDir = std::filesystem::path(SM_SOURCE_DIRECTORY) / "resources";
+#elif defined (SM_BUILD_RELEASE_MODE)
+    auto resDir = exeDir / "resources";
+#endif
+        
+    vfs = std::make_shared<SM::VFS>();
+    vfs->mount("shaders", resDir / "shaders");
+    
     compiler = std::make_unique<SM::ShaderCompiler>();
     compiler->SetOptimizationLevel(shaderc_optimization_level_performance);
 #ifdef SM_BUILD_DEBUG_MODE
@@ -57,10 +66,10 @@ void SM::Engine::init(std::filesystem::path exeDir) {
     compiler->SetOptimizationLevel(shaderc_optimization_level_zero); // easier to debug in RenderDoc
 #endif
 
-    auto vertShader = compiler->CompileFromFile(resourcePath / "shaders/shader.vert", SM::ShaderStage::Vertex);
+    auto vertShader = compiler->CompileFromFile(vfs->resolve("shaders/shader.vert").value(), SM::ShaderStage::Vertex);
     SM_LOG_DEBUG("CORE", "Vertex shader compiled successfully:{}{}", vertShader.success, vertShader.errorMessage.empty() ? "" : ", message: " + vertShader.errorMessage);
 
-    auto fragShader = compiler->CompileFromFile(resourcePath / "shaders/shader.frag", SM::ShaderStage::Fragment);
+    auto fragShader = compiler->CompileFromFile(vfs->resolve("shaders/shader.frag").value(), SM::ShaderStage::Fragment);
     SM_LOG_DEBUG("CORE", "Fragment shader compiled successfully:{}{}", fragShader.success, fragShader.errorMessage.empty() ? "" : ", message: " + fragShader.errorMessage);
 
     renderer = std::make_unique<SM::Renderer>(rhi, vertShader, fragShader);
